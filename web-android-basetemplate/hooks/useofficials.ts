@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import officialService from '../services/official/official.service';
 import { Official } from '../services/official/official.type';
 
-export const useOfficials = () => {
+// 🌟 Add config option param defaulting to an empty object
+export const useOfficials = (options?: { lazy?: boolean }) => {
   const [officials, setOfficials] = useState<Official[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -12,7 +13,6 @@ export const useOfficials = () => {
       setLoading(true);
       setError('');
       const response = await officialService.getOfficials();
-      // Accessing response.data to match your FastAPI return format
       setOfficials(response.data || response);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch officials');
@@ -22,6 +22,8 @@ export const useOfficials = () => {
   };
 
   useEffect(() => {
+    // 🌟 Check if lazy execution is explicitly declared
+    if (options?.lazy) return;
     loadOfficials();
   }, []);
 

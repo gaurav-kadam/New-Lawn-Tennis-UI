@@ -28,43 +28,73 @@ class MatchService {
     return ApiService.delete(`/matches/${id}`);
   }
 
-  /**
-   * Translates frontend form parameters (both camelCase and snake_case format)
-   * to exact backend structural signature
-   */
+  // 🌟 NEW METHOD: Hit the backend endpoint to change completion status
+  async completeMatch(id: number | string) {
+    return ApiService.post(`/matches/${id}/complete`);
+  }
+
   private mapToBackend(data: any) {
-    // Safely extract team values
-    const whiteTeamId = data.white_team_id ?? data.whiteTeamId ?? data.white_team ?? data.whiteTeam ?? null;
-    const blueTeamId = data.blue_team_id ?? data.blueTeamId ?? data.blue_team ?? data.blueTeam ?? null;
+    const whiteTeamCode = data.white_team_code ?? data.whiteTeamCode ?? data.white_team_id ?? data.whiteTeamId ?? null;
+    const blueTeamCode = data.blue_team_code ?? data.blueTeamCode ?? data.blue_team_id ?? data.blueTeamId ?? null;
+
+    const digitalScorer = data.digital_scorer_code ?? data.digitalScorerCode ?? data.digital_scorer_id ?? data.digitalScorer ?? null;
+    const referee1 = data.referee_1_code ?? data.referee1Code ?? data.referee_1_id ?? data.referee1 ?? null;
+    const referee2 = data.referee_2_code ?? data.referee2Code ?? data.referee2 ?? null;
 
     return {
-      tournament_code: data.tournament_code || data.tournamentId,
+      tournament_code: data.tournament_code || data.tournamentId || null,
       match_date: data.match_date || data.matchDate,
-      match_time: data.match_time || data.matchTime,
+      match_time: data.match_time || data.match_time,
       court_no: String(data.court_no || data.courtNo || ''),
       match_no: String(data.match_no || data.matchNo || ''),
       age_category: data.age_category || data.ageCategory,
       gender: data.gender,
 
-      // Mapped to raw team fields if backend expects text names alongside IDs
       white_team: data.white_team || data.whiteTeam || '',
       blue_team: data.blue_team || data.blueTeam || '',
 
-      // Explicit numeric structure IDs
-      white_team_id: whiteTeamId ? Number(whiteTeamId) : null,
-      blue_team_id: blueTeamId ? Number(blueTeamId) : null,
+      white_team_code: whiteTeamCode ? String(whiteTeamCode) : null,
+      blue_team_code: blueTeamCode ? String(blueTeamCode) : null,
 
-      digital_scorer_id: data.digital_scorer_id || data.digitalScorer ? Number(data.digital_scorer_id || data.digitalScorer) : null,
-      referee_1_id: data.referee_1_id || data.referee1 ? Number(data.referee_1_id || data.referee1) : null,
-      referee_2_id: data.referee_2_id || data.referee2 ? Number(data.referee_2_id || data.referee2) : null,
+      digital_scorer_code: digitalScorer ? String(digitalScorer) : null,
+      referee_1_code: referee1 ? String(referee1) : null,
+      referee_2_code: referee2 ? String(referee2) : null,
       
-      // 🌟 New official parameters synced to backend columns
-      goaljudge_1_id: data.goaljudge_1_id || data.goaljudge1 ? Number(data.goaljudge_1_id || data.goaljudge1) : null,
-      goaljudge_2_id: data.goaljudge_2_id || data.goaljudge2 ? Number(data.goaljudge_2_id || data.goaljudge2) : null,
-      timekeeper_1_id: data.timekeeper_1_id || data.timekeeper1 ? Number(data.timekeeper_1_id || data.timekeeper1) : null,
-      timekeeper_2_id: data.timekeeper_2_id || data.timekeeper2 ? Number(data.timekeeper_2_id || data.timekeeper2) : null,
+      goaljudge_1_code: data.goaljudge_1_code || data.goaljudge1Code || null,
+      goaljudge_2_code: data.goaljudge_2_code || data.goaljudge2Code || null,
+      timekeeper_1_code: data.timekeeper_1_code || data.timekeeper1Code || null,
+      timekeeper_2_code: data.timekeeper_2_code || data.timekeeper2Code || null,
+      // Pass along status directly if supplied in custom forms
+      is_complete: data.is_complete ?? false,
     };
   }
 }
 
 export default new MatchService();
+
+export interface Match {
+  id: number;
+  match_date: string;
+  match_time: string;
+  court_no: string;
+  match_no: string;
+  age_category: string;
+  gender: string;
+  tournament_code: string | null;
+  white_team: string;
+  blue_team: string;
+  white_team_code: string | null; 
+  blue_team_code: string | null;   
+  digital_scorer_code: string | null;
+  referee_1_code: string | null;
+  referee_2_code: string | null;
+  
+  goaljudge_1_code: string | null;
+  goaljudge_2_code: string | null;
+  timekeeper_1_code: string | null;
+  timekeeper_2_code: string | null;
+  
+  is_active: boolean;
+  // 🌟 NEW INTERFACE PROPERTY
+  is_complete: boolean;
+}

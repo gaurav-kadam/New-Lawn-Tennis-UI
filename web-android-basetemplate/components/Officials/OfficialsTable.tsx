@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { Pencil, Trash2 } from 'lucide-react-native';
@@ -11,9 +11,7 @@ import { Pencil, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/theme/themeContext';
 import { tokens } from '@/theme/token';
 
-const TABLE_MIN_WIDTH = 1050;
 const TABLE_MAX_HEIGHT = 500;
-const ACTION_WIDTH = 100;
 
 export default function OfficialsTable({
   tournaments,
@@ -25,52 +23,145 @@ export default function OfficialsTable({
 
   const data = officials || tournaments || [];
 
-  const [hoveredRow, setHoveredRow] =
-    useState<number | null>(null);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const getFullName = (item: any) =>
     `${item.first_name || ''} ${item.last_name || ''}`.trim() || '—';
 
   return (
-    <View style={styles.wrapper}>
-      <View style={styles.card(theme)}>
-        <View style={styles.headerRow(theme)}>
-          <Text style={[styles.headerText(theme), styles.nameColumn]}>
+    <View style={{ width: '100%', alignSelf: 'center', paddingHorizontal: tokens.spacing.md }}>
+      <View 
+        style={{
+          width: '100%',
+          backgroundColor: theme.colors.surface,
+          borderRadius: tokens.radius.lg,
+          overflow: 'hidden',
+          borderWidth: tokens.layout.dividerHeight,
+          borderColor: theme.colors.border,
+          ...tokens.shadow.light,
+        }}
+      >
+        {/* Header Row */}
+        <View 
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: tokens.spacing.md,
+            paddingHorizontal: tokens.spacing.md,
+            backgroundColor: theme.colors.secondary,
+            borderBottomWidth: tokens.layout.dividerHeight,
+            borderBottomColor: theme.colors.border,
+          }}
+        >
+          <Text 
+            style={{
+              width: '18%',
+              textAlign: 'left',
+              fontSize: tokens.typography.sizes.caption || 11,
+              fontWeight: tokens.typography.weights.bold as any,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: theme.colors.textSecondary,
+              fontFamily: theme.typography.fontFamily,
+            }}
+          >
             Name
           </Text>
 
-          <Text style={[styles.headerText(theme), styles.emailColumn]}>
+          <Text 
+            style={{
+              width: '24%',
+              textAlign: 'left',
+              paddingHorizontal: tokens.spacing.xs,
+              fontSize: tokens.typography.sizes.caption || 11,
+              fontWeight: tokens.typography.weights.bold as any,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: theme.colors.textSecondary,
+              fontFamily: theme.typography.fontFamily,
+            }}
+          >
             Email
           </Text>
 
-          <Text style={[styles.headerText(theme), styles.phoneColumn]}>
+          <Text 
+            style={{
+              width: '18%',
+              textAlign: 'center',
+              fontSize: tokens.typography.sizes.caption || 11,
+              fontWeight: tokens.typography.weights.bold as any,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: theme.colors.textSecondary,
+              fontFamily: theme.typography.fontFamily,
+            }}
+          >
             Phone Number
           </Text>
 
-          <Text style={[styles.headerText(theme), styles.stateColumn]}>
+          <Text 
+            style={{
+              width: '12%',
+              textAlign: 'center',
+              fontSize: tokens.typography.sizes.caption || 11,
+              fontWeight: tokens.typography.weights.bold as any,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              color: theme.colors.textSecondary,
+              fontFamily: theme.typography.fontFamily,
+            }}
+          >
             State
           </Text>
 
-          <View style={styles.badgeColumn}>
-          <Text style={styles.headerText(theme)}>
-            Gender
-          </Text>
+          <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
+            <Text 
+              style={{
+                fontSize: tokens.typography.sizes.caption || 11,
+                fontWeight: tokens.typography.weights.bold as any,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: theme.colors.textSecondary,
+                fontFamily: theme.typography.fontFamily,
+              }}
+            >
+              Gender
+            </Text>
           </View>
 
-        <View style={styles.badgeColumn}>
-        <Text style={styles.headerText(theme)}>
-            Is Active
-        </Text>
+          <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
+            <Text 
+              style={{
+                fontSize: tokens.typography.sizes.caption || 11,
+                fontWeight: tokens.typography.weights.bold as any,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: theme.colors.textSecondary,
+                fontFamily: theme.typography.fontFamily,
+              }}
+            >
+              Is Active
+            </Text>
+          </View>
+
+          <View style={{ width: '6%', alignItems: 'center', justifyContent: 'center' }}>
+            <Text 
+              style={{
+                fontSize: tokens.typography.sizes.caption || 11,
+                fontWeight: tokens.typography.weights.bold as any,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: theme.colors.textSecondary,
+                fontFamily: theme.typography.fontFamily,
+              }}
+            >
+              Actions
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.actionColumn}>
-        <Text style={styles.headerText(theme)}>
-            Actions
-        </Text>
-        </View>
-        </View>
-
-        <View style={styles.scrollArea}>
+        {/* Data Rows Area */}
+        <View style={{ maxHeight: TABLE_MAX_HEIGHT }}>
           <ScrollView showsVerticalScrollIndicator={false}>
             {data.length > 0 ? (
               data.map((item: any, index: number) => {
@@ -83,47 +174,112 @@ export default function OfficialsTable({
                     onMouseEnter={() => setHoveredRow(item.id)}
                     // @ts-ignore web hover only
                     onMouseLeave={() => setHoveredRow(null)}
-                    style={styles.row(theme, isHovered, index, data.length)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingVertical: tokens.spacing.sm + tokens.spacing.xs,
+                      paddingHorizontal: tokens.spacing.md,
+                      borderBottomWidth: index !== data.length - 1 ? tokens.layout.dividerHeight : 0,
+                      borderBottomColor: theme.colors.border,
+                      backgroundColor: isHovered ? theme.colors.background : theme.colors.surface,
+                    }}
                   >
                     <Text
                       numberOfLines={1}
-                      style={[styles.nameText(theme), styles.nameColumn]}
+                      style={{
+                        width: '18%',
+                        textAlign: 'left',
+                        fontSize: tokens.typography.sizes.small,
+                        fontWeight: tokens.typography.weights.bold as any,
+                        color: theme.colors.textPrimary,
+                        fontFamily: theme.typography.fontFamily,
+                      }}
                     >
                       {getFullName(item)}
                     </Text>
 
                     <Text
                       numberOfLines={1}
-                      style={[styles.cellText(theme), styles.emailColumn]}
+                      style={{
+                        width: '24%',
+                        textAlign: 'left',
+                        paddingHorizontal: tokens.spacing.xs,
+                        fontSize: tokens.typography.sizes.tableText,
+                        fontWeight: tokens.typography.weights.medium as any,
+                        color: theme.colors.textPrimary,
+                        fontFamily: theme.typography.fontFamily,
+                      }}
                     >
                       {item.email || '—'}
                     </Text>
 
                     <Text
                       numberOfLines={1}
-                      style={[styles.cellText(theme), styles.phoneColumn]}
+                      style={{
+                        width: '18%',
+                        textAlign: 'center',
+                        fontSize: tokens.typography.sizes.tableText,
+                        fontWeight: tokens.typography.weights.medium as any,
+                        color: theme.colors.textPrimary,
+                        fontFamily: theme.typography.fontFamily,
+                      }}
                     >
                       {item.phone_no || '—'}
                     </Text>
 
                     <Text
                       numberOfLines={1}
-                      style={[styles.cellText(theme), styles.stateColumn]}
+                      style={{
+                        width: '12%',
+                        textAlign: 'center',
+                        fontSize: tokens.typography.sizes.tableText,
+                        fontWeight: tokens.typography.weights.medium as any,
+                        color: theme.colors.textPrimary,
+                        fontFamily: theme.typography.fontFamily,
+                      }}
                     >
                       {item.state || '—'}
                     </Text>
 
-                    <View style={styles.badgeColumn}>
-                      <View style={styles.genderBadge(theme)}>
-                        <Text style={styles.genderText(theme)}>
+                    <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
+                      <View 
+                        style={{
+                          paddingHorizontal: tokens.spacing.sm,
+                          paddingVertical: tokens.spacing.xs,
+                          borderRadius: tokens.radius.round,
+                          backgroundColor: theme.colors.secondary,
+                        }}
+                      >
+                        <Text 
+                          style={{
+                            fontSize: tokens.typography.sizes.badge,
+                            fontWeight: tokens.typography.weights.medium as any,
+                            color: theme.colors.primary,
+                            fontFamily: theme.typography.fontFamily,
+                          }}
+                        >
                           {item.gender || '—'}
                         </Text>
                       </View>
                     </View>
 
-                    <View style={styles.badgeColumn}>
-                      <View style={styles.statusBadge(item.is_active)}>
-                        <Text style={styles.statusText(item.is_active)}>
+                    <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
+                      <View 
+                        style={{
+                          paddingHorizontal: tokens.spacing.sm,
+                          paddingVertical: tokens.spacing.xs,
+                          borderRadius: tokens.radius.round,
+                          backgroundColor: item.is_active ? tokens.colors.actions.saveBg : tokens.colors.actions.deleteBg,
+                        }}
+                      >
+                        <Text 
+                          style={{
+                            fontSize: tokens.typography.sizes.badge,
+                            fontWeight: tokens.typography.weights.medium as any,
+                            color: item.is_active ? tokens.colors.success : tokens.colors.error,
+                            fontFamily: theme.typography.fontFamily,
+                          }}
+                        >
                           {item.is_active === true
                             ? 'Active'
                             : item.is_active === false
@@ -133,7 +289,15 @@ export default function OfficialsTable({
                       </View>
                     </View>
 
-                    <View style={styles.actions}>
+                    <View 
+                      style={{
+                        width: '6%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: tokens.spacing.sm,
+                      }}
+                    >
                       <TouchableOpacity onPress={() => onEdit(item)}>
                         <Pencil
                           size={tokens.typography.sizes.body}
@@ -154,8 +318,14 @@ export default function OfficialsTable({
                 );
               })
             ) : (
-              <View style={styles.emptyWrapper}>
-                <Text style={styles.emptyText(theme)}>
+              <View style={{ paddingVertical: tokens.spacing.xl * 2, alignItems: 'center', justifyContent: 'center' }}>
+                <Text 
+                  style={{
+                    fontSize: tokens.typography.sizes.small,
+                    color: theme.colors.textSecondary,
+                    fontFamily: theme.typography.fontFamily,
+                  }}
+                >
                   No officials found
                 </Text>
               </View>
@@ -166,158 +336,3 @@ export default function OfficialsTable({
     </View>
   );
 }
-
-const styles = {
-  wrapper: {
-    width: '100%' as const,
-    alignSelf: 'center' as const,
-  },
-
-  card: (theme: any) => ({
-    flex: tokens.layout.flexFull,
-    minWidth: TABLE_MIN_WIDTH,
-    backgroundColor: theme.colors.surface,
-    borderRadius: tokens.radius.lg,
-    overflow: 'hidden' as const,
-    borderWidth: tokens.layout.dividerHeight,
-    borderColor: theme.colors.border,
-    ...tokens.shadow.light,
-  }),
-
-  headerRow: (theme: any) => ({
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.lg,
-    backgroundColor: theme.colors.secondary,
-    borderBottomWidth: tokens.layout.dividerHeight,
-    borderBottomColor: theme.colors.border,
-  }),
-
-  row: (
-    theme: any,
-    isHovered: boolean,
-    index: number,
-    total: number
-  ) => ({
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    paddingVertical: tokens.spacing.sm + tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.lg,
-    borderBottomWidth:
-      index !== total - 1 ? tokens.layout.dividerHeight : 0,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: isHovered
-      ? theme.colors.background
-      : theme.colors.surface,
-  }),
-
-  scrollArea: {
-    maxHeight: TABLE_MAX_HEIGHT,
-  },
-
-  nameColumn: {
-    flex: 1.6,
-    textAlign: 'left' as const,
-  },
-
-  emailColumn: {
-    flex: 2,
-    textAlign: 'center' as const,
-  },
-
-  phoneColumn: {
-    flex: 1.3,
-    textAlign: 'center' as const,
-  },
-
-  stateColumn: {
-    flex: 1.2,
-    textAlign: 'center' as const,
-  },
-
-  badgeColumn: {
-  flex: 1,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-    },
-
-    actionColumn: {
-  width: ACTION_WIDTH,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-    },
-
-  actions: {
-    width: ACTION_WIDTH,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: tokens.spacing.md,
-  },
-
-  headerText: (theme: any) => ({
-    fontSize: tokens.typography.sizes.cooldownTimer,
-    fontWeight: tokens.typography.weights.bold as any,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 1.2,
-    color: theme.colors.textSecondary,
-    fontFamily: theme.typography.fontFamily,
-  }),
-
-  nameText: (theme: any) => ({
-    fontSize: tokens.typography.sizes.small,
-    fontWeight: tokens.typography.weights.bold as any,
-    color: theme.colors.textPrimary,
-    fontFamily: theme.typography.fontFamily,
-  }),
-
-  cellText: (theme: any) => ({
-    fontSize: tokens.typography.sizes.tableText,
-    fontWeight: tokens.typography.weights.medium as any,
-    color: theme.colors.textPrimary,
-    fontFamily: theme.typography.fontFamily,
-  }),
-
-  genderBadge: (theme: any) => ({
-    paddingHorizontal: tokens.spacing.sm + tokens.spacing.xs / 2,
-    paddingVertical: tokens.spacing.xs,
-    borderRadius: tokens.radius.round,
-    backgroundColor: theme.colors.secondary,
-  }),
-
-  genderText: (theme: any) => ({
-    fontSize: tokens.typography.sizes.badge,
-    fontWeight: tokens.typography.weights.medium as any,
-    color: theme.colors.primary,
-    fontFamily: theme.typography.fontFamily,
-  }),
-
-  statusBadge: (isActive: boolean) => ({
-    paddingHorizontal: tokens.spacing.sm + tokens.spacing.xs / 2,
-    paddingVertical: tokens.spacing.xs,
-    borderRadius: tokens.radius.round,
-    backgroundColor: isActive
-      ? tokens.colors.actions.saveBg
-      : tokens.colors.actions.deleteBg,
-  }),
-
-  statusText: (isActive: boolean) => ({
-    fontSize: tokens.typography.sizes.badge,
-    fontWeight: tokens.typography.weights.medium as any,
-    color: isActive ? tokens.colors.success : tokens.colors.error,
-    fontFamily: tokens.typography.fontFamily,
-  }),
-
-  emptyWrapper: {
-    paddingVertical: tokens.spacing.xl * 2,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-
-  emptyText: (theme: any) => ({
-    fontSize: tokens.typography.sizes.small,
-    color: theme.colors.textSecondary,
-    fontFamily: theme.typography.fontFamily,
- }),
-};

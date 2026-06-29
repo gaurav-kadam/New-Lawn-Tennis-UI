@@ -6,7 +6,7 @@ import Button from '../../ui/Button';
 import { useMatch } from '../layout/MatchContext';
 
 const POPUP_ACTIONS: Record<string, string[]> = {
-  Goals: ['Action Goal', 'Extra Man Goal', 'Penalty Goal', 'Counter Goal', '6M Goal'],
+  Goals: ['Action Goal', 'Extra Man Goal', 'Penalty Goal', 'Counter Goal', '6M Goal', 'Self Goal'],
   Shots: ['Shot Blocked(GK)', 'Shot Blocked(P)', 'Shot Wide', 'Shot Bar'],
   Fouls: ['Ordinary Foul', 'Exclusion Foul', 'Misconduct Foul', 'Brutality Foul', 'Simulating', 'Penalty Foul'],
   Penalty: ['Penalty Awarded', 'Penalty Missed', 'Penalty Saved'],

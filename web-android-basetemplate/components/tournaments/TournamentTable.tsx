@@ -14,6 +14,22 @@
 
     import { useTheme } from '@/theme/themeContext';
 
+    const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return '—';
+    
+    // Normalize separator to support both YYYY/MM/DD and YYYY-MM-DD
+    const normalizedDate = dateString.replace(/-/g, '/');
+    const parts = normalizedDate.split('/');
+    
+    // Check if it matches expected YYYY/MM/DD format parts
+    if (parts.length === 3 && parts[0].length === 4) {
+        const [year, month, day] = parts;
+        return `${day}/${month}/${year}`;
+    }
+    
+    return dateString; // Fallback to raw string if format is unexpected
+};
+
     export default function TournamentTable({
         tournaments,
         onEdit,
@@ -78,7 +94,7 @@
                         <Text
                             style={[
                                 styles.headerText(theme),
-                                { flex: 2.3 },
+                                { flex: 2.5 },
                             ]}
                         >
                             Tournament
@@ -87,7 +103,7 @@
                         <Text
                             style={[
                                 styles.headerText(theme),
-                                { flex: 1.2 },
+                                { flex: 1 },
                             ]}
                         >
                             Start
@@ -96,7 +112,7 @@
                         <Text
                             style={[
                                 styles.headerText(theme),
-                                { flex: 1.2 },
+                                { flex: 1 },
                             ]}
                         >
                             End
@@ -150,7 +166,7 @@
                         <Text
                             style={[
                                 styles.headerText(theme),
-                                { width: 100 },
+                                { width: 140 },
                             ]}
                         >
                             Actions
@@ -261,10 +277,10 @@
                                                         styles.cellText(
                                                             theme
                                                         ),
-                                                        { flex: 1.2 },
+                                                        { flex: 1 },
                                                     ]}
                                                 >
-                                                    {t.start_date || '—'}
+                                                    {formatDateToDDMMYYYY(t.start_date)}
                                                 </Text>
 
                                                 {/* END DATE */}
@@ -273,10 +289,10 @@
                                                         styles.cellText(
                                                             theme
                                                         ),
-                                                        { flex: 1.2 },
+                                                        { flex: 1 },
                                                     ]}
                                                 >
-                                                    {t.end_date || '—'}
+                                                    {formatDateToDDMMYYYY(t.end_date)}
                                                 </Text>
 
                                                 {/* SECTION */}
@@ -499,7 +515,7 @@
                                                     {/* 1. VIEW */}
                                                     <TouchableOpacity
                                                         onPress={() =>
-                                                            onView(t) // Replace with your actual view handler
+                                                            onView(t) 
                                                         }
                                                             >
                                                         <Eye

@@ -1,6 +1,6 @@
 import { usePathname, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, View, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, View, ActivityIndicator, Alert, Platform } from 'react-native';
 
 import { useTheme } from '../../../theme/themeContext';
 import { useFullscreenStore } from '../../../stores/fullscreen.store';
@@ -11,11 +11,11 @@ import Footer from './Footer';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-// 🌟 UPDATED: Everyone has structural access permissions to both match tracking interfaces
+// Keep /MatchScreen in permissions map so the layout system allows intercepting the action
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   supervisor: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen', '/users'],
-  admin: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'], // Added MatchScreen
-  scorer: ['/matches', '/MatchScreen'], // 🌟 Added /MatchScreen so scorers can run games smoothly
+  admin: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'],
+  scorer: ['/matches', '/MatchScreen'],
 };
 
 export default function WebLayout({ children }: any) {
@@ -36,7 +36,6 @@ export default function WebLayout({ children }: any) {
     { name: 'Teams', icon: 'people', path: '/teams' },
     { name: 'Officials', icon: 'shield', path: '/officials' },
     { name: 'Matches', icon: 'list', path: '/matches' },
-    { name: 'Match Screen', icon: 'person', path: '/MatchScreen' },
     { name: 'User Management', icon: 'person', path: '/users' },
   ];
 
@@ -47,20 +46,38 @@ export default function WebLayout({ children }: any) {
   // 1. Dynamic UI Navigation Menu Filtering Logic
   const filteredMenu = masterMenu.filter((item) => allowedPaths.includes(item.path));
 
-  // 2. Immediate Active URL Router Protection Guard Engine
+  // Extract clean base pathname splitting off any search/query routing params (e.g., ?match_id=...)
+  const baseCleanPath = path.split('?')[0];
+  
+  // Guard condition to check if user is on the dedicated Match Tracking Interface
+  const isMatchScreen = baseCleanPath === '/MatchScreen';
+
+  // 2. Active URL Protection Guard & Action Interceptor Engine
   useEffect(() => {
     if (loading) return;
 
-    // 🌟 OPTIMIZATION: Extract clean base pathname splitting off any search/query routing params (e.g., ?tournament_code=...)
-    const baseCleanPath = path.split('?')[0];
-    const isPathAllowed = allowedPaths.includes(baseCleanPath);
+    // 🌟 RETAINED INTERCEPTOR: If admin/supervisor attempts to enter the Match Tracking Screen, block and alert them
+    if (isMatchScreen && (currentRole === 'admin' || currentRole === 'supervisor')) {
+      
+      // Multi-platform safe clean alert invocation
+      if (Platform.OS === 'web') {
+        window.alert('Access Denied: Only a Scorer can start and track matches.');
+      } else {
+        Alert.alert('Access Denied', 'Only a Scorer can start and track matches.');
+      }
 
+      // Explicitly redirect them right back to the static matches panel view without flickering/blinking
+      router.replace('/matches');
+      return;
+    }
+
+    // Standard structural path fallback security mechanism
+    const isPathAllowed = allowedPaths.includes(baseCleanPath);
     if (!isPathAllowed) {
       console.warn(`Unauthorized access attempt to [${baseCleanPath}] rejected for role: ${currentRole}`);
       
-      // Dynamic fallbacks on landing destination base entry indexes
       if (currentRole === 'scorer') {
-        router.replace('/matches'); // Fallback destination updated for scorers
+        router.replace('/matches');
       } else {
         router.replace('/dashboard1');
       }
@@ -95,10 +112,16 @@ export default function WebLayout({ children }: any) {
     );
   }
 
+  // Process tree layout structure and share currentRole down to sub-screens cleanly
+  const processedChildren = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<any>, { currentRole })
+    : children;
+
   return (
     <View style={{ flex: theme.layout.flexFull }}>
+      
       {/* ================= HEADER ================= */}
-      {!isFullscreen && (
+      {!isFullscreen && !isMatchScreen && (
         <Header onToggle={() => setSidebarOpen(!isSidebarOpen)} theme={theme} />
       )}
 
@@ -106,9 +129,9 @@ export default function WebLayout({ children }: any) {
       <View style={{ flex: theme.layout.flexFull, flexDirection: 'row' }}>
         
         {/* ================= SIDEBAR ================= */}
-        {!isFullscreen && (
+        {!isFullscreen && !isMatchScreen && (
           <Sidebar
-            menu={filteredMenu} // Feeds safe filtered collection subset cleanly
+            menu={filteredMenu}
             path={path}
             router={router}
             translateX={sidebarTranslate}
@@ -118,13 +141,13 @@ export default function WebLayout({ children }: any) {
         )}
 
         {/* ================= CONTENT ================= */}
-        <Content marginLeft={isFullscreen ? 0 : contentMargin} theme={theme}>
-          {children}
+        <Content marginLeft={(isFullscreen || isMatchScreen) ? 0 : contentMargin} theme={theme}>
+          {processedChildren}
         </Content>
       </View>
 
       {/* ================= FOOTER ================= */}
-      {!isFullscreen && <Footer theme={theme} />}
+      {!isFullscreen && !isMatchScreen && <Footer theme={theme} />}
     </View>
   );
 }

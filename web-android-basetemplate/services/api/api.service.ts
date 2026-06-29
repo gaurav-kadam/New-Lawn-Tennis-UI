@@ -18,8 +18,8 @@ class ApiService {
     return response.data;
   }
 
-  async post(url: string, data: any) {
-    const response = await api.post(url, data);
+  async post(url: string, data: any, config?: any) {
+    const response = await api.post(url, data, config);
     return response.data;
   }
 

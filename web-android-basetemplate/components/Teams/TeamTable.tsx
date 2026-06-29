@@ -77,7 +77,7 @@ export default function TeamTable({
                     <Text
                         style={[
                             styles.headerText(theme),
-                            { flex: 2.3 },
+                            { flex: 1.3 },
                         ]}
                     >
                         Team Name
@@ -86,19 +86,10 @@ export default function TeamTable({
                     <Text
                         style={[
                             styles.headerText(theme),
-                            { flex: 1.2 },
+                            { flex: 1.4 },
                         ]}
                     >
-                        Manager name
-                    </Text>
-
-                    <Text
-                        style={[
-                            styles.headerText(theme),
-                            { flex: 1.2 },
-                        ]}
-                    >
-                        Head Coach
+                        HeadCoach 
                     </Text>
 
                     <Text
@@ -110,11 +101,20 @@ export default function TeamTable({
                         Coach
                     </Text>
 
+                    <Text
+                        style={[
+                            styles.headerText(theme),
+                            { flex: 1.2 },
+                        ]}
+                    >
+                         Manager
+                    </Text>
+
                     
                     <Text
                         style={[
                             styles.headerText(theme),
-                            { flex: 1 },
+                            { flex: 1.2 },
                         ]}
                     >
                         Section
@@ -223,7 +223,7 @@ export default function TeamTable({
                                             {/* Team name  */}
                                             <View
                                                 style={{
-                                                    flex: 2.3,
+                                                    flex: 1.3,
 
                                                     flexDirection: 'row',
 
@@ -262,7 +262,7 @@ export default function TeamTable({
                                                     { flex: 1.2 },
                                                 ]}
                                             >
-                                                {t.manager || '—'}
+                                                {t.head_coach || '—'}
                                             </Text>
 
                                             {/* Head Coach */}
@@ -274,7 +274,7 @@ export default function TeamTable({
                                                     { flex: 1.2 },
                                                 ]}
                                             >
-                                                {t.head_coach || '—'}
+                                                {t.coach || '—'}
                                             </Text>
 
                                             {/* Coach */}
@@ -286,7 +286,7 @@ export default function TeamTable({
                                                     { flex: 1.2 },
                                                 ]}
                                             >
-                                                {t.coach || '—'}
+                                                {t.manager || '—'}
                                             </Text>
 
                                             {/* SECTION */}

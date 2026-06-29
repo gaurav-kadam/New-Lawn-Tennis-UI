@@ -123,7 +123,7 @@ export const tokens = {
     },
 
     popupCard: {
-      width: 230,
+      width: 315,
       subActionHeight: 36,
       confirmButtonHeight: 38,
       borderWidth: 1,
@@ -134,7 +134,7 @@ export const tokens = {
     playerBadge: {
       containerWidth: 48,  
       buttonSize: 37,      
-      stackRowGap: 1,      
+      stackRowGap: 3,      
       cooldownSpacing: 1,  
       activeOpacity: 1,
       disabledOpacity: 0.75,

@@ -9,15 +9,17 @@ export interface Match {
   tournament_code: string | null;
   white_team: string;
   blue_team: string;
-  white_team_id: number | null; 
-  blue_team_id: number | null;  
-  digital_scorer_id: number | null;
-  referee_1_id: number | null;
-  referee_2_id: number | null;
-  // 🌟 Added new structural types
-  goaljudge_1_id: number | null;
-  goaljudge_2_id: number | null;
-  timekeeper_1_id: number | null;
-  timekeeper_2_id: number | null;
+  white_team_code: string | null; 
+  blue_team_code: string | null;  
+  digital_scorer_code: string | null;
+  referee_1_code: string | null;
+  referee_2_code: string | null;
+  
+  // 🌟 Clean string representations matching official codes
+  goaljudge_1_code: string | null;
+  goaljudge_2_code: string | null;
+  timekeeper_1_code: string | null;
+  timekeeper_2_code: string | null;
+  
   is_active: boolean;
 }

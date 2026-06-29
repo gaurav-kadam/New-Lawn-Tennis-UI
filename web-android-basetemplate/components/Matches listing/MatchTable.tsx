@@ -1,3 +1,4 @@
+// MatchesTable.tsx
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -11,7 +12,7 @@ import { Pencil, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/theme/themeContext';
 import { tokens } from '@/theme/token';
 
-const ACTION_WIDTH = 170;
+const ACTION_WIDTH = 150;
 const TABLE_MAX_HEIGHT = 500;
 
 export default function MatchesTable({
@@ -52,10 +53,13 @@ export default function MatchesTable({
     return teamIdOrField;
   };
 
-  // Helper to extract the full visible identity name of an assigned official
   const getOfficialName = (officialId: any) => {
+    if (!officialId) return '—';
+
     const official = officials.find(
-      (item: any) => String(item.id) === String(officialId)
+      (item: any) => 
+        String(item.id) === String(officialId) || 
+        String(item.official_code) === String(officialId)
     );
 
     if (!official) return '—';
@@ -91,11 +95,11 @@ export default function MatchesTable({
           }}
         >
           <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.2 }]}>Date</Text>
-          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.5 }]}>White Team</Text>
-          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.5 }]}>Blue Team</Text>
-          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1 }]}>Gender</Text>
+          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.6 }]}>White Team</Text>
+          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.6 }]}>Blue Team</Text>
+          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.0 }]}>Gender</Text>
           <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.2 }]}>Category</Text>
-          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.5 }]}>Digital Scorer</Text>
+          <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.6 }]}>Digital Scorer</Text>
           <Text style={[{ fontSize: tokens.typography.sizes.cooldownTimer, fontWeight: tokens.typography.weights.bold as any, textTransform: 'uppercase', letterSpacing: 1.2, color: theme.colors.textSecondary || tokens.colors.textSecondary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, width: ACTION_WIDTH }]}>Actions</Text>
         </View>
 
@@ -135,10 +139,7 @@ export default function MatchesTable({
                       numberOfLines={1}
                       style={[
                         { fontSize: tokens.typography.sizes.tableText, color: theme.colors.textPrimary || tokens.colors.textPrimary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily },
-                        {
-                          flex: 1.5,
-                          fontWeight: tokens.typography.weights.bold as any,
-                        },
+                        { flex: 1.6, fontWeight: tokens.typography.weights.bold as any },
                       ]}
                     >
                       {getTeamName(m.white_team_id || m.whiteTeamId || m.white_team || m.whiteTeam || m.red_player)}
@@ -149,10 +150,7 @@ export default function MatchesTable({
                       numberOfLines={1}
                       style={[
                         { fontSize: tokens.typography.sizes.tableText, color: theme.colors.textPrimary || tokens.colors.textPrimary, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily },
-                        {
-                          flex: 1.5,
-                          fontWeight: tokens.typography.weights.bold as any,
-                        },
+                        { flex: 1.6, fontWeight: tokens.typography.weights.bold as any },
                       ]}
                     >
                       {getTeamName(m.blue_team_id || m.blueTeamId || m.blue_team || m.blueTeam || m.blue_player)}
@@ -187,12 +185,16 @@ export default function MatchesTable({
                       {m.category || m.age_category || m.ageCategory || '—'}
                     </Text>
 
-                    {/* Displays full mapped official names inside text containers */}
+                    {/* Digital Scorer Column */}
                     <Text
                       numberOfLines={1}
-                      style={[{ fontSize: tokens.typography.sizes.tableText, color: theme.colors.textPrimary || tokens.colors.textPrimary, fontWeight: tokens.typography.weights.medium as any, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.5 }]}
+                      style={[{ fontSize: tokens.typography.sizes.tableText, color: theme.colors.textPrimary || tokens.colors.textPrimary, fontWeight: tokens.typography.weights.medium as any, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, flex: 1.6 }]}
                     >
-                      {m.digital_scorer_id || m.digitalScorerId ? getOfficialName(m.digital_scorer_id || m.digitalScorerId) : '—'}
+                      {m.digital_scorer_code 
+                        ? (getOfficialName(m.digital_scorer_code) !== '—' 
+                            ? getOfficialName(m.digital_scorer_code) 
+                            : m.digital_scorer_code) 
+                        : '—'}
                     </Text>
 
                     {/* Action Group Block */}

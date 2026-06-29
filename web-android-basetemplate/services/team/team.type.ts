@@ -1,5 +1,8 @@
+
+
 export interface Team {
   id?: number;
+  team_code?: string;
   team_name: string;
   short_name: string;
   gender: string;

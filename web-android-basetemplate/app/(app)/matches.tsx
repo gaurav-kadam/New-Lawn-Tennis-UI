@@ -26,26 +26,28 @@ import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
 
 const TABLET_BREAKPOINT = 768;
-const MODAL_Z_INDEX = 1000;
 
 export default function MatchesScreen() {
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const isMobile = screenWidth < TABLET_BREAKPOINT;
 
-  // 🌟 Read active routing query parameters
   const { tournament_code } = useLocalSearchParams<{ tournament_code?: string }>();
 
+  // 1. Matches hook runs automatically to populate the main view layout
   const { matches = [], loading, error, reload } = useMatches();
-  const { teams = [] } = useTeams(); 
-  const { officials = [] } = useOfficials();
+  
+  // 2. Destructure reload/fetch controls from lookups to prevent auto-fetching on mount
+  const { teams = [], reload: fetchTeams } = useTeams({ lazy: true }); 
+  const { officials = [], reload: fetchOfficials } = useOfficials({ lazy: true });
 
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState<any>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
 
+  // 3. Keep the initial layout load clean—only fetching match dependencies if needed
   useEffect(() => {
-    fetchTournaments();
+    // Lookups are no longer fetched here automatically
   }, []);
 
   const fetchTournaments = async () => {
@@ -57,18 +59,14 @@ export default function MatchesScreen() {
     }
   };
 
-  // 🌟 Helper to resolve tournament name dynamically using the route param code
   const getSelectedTournamentName = () => {
     if (!tournament_code || tournaments.length === 0) return '';
-    
     const foundTournament = tournaments.find(
       (t: any) => String(t.tournament_code) === String(tournament_code)
     );
-
     return foundTournament ? (foundTournament.name || foundTournament.tournament_name) : tournament_code;
   };
 
-  // 🌟 Clear Filter Context Action (returns back to full list)
   const handleClearFilter = () => {
     router.replace('/matches');
   };
@@ -92,8 +90,8 @@ export default function MatchesScreen() {
       pathname: '/MatchScreen',
       params: {
         matchId: String(match.id),
-        whiteTeamId: String(match.white_team_id || match.white_team), 
-        blueTeamId: String(match.blue_team_id || match.blue_team),   
+        whiteTeamCode: String(match.white_team_code || match.white_team), 
+        blueTeamCode: String(match.blue_team_code || match.blue_team),   
         whiteTeamName: match.white_team_name || match.white_team || match.red_player,
         blueTeamName: match.blue_team_name || match.blue_team || match.blue_player,
         ageCategory: match.age_category,
@@ -119,23 +117,32 @@ export default function MatchesScreen() {
     };
 
     if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure, want to delete Match Details?')) {
+      if (window.confirm('Are you sure you want to delete Match Details?')) {
         performDelete();
       }
     } else {
-      Alert.alert('Delete Match', 'Are you sure, want to delete Match Details?', [
+      Alert.alert('Delete Match', 'Are you sure you want to delete Match Details?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: performDelete },
       ]);
     }
   };
 
-  const openCreateModal = () => {
+  // 🌟 FIX: Only hit secondary metadata lookup APIs when opening the modal configuration setup
+  const openCreateModal = async () => {
     setEditingData(null);
     setOpenModal(true);
+    
+    // Trigger parallel lazy fetching for dropdown assets
+    await Promise.all([
+      fetchTournaments(),
+      fetchTeams(),
+      fetchOfficials()
+    ]);
   };
 
-  const openEditModal = (match: any) => {
+  // 🌟 FIX: Do the same for your edit modal trigger layout
+  const openEditModal = async (match: any) => {
     const formattedData = {
       id: match.id,
       tournament_code: match.tournament_code,
@@ -145,26 +152,27 @@ export default function MatchesScreen() {
       match_no: match.match_no,
       age_category: match.age_category,
       gender: match.gender,
-      
-      // 🌟 FIXED: Explicitly pass existing team names down to the modal state
       white_team: match.white_team,
       blue_team: match.blue_team,
-      
-      white_team_id: match.white_team_id, 
-      blue_team_id: match.blue_team_id,   
-      digital_scorer_id: match.digital_scorer_id,
-      text_scorer_id: match.text_scorer_id,
-      referee_1_id: match.referee_1_id,
-      referee_2_id: match.referee_2_id,
-
-      // 🌟 FIXED: Pass the 4 new official IDs down so they display and do not get overwritten with null
-      goaljudge_1_id: match.goaljudge_1_id,
-      goaljudge_2_id: match.goaljudge_2_id,
-      timekeeper_1_id: match.timekeeper_1_id,
-      timekeeper_2_id: match.timekeeper_2_id,
+      white_team_code: match.white_team_code, 
+      blue_team_code: match.blue_team_code,   
+      digital_scorer_code: match.digital_scorer_code,
+      referee_1_code: match.referee_1_code,
+      referee_2_code: match.referee_2_code,
+      goaljudge_1_code: match.goaljudge_1_code,
+      goaljudge_2_code: match.goaljudge_2_code,
+      timekeeper_1_code: match.timekeeper_1_code,
+      timekeeper_2_code: match.timekeeper_2_code,
     };
     setEditingData(formattedData);
     setOpenModal(true);
+
+    // Fetch drop-down dependencies dynamically in background
+    await Promise.all([
+      fetchTournaments(),
+      fetchTeams(),
+      fetchOfficials()
+    ]);
   };
 
   const closeModal = () => {
@@ -183,7 +191,6 @@ export default function MatchesScreen() {
       >
         <MatchesHeader onEdit={openCreateModal} />
 
-        {/* Active Filter Indicators Banner UI */}
         {tournament_code && (
           <View style={{
             flexDirection: 'row',
@@ -239,16 +246,14 @@ export default function MatchesScreen() {
       </ScrollView>
 
       {openModal && (
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: theme.colors.overlay || tokens.colors.overlay, justifyContent: 'center', alignItems: 'center', zIndex: MODAL_Z_INDEX }}>
-          <CreateMatchModal
-            onSave={handleSave}
-            onClose={closeModal}
-            initialData={editingData}
-            teams={teams} 
-            officials={officials}
-            tournaments={tournaments}
-          />
-        </View>
+        <CreateMatchModal
+          onSave={handleSave}
+          onClose={closeModal}
+          initialData={editingData}
+          teams={teams} 
+          officials={officials}
+          tournaments={tournaments}
+        />
       )}
     </View>
   );

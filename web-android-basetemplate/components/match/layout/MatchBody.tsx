@@ -2,14 +2,17 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import MatchSidePanel from '../side-panel/MatchSidePanel';
 import PlayerNo from '../side-panel/playerno'; 
+import PenaltyShootoutOverlay from '../field/PenaltyShootoutOverlay';
 import MatchField from '../field/MatchField';
 import { useTheme } from '@/theme/themeContext';
 import Button from '@/components/ui/Button';
+import { useMatch } from '../layout/MatchContext';
 
 export default function MatchBody() {
   const scoreButtonsA = ['1', '2', '3', '4','5','6','7','8'];
   const scoreButtonsB = ['1', '2', '3', '4','5', '6', '7', '8'];
-  
+
+  const { penaltyPhase } = useMatch();
   const theme = useTheme();
   return (
     <View style={{
@@ -34,7 +37,29 @@ export default function MatchBody() {
           <MatchSidePanel side="left" />
 
           {/* Inner edge */}
-          <MatchField side="left" />
+          {/* Inner edge with custom border and padding */}
+          <View style={{ 
+            flex: 4, 
+            paddingTop: 8,
+            paddingBottom: 8,
+            paddingLeft: 8,
+            paddingRight: 0, // Remove padding from middle
+            backgroundColor: '#a1c6ec' 
+          }}>
+            <View style={{ 
+              flex: 1, 
+              borderTopWidth: 2, 
+              borderBottomWidth: 2, 
+              borderLeftWidth: 2, 
+              borderRightWidth: 0, // Remove border from middle
+              borderColor: '#00000030', 
+              borderTopLeftRadius: 8, 
+              borderBottomLeftRadius: 8, 
+              overflow: 'hidden' 
+            }}>
+              {penaltyPhase ? <PenaltyShootoutOverlay side="left" /> : <MatchField side="left" />}
+            </View>
+          </View>
         </View>
       </View>
 
@@ -103,8 +128,29 @@ export default function MatchBody() {
         {/* Lower Row Controls */}
         <View style={{ flex: 1, flexDirection: 'row' }}>
           {/* Inner edge */}
-          <MatchField side="right" />
-
+          {/* Inner edge with custom border and padding */}
+          <View style={{ 
+            flex: 4, 
+            paddingTop: 8,
+            paddingBottom: 8,
+            paddingLeft: 0, // Remove padding from middle
+            paddingRight: 8,
+            backgroundColor: '#a1c6ec' 
+          }}>
+            <View style={{ 
+              flex: 1, 
+              borderTopWidth: 2, 
+              borderBottomWidth: 2, 
+              borderLeftWidth: 0, // Remove border from middle
+              borderRightWidth: 2, 
+              borderColor: '#00000030', 
+              borderTopRightRadius: 8, 
+              borderBottomRightRadius: 8, 
+              overflow: 'hidden' 
+            }}>
+              {penaltyPhase ? <PenaltyShootoutOverlay side="right" /> : <MatchField side="right" />}
+            </View>
+          </View>
           {/* Middle edge */}
           <MatchSidePanel side="right" />
 

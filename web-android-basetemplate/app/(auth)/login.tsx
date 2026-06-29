@@ -225,7 +225,7 @@ console.log('hey working');
                   color: theme.colors.primary,
                 }}
               >
-                WRESTLING
+                WATERPOLO
               </Text>
 
             </View>

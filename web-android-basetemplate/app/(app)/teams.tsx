@@ -35,15 +35,22 @@ export default function TeamsScreen() {
   const handleSave = async (data: any) => {
     try {
       if (editingTeam) {
+        // Updating an existing team
         await teamService.updateTeam(editingTeam.id, data);
       } else {
+        // Registering a new team (handles both text parameters and Excel player sheets via FormData)
         await teamService.createTeam(data);
       }
 
       await reload();
       closeModal();
-    } catch {
-      Alert.alert('Error', 'Failed to save team data.');
+    } catch (error) {
+      console.error('Error handling save team registration operation:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to save team data and process player spreadsheet.');
+      } else {
+        Alert.alert('Error', 'Failed to save team data and process player spreadsheet.');
+      }
     }
   };
 
@@ -158,20 +165,9 @@ export default function TeamsScreen() {
       </ScrollView>
 
       {openModal && (
-        <View 
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: theme.colors.overlay || tokens.colors.overlay,
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: MODAL_Z_INDEX,
-          }}
-        >
+        <View>
           <CreateTeamModal
+          visible={openModal}
             onSave={handleSave}
             onClose={closeModal}
             initialData={editingTeam}

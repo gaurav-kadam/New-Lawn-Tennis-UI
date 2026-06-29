@@ -11,6 +11,10 @@ class TeamService {
     return ApiService.get(`/teams/${id}`);
   }
 
+  async getPlayersByTeamCode(teamCode: string) {
+    return ApiService.get(`/teams/code/${teamCode}/players`);
+  }
+
   async createTeam(data: any) {
     const formData = new FormData();
     

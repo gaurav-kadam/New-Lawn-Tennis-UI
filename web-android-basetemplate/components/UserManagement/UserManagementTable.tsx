@@ -59,7 +59,7 @@ export default function UserManagementTable({
                             letterSpacing: 1.2,
                             color: '#64748B',
                             fontFamily: theme.typography.fontFamily,
-                            flex: 2.3,
+                            flex: 1.3,
                         }}
                     >
                         Name
@@ -149,7 +149,7 @@ export default function UserManagementTable({
                                         {/* Name */}
                                         <View
                                             style={{
-                                                flex: 2.3,
+                                                flex: 1.1,
                                                 flexDirection: 'row',
                                                 alignItems: 'center',
                                                 gap: 10,
@@ -175,7 +175,7 @@ export default function UserManagementTable({
                                                 color: '#0F172A',
                                                 fontWeight: '500',
                                                 fontFamily: theme.typography.fontFamily,
-                                                flex: 1.2,
+                                                flex: 1.3,
                                             }}
                                         >
                                             {t.email || '—'}

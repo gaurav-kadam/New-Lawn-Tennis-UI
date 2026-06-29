@@ -149,13 +149,13 @@ export default function TournamentsScreen() {
       </ScrollView>
 
       {openModal && (
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', zIndex: 1000 }}>
+        <View>
           <AddTournamentModal onSave={handleSave} onClose={closeModal} initialData={editingData} />
         </View>
       )}
 
       {openViewModal && (
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <ViewTournamentModal tournament={viewingData} onClose={closeViewModal} />
         </View>
       )}
