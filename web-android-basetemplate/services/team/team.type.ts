@@ -13,4 +13,5 @@ export interface Team {
   coach: string;
   manager: string;
   player_file?: string | null;
+  is_active?: boolean;
 }

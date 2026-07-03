@@ -13,7 +13,7 @@ export default function UserManagementHeader({
   return (
     <View
       style={{
-        marginBottom: 24,
+        marginBottom: 10,
 
         flexDirection: 'row',
 

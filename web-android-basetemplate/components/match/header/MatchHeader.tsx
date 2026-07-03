@@ -4,11 +4,12 @@ import { View, Text, Platform, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '../../../theme/themeContext';
 import Button from '@/components/ui/Button';
 import ViewLogModal from './ViewLogModal';
-import QuarterConfirmationModal from './QuarterConfirmationModal'; 
+import QuarterConfirmationModal from './QuarterConfirmationModal';
 import PenaltyPlayerSelectionModal from './PenaltyPlayerSelectionModal';
-import MatchResultModal from './MatchResultModal'; 
-import { useMatch } from '../layout/MatchContext'; 
-import { useLocalSearchParams } from 'expo-router'; 
+import MatchResultModal from './MatchResultModal';
+import { useMatch } from '../layout/MatchContext';
+import { useLocalSearchParams } from 'expo-router';
+import TeamService from '../../../services/team/team.service';
 
 export default function MatchHeader() {
   const theme = useTheme();
@@ -42,6 +43,31 @@ export default function MatchHeader() {
   const displayBlueTeam = blueTeamName || activeMatch?.blueTeamName || 'Team B';
   const resolvedWhiteTeamCode = whiteTeamCode || activeMatch?.whiteTeamCode || activeMatch?.white_team_code || activeMatch?.white_team;
   const resolvedBlueTeamCode = blueTeamCode || activeMatch?.blueTeamCode || activeMatch?.blue_team_code || activeMatch?.blue_team;
+
+  const [whiteShortName, setWhiteShortName] = useState('');
+  const [blueShortName, setBlueShortName] = useState('');
+
+  useEffect(() => {
+    const fetchShort = async (code: string | undefined): Promise<string> => {
+      if (!code) return '';
+      try {
+        const res = await TeamService.getTeams({ team_code: code });
+        const list: any[] = res?.data?.data ?? res?.data ?? (Array.isArray(res) ? res : []);
+        const team = list.find((t: any) => String(t.team_code) === String(code));
+        return team?.short_name || '';
+      } catch {
+        return '';
+      }
+    };
+    if (resolvedWhiteTeamCode || resolvedBlueTeamCode) {
+      Promise.all([fetchShort(resolvedWhiteTeamCode), fetchShort(resolvedBlueTeamCode)]).then(
+        ([ws, bs]) => { setWhiteShortName(ws); setBlueShortName(bs); }
+      );
+    }
+  }, [resolvedWhiteTeamCode, resolvedBlueTeamCode]);
+
+  const scoreboardWhite = whiteShortName || displayWhiteTeam;
+  const scoreboardBlue  = blueShortName  || displayBlueTeam;
 
   const handleEndInning = () => setIsConfirmVisible(true);
 
@@ -91,7 +117,6 @@ export default function MatchHeader() {
       
       <View style={{ flex: 3.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' } as ViewStyle}>
         <View style={{ width: layout.scoreboardWidth, justifyContent: 'center' } as ViewStyle}>
-          <Text style={{ color: theme.colors.surface, fontSize: sizes.miniLabel, fontWeight: weights.heavy, marginBottom: theme.spacing.xs, letterSpacing: 0.5, textTransform: 'uppercase' } as TextStyle}>Scoreboard</Text>
           
           <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: theme.radius.sm, overflow: 'hidden', backgroundColor: colors.bg } as ViewStyle}>
             <View style={{ flexDirection: 'row', backgroundColor: colors.headerBg, borderBottomWidth: 1, borderColor: colors.border, height: layout.scoreboardRowHeight, alignItems: 'center' } as ViewStyle}>
@@ -103,7 +128,7 @@ export default function MatchHeader() {
             </View>
 
             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: colors.border, height: layout.scoreboardRowHeight, alignItems: 'center' } as ViewStyle}>
-              <Text numberOfLines={1} style={{ width: layout.scoreboardHeaderWidth, color: colors.teamA, fontSize: sizes.tableCell, fontWeight: weights.heavy, paddingLeft: theme.spacing.sm } as TextStyle}>{displayWhiteTeam}</Text>
+              <Text numberOfLines={1} style={{ width: layout.scoreboardHeaderWidth, color: colors.team, fontSize: sizes.tableCell, fontWeight: weights.heavy, paddingLeft: theme.spacing.sm } as TextStyle}>{scoreboardWhite}</Text>
               {[1, 2, 3, 4].map(q => (
                 <Text key={q} style={{ flex: 1, color: theme.colors.textLight, fontSize: sizes.tableCell, textAlign: 'center', borderLeftWidth: 1, borderColor: colors.border } as TextStyle}>{getQuarterScore('left', q)}</Text>
               ))}
@@ -111,7 +136,7 @@ export default function MatchHeader() {
             </View>
 
             <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: colors.border, height: layout.scoreboardRowHeight, alignItems: 'center' } as ViewStyle}>
-              <Text numberOfLines={1} style={{ width: layout.scoreboardHeaderWidth, color: colors.teamB, fontSize: sizes.tableCell, fontWeight: weights.heavy, paddingLeft: theme.spacing.sm } as TextStyle}>{displayBlueTeam}</Text>
+              <Text numberOfLines={1} style={{ width: layout.scoreboardHeaderWidth, color: colors.team, fontSize: sizes.tableCell, fontWeight: weights.heavy, paddingLeft: theme.spacing.sm } as TextStyle}>{scoreboardBlue}</Text>
               {[1, 2, 3, 4].map(q => (
                 <Text key={q} style={{ flex: 1, color: theme.colors.textLight, fontSize: sizes.tableCell, textAlign: 'center', borderLeftWidth: 1, borderColor: colors.border } as TextStyle}>{getQuarterScore('right', q)}</Text>
               ))}
@@ -129,7 +154,7 @@ export default function MatchHeader() {
       <View style={{ flex: 3, height: '100%', justifyContent: 'center', alignItems: 'center', paddingHorizontal: theme.spacing.sm } as ViewStyle}>
         <View style={{ flexDirection: 'row', height: layout.hudContainerHeight, width: '100%', borderRadius: theme.radius.sm, overflow: 'hidden', borderWidth: 1, borderColor: theme.colors.border } as ViewStyle}>
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.matchScreen.shade1 } as ViewStyle}> 
-            <Text style={{ fontSize: sizes.scoreHUD, fontWeight: weights.heavy, color: colors.teamA } as TextStyle}>{scoreA}</Text>
+            <Text style={{ fontSize: sizes.scoreHUD, fontWeight: weights.heavy, color: colors.team } as TextStyle}>{scoreA}</Text>
           </View>
 
           <View style={{ flex: 2.2, backgroundColor: theme.colors.matchScreen.sidePanel1, justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: layout.hudCenterGap, paddingVertical: theme.spacing.xs } as ViewStyle}>
@@ -149,7 +174,7 @@ export default function MatchHeader() {
           </View>
 
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.matchScreen.shade1 } as ViewStyle}> 
-            <Text style={{ fontSize: sizes.scoreHUD, fontWeight: weights.heavy, color: colors.teamB } as TextStyle}>{scoreB}</Text>
+            <Text style={{ fontSize: sizes.scoreHUD, fontWeight: weights.heavy, color: colors.team } as TextStyle}>{scoreB}</Text>
           </View>
         </View>
       </View>
@@ -203,13 +228,15 @@ export default function MatchHeader() {
         }}
       />
 
-      <MatchResultModal 
+      <MatchResultModal
         isVisible={isResultVisible}
         onClose={() => setIsResultVisible(false)}
         scoreA={scoreA}
         scoreB={scoreB}
         whiteTeamName={displayWhiteTeam}
         blueTeamName={displayBlueTeam}
+        whiteTeamCode={resolvedWhiteTeamCode}
+        blueTeamCode={resolvedBlueTeamCode}
         getQuarterScore={getQuarterScore}
       />
     </View>

@@ -1,31 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
-  Platform,
   ScrollView,
   Text,
+  TouchableOpacity,
   View,
   useWindowDimensions,
-  TouchableOpacity,
 } from 'react-native';
 
-import { router, useLocalSearchParams } from 'expo-router'; 
+import { router, useLocalSearchParams } from 'expo-router';
 import CreateMatchModal from '../../components/elements/CreateMatchModal';
 import MatchCardList from '@/components/Matches listing/MatchCardList';
 import MatchesHeader from '@/components/Matches listing/MatchesHeader';
 import MatchTable from '@/components/Matches listing/MatchTable';
+import NotificationModal from '@/components/ui/NotificationModal';
+import FilterSearchBar from '@/components/ui/FilterSearchBar';
 
 import { useOfficials } from '@/hooks/useofficials';
 import { useMatches } from '../../hooks/usematches';
-import { useTeams } from '../../hooks/useteams'; 
+import { useTeams } from '../../hooks/useteams';
 
 import matchService from '../../services/match/match.service';
 import tournamentService from '../../services/tournament/tournamment.service';
 import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
+import Pagination from '@/components/ui/Pagination';
 
 const TABLET_BREAKPOINT = 768;
+
+type NotifState = { visible: boolean; type: 'success' | 'error'; title: string; message: string };
+type ConfirmState = { visible: boolean; onConfirm: () => void };
 
 export default function MatchesScreen() {
   const theme = useTheme();
@@ -34,54 +38,59 @@ export default function MatchesScreen() {
 
   const { tournament_code } = useLocalSearchParams<{ tournament_code?: string }>();
 
-  // 1. Matches hook runs automatically to populate the main view layout
-  const { matches = [], loading, error, reload } = useMatches();
-  
-  // 2. Destructure reload/fetch controls from lookups to prevent auto-fetching on mount
-  const { teams = [], reload: fetchTeams } = useTeams({ lazy: true }); 
-  const { officials = [], reload: fetchOfficials } = useOfficials({ lazy: true });
+  type MatchFilter = 'all' | 'incomplete' | 'completed';
+  const [filter, setFilter] = useState<MatchFilter>('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const isComplete = filter === 'all' ? undefined : filter === 'completed';
+  const { matches = [], total, loading, error, reload } = useMatches(isComplete, search, page, rowsPerPage);
+  const { teams = [], reload: fetchTeams } = useTeams({ lazy: true });
+  const { officials = [], reload: fetchOfficials } = useOfficials({ rowsPerPage: 500 });
 
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState<any>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
+  const [notif, setNotif] = useState<NotifState>({ visible: false, type: 'success', title: '', message: '' });
+  const [confirm, setConfirm] = useState<ConfirmState>({ visible: false, onConfirm: () => {} });
 
-  // 3. Keep the initial layout load clean—only fetching match dependencies if needed
-  useEffect(() => {
-    // Lookups are no longer fetched here automatically
-  }, []);
+  const showNotif = (type: 'success' | 'error', title: string, message: string) =>
+    setNotif({ visible: true, type, title, message });
+
+  useEffect(() => {}, []);
 
   const fetchTournaments = async () => {
     try {
       const response = await tournamentService.getTournaments();
       setTournaments(response?.data?.data || response?.data || []);
-    } catch (error) {
-      console.log('Failed to fetch tournaments:', error);
+    } catch {
+      console.log('Failed to fetch tournaments');
     }
   };
 
   const getSelectedTournamentName = () => {
     if (!tournament_code || tournaments.length === 0) return '';
-    const foundTournament = tournaments.find(
-      (t: any) => String(t.tournament_code) === String(tournament_code)
-    );
-    return foundTournament ? (foundTournament.name || foundTournament.tournament_name) : tournament_code;
+    const found = tournaments.find((t: any) => String(t.tournament_code) === String(tournament_code));
+    return found ? (found.name || found.tournament_name) : tournament_code;
   };
 
-  const handleClearFilter = () => {
-    router.replace('/matches');
-  };
+  // const handleClearFilter = () => {
+  //   router.replace('/matches');
+  // };
 
   const handleSave = async (formData: any) => {
     try {
       if (editingData) {
         await matchService.updateMatch(editingData.id, formData);
+        showNotif('success', 'Success', 'Match updated successfully.');
       } else {
         await matchService.createMatch(formData);
+        showNotif('success', 'Success', 'Match created successfully.');
       }
       await reload();
       closeModal();
-    } catch (err: any) {
-      Alert.alert('Error', 'Failed to save match data.');
+    } catch {
+      showNotif('error', 'Error', 'Failed to save match data.');
     }
   };
 
@@ -90,14 +99,24 @@ export default function MatchesScreen() {
       pathname: '/MatchScreen',
       params: {
         matchId: String(match.id),
-        whiteTeamCode: String(match.white_team_code || match.white_team), 
-        blueTeamCode: String(match.blue_team_code || match.blue_team),   
+        whiteTeamCode: String(match.white_team_code || match.white_team),
+        blueTeamCode: String(match.blue_team_code || match.blue_team),
         whiteTeamName: match.white_team_name || match.white_team || match.red_player,
         blueTeamName: match.blue_team_name || match.blue_team || match.blue_player,
         ageCategory: match.age_category,
         gender: match.gender,
         matchNo: match.match_no,
         courtNo: match.court_no,
+        matchDate: match.match_date || '',
+        tournamentCode: match.tournament_code || '',
+        quarterDuration: String(match.quarter_duration || ''),
+        digitalScorerCode: match.digital_scorer_code || '',
+        referee1Code: match.referee_1_code || '',
+        referee2Code: match.referee_2_code || '',
+        timekeeper1Code: match.timekeeper_1_code || '',
+        timekeeper2Code: match.timekeeper_2_code || '',
+        goalJudge1Code: match.goaljudge_1_code || '',
+        goalJudge2Code: match.goaljudge_2_code || '',
       },
     });
   };
@@ -107,43 +126,22 @@ export default function MatchesScreen() {
       try {
         await matchService.deleteMatch(id);
         await reload();
-      } catch (err) {
-        if (Platform.OS === 'web') {
-          window.alert('Failed to delete match.');
-        } else {
-          Alert.alert('Error', 'Failed to delete match.');
-        }
+        showNotif('success', 'Deleted', 'Match deleted successfully.');
+      } catch {
+        showNotif('error', 'Error', 'Failed to delete match.');
       }
     };
-
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to delete Match Details?')) {
-        performDelete();
-      }
-    } else {
-      Alert.alert('Delete Match', 'Are you sure you want to delete Match Details?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: performDelete },
-      ]);
-    }
+    setConfirm({ visible: true, onConfirm: performDelete });
   };
 
-  // 🌟 FIX: Only hit secondary metadata lookup APIs when opening the modal configuration setup
   const openCreateModal = async () => {
     setEditingData(null);
     setOpenModal(true);
-    
-    // Trigger parallel lazy fetching for dropdown assets
-    await Promise.all([
-      fetchTournaments(),
-      fetchTeams(),
-      fetchOfficials()
-    ]);
+    await Promise.all([fetchTournaments(), fetchTeams(), fetchOfficials()]);
   };
 
-  // 🌟 FIX: Do the same for your edit modal trigger layout
   const openEditModal = async (match: any) => {
-    const formattedData = {
+    setEditingData({
       id: match.id,
       tournament_code: match.tournament_code,
       match_date: match.match_date,
@@ -154,8 +152,8 @@ export default function MatchesScreen() {
       gender: match.gender,
       white_team: match.white_team,
       blue_team: match.blue_team,
-      white_team_code: match.white_team_code, 
-      blue_team_code: match.blue_team_code,   
+      white_team_code: match.white_team_code,
+      blue_team_code: match.blue_team_code,
       digital_scorer_code: match.digital_scorer_code,
       referee_1_code: match.referee_1_code,
       referee_2_code: match.referee_2_code,
@@ -163,16 +161,9 @@ export default function MatchesScreen() {
       goaljudge_2_code: match.goaljudge_2_code,
       timekeeper_1_code: match.timekeeper_1_code,
       timekeeper_2_code: match.timekeeper_2_code,
-    };
-    setEditingData(formattedData);
+    });
     setOpenModal(true);
-
-    // Fetch drop-down dependencies dynamically in background
-    await Promise.all([
-      fetchTournaments(),
-      fetchTeams(),
-      fetchOfficials()
-    ]);
+    await Promise.all([fetchTournaments(), fetchTeams(), fetchOfficials()]);
   };
 
   const closeModal = () => {
@@ -180,81 +171,141 @@ export default function MatchesScreen() {
     setEditingData(null);
   };
 
-  return (
-    <View style={{ flex: tokens.layout.flexFull, backgroundColor: theme.colors.background || tokens.colors.background }}>
-      <ScrollView
-        scrollEnabled={isMobile}
-        contentContainerStyle={{
-          flexGrow: tokens.layout.flexFull,
-          padding: isMobile ? tokens.spacing.md : tokens.spacing.xl,
-        }}
-      >
-        <MatchesHeader onEdit={openCreateModal} />
+  const filteredMatches = (matches || []).filter((m: any) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      m.match_date?.toLowerCase().includes(q) ||
+      m.age_category?.toLowerCase().includes(q) ||
+      m.gender?.toLowerCase().includes(q) ||
+      String(m.match_no || '').toLowerCase().includes(q) ||
+      String(m.court_no || '').toLowerCase().includes(q)
+    );
+  });
 
-        {tournament_code && (
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: theme.colors.secondary || '#e0f2fe',
-            padding: tokens.spacing.md,
-            borderRadius: tokens.radius.md,
-            marginBottom: tokens.spacing.md
-          }}>
-            <Text style={{ fontFamily: theme.typography.fontFamily, color: theme.colors.textPrimary, fontWeight: '600' }}>
-              Matches of Tournament: {getSelectedTournamentName()}
-            </Text>
-            <TouchableOpacity onPress={handleClearFilter}>
-              <Text style={{ color: theme.colors.primary || '#0284c7', fontWeight: '700', textDecorationLine: 'underline' }}>
-                Clear Filter
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+  const topSection = (
+    <>
+      <MatchesHeader onEdit={openCreateModal} />
 
-        {loading && <ActivityIndicator size="large" color={theme.colors.primary || tokens.colors.primary} />}
-
-        {error ? (
-          <Text style={{ color: theme.colors.error || tokens.colors.error, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, marginBottom: tokens.spacing.sm }}>
-            {error}
+      {tournament_code ? (
+        <View
+          style={{
+            // flexDirection: 'row',
+            // justifyContent: 'space-between',
+            // alignItems: 'center',
+            // backgroundColor: theme.colors.secondary || '#e0f2fe',
+            // padding: tokens.spacing.md,
+            // borderRadius: tokens.radius.md,
+            // marginBottom: tokens.spacing.md,
+          }}
+        >
+          {/* <Text style={{ fontFamily: theme.typography.fontFamily, color: theme.colors.textPrimary, fontWeight: '600' }}>
+            Matches of Tournament: {getSelectedTournamentName()}
           </Text>
-        ) : null}
+          <TouchableOpacity onPress={handleClearFilter}>
+            <Text style={{ color: theme.colors.primary || '#0284c7', fontWeight: '700', textDecorationLine: 'underline' }}>
+              Clear Filter
+            </Text>
+          </TouchableOpacity> */}
+        </View>
+      ) : null}
 
-        <View style={{ flex: tokens.layout.flexFull, minHeight: isMobile ? 'auto' : 0 }}>
-          {isMobile ? (
-            <MatchCardList
-              matches={matches}
-              teams={teams} 
-              officials={officials} 
+      {loading ? <ActivityIndicator size="large" color={theme.colors.primary || tokens.colors.primary} /> : null}
+
+      {error ? (
+        <Text style={{ color: theme.colors.error || tokens.colors.error, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, marginBottom: tokens.spacing.sm }}>
+          {error}
+        </Text>
+      ) : null}
+
+      <FilterSearchBar
+        filter={filter}
+        onFilterChange={(f: MatchFilter) => { setFilter(f); setPage(0); }}
+        search={search}
+        onSearchChange={(s: string) => { setSearch(s); setPage(0); }}
+        searchPlaceholder="Search matches..."
+        tabs={[
+          { label: 'All', value: 'all' },
+          { label: 'Incomplete', value: 'incomplete' },
+          { label: 'Completed', value: 'completed' },
+        ]}
+      />
+    </>
+  );
+
+  return (
+    <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background || tokens.colors.background }}>
+      {isMobile ? (
+        /*
+         * MOBILE: outer ScrollView is correct here — MatchCardList renders
+         * cards with natural (auto) height so a single outer scroll handles
+         * the page. No inner ScrollView conflict.
+         */
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: tokens.spacing.md }}>
+          {topSection}
+          <MatchCardList
+            matches={filteredMatches}
+            teams={teams}
+            officials={officials}
+            onEdit={openEditModal}
+            onDelete={handleDelete}
+            onStartMatch={handleStartMatch}
+          />
+        </ScrollView>
+      ) : (
+        <View style={{ flex: 1, padding: tokens.spacing.xl }}>
+          <View style={{ flexShrink: 0 }}>
+            {topSection}
+          </View>
+          <View style={{ height: 'calc(100vh - 360px)' as any, width: '100%' }}>
+            <MatchTable
+              matches={filteredMatches}
+              teams={teams}
+              officials={officials}
               onEdit={openEditModal}
               onDelete={handleDelete}
               onStartMatch={handleStartMatch}
             />
-          ) : (
-            <View style={{ flex: tokens.layout.flexFull, overflow: 'hidden' }}>
-              <MatchTable
-                matches={matches}
-                teams={teams} 
-                officials={officials}
-                onEdit={openEditModal}
-                onDelete={handleDelete}
-                onStartMatch={handleStartMatch}
-              />
-            </View>
-          )}
+          </View>
+          <Pagination
+            total={total ?? 0}
+            page={page ?? 0}
+            rowsPerPage={rowsPerPage ?? 10}
+            onPageChange={setPage}
+            onRowsPerPageChange={(rpp: number) => { setRowsPerPage(rpp); setPage(0); }}
+          />
         </View>
-      </ScrollView>
+      )}
 
-      {openModal && (
+      {openModal ? (
         <CreateMatchModal
+          visible={openModal}
           onSave={handleSave}
           onClose={closeModal}
           initialData={editingData}
-          teams={teams} 
+          teams={teams}
           officials={officials}
           tournaments={tournaments}
         />
-      )}
+      ) : null}
+
+      <NotificationModal
+        visible={notif.visible}
+        type={notif.type}
+        title={notif.title}
+        message={notif.message}
+        onClose={() => setNotif((n) => ({ ...n, visible: false }))}
+      />
+
+      <NotificationModal
+        visible={confirm.visible}
+        type="confirm"
+        title="Delete Match"
+        message="Are you sure you want to delete this match?"
+        confirmLabel="Delete"
+        onClose={() => setConfirm((c) => ({ ...c, visible: false }))}
+        onConfirm={confirm.onConfirm}
+      />
     </View>
   );
 }

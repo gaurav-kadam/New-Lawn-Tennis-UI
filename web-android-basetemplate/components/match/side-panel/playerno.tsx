@@ -80,9 +80,13 @@ export default function PlayerNo({ side }: PlayerNoProps) {
       
       delete lastTapRef.current[playerNum];
     } else {
-      // SINGLE TAP REGISTERED: Trigger standard select match event pipeline
+      // SINGLE TAP REGISTERED: toggle select/deselect
       lastTapRef.current[playerNum] = now;
-      selectPlayer(playerNum, side);
+      if (selectedPlayer?.number === playerNum && selectedPlayer?.side === side) {
+        clearSelection();
+      } else {
+        selectPlayer(playerNum, side);
+      }
     }
   };
 

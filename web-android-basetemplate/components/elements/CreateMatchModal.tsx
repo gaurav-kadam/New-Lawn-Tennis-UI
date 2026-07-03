@@ -19,6 +19,9 @@ import Input from '../ui/Input';
 import RadioGroup from '../ui/RadioGroup';
 import Select from '../ui/Select';
 
+import DatePicker from '../ui/DatePicker';
+import TimePicker from '../ui/TimePicker';
+
 const TABLET_BREAKPOINT = 768;
 const MODAL_DESKTOP_WIDTH = 520; 
 const MODAL_MOBILE_WIDTH = '92%';
@@ -56,6 +59,14 @@ export default function CreateMatchModal({
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<any>({});
 
+  const toDateObj = (dateStr: string) => {
+  if (!dateStr || !dateStr.includes('/')) return undefined;
+  const [d, m, y] = dateStr.split('/');
+  return new Date(Number(y), Number(m) - 1, Number(d));
+};
+
+const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
+
   // Helper to resolve team name using code
   const findTeamNameByCode = (code: string | number | undefined) => {
     if (!code) return '';
@@ -71,6 +82,7 @@ export default function CreateMatchModal({
     matchNo: '',
     ageCategory: 'OPEN',
     gender: 'Men',
+    quarterDuration: '',
     whiteTeamCode: '',
     whiteTeam: '',
     blueTeamCode: '',
@@ -103,7 +115,10 @@ export default function CreateMatchModal({
         matchNo: initialData?.matchNo || initialData?.match_no || '',
         ageCategory: initialData?.ageCategory || initialData?.age_category || 'OPEN',
         gender: initialData?.gender || 'Men',
-        
+        quarterDuration: initialData?.quarterDuration || initialData?.quarter_duration
+          ? String(initialData.quarterDuration || initialData.quarter_duration)
+          : '',
+
         whiteTeamCode: whiteCode ? String(whiteCode) : '',
         whiteTeam: initialData?.white_team || initialData?.whiteTeam || findTeamNameByCode(whiteCode), 
         
@@ -195,6 +210,24 @@ export default function CreateMatchModal({
       value: String(tournament.tournament_code),
     }));
 
+  // Build the set of all currently assigned official codes across every role
+  const selectedOfficialCodes = new Set(
+    [
+      formData.digitalScorerCode,
+      formData.referee1Code,
+      formData.referee2Code,
+      formData.goaljudge1Code,
+      formData.goaljudge2Code,
+      formData.timekeeper1Code,
+      formData.timekeeper2Code,
+    ].filter(Boolean)
+  );
+
+  // For a given role's dropdown: keep options that are not taken by another role,
+  // but always keep the option that is currently selected in THIS role so it stays visible.
+  const availableFor = (currentCode: string, baseOptions: any[]) =>
+    baseOptions.filter(o => !selectedOfficialCodes.has(o.value) || o.value === currentCode);
+
   const update = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -227,6 +260,15 @@ export default function CreateMatchModal({
       if (!formData.courtNo) stepErrors.courtNo = 'Required';
       if (!formData.matchNo) stepErrors.matchNo = 'Required';
       if (!formData.ageCategory) stepErrors.ageCategory = 'Select Age Category';
+      if (!formData.quarterDuration) {
+        stepErrors.quarterDuration = 'Required';
+      } else if (
+        !/^\d+$/.test(String(formData.quarterDuration)) ||
+        Number(formData.quarterDuration) < 1 ||
+        Number(formData.quarterDuration) > 15
+      ) {
+        stepErrors.quarterDuration = 'Enter a whole number between 1 and 15';
+      }
     }
     if (currentStep === 2) {
       if (!formData.whiteTeamCode) stepErrors.whiteTeam = 'Select White Team';
@@ -271,7 +313,8 @@ export default function CreateMatchModal({
           match_no: String(formData.matchNo),
           age_category: formData.ageCategory,
           gender: formData.gender,
-          white_team: formData.whiteTeam, 
+          quarter_duration: Number(formData.quarterDuration),
+          white_team: formData.whiteTeam,
           blue_team: formData.blueTeam,
           white_team_code: formData.whiteTeamCode || null,
           blue_team_code: formData.blueTeamCode || null,
@@ -385,24 +428,22 @@ export default function CreateMatchModal({
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={{ marginBottom: tokens.spacing.xs, color: theme.colors.textPrimary, fontSize: tokens.typography.sizes.small }}>Date</Text>
-                          {Platform.OS === 'web' ? (
-                            <input type="date" value={formData.matchDate} onChange={(e: any) => update('matchDate', e.target.value)} style={webInputStyle} />
-                          ) : (
-                            <Input placeholder="DD/MM/YYYY" value={formData.matchDate} onChangeText={(value: any) => update('matchDate', value)} />
-                          )}
-                          {errors.matchDate && <Text style={errorTextStyle}>{errors.matchDate}</Text>}
-                        </View>
+  <DatePicker
+    label="Date"
+    value={toDateObj(formData.matchDate)}
+    onChange={(d) => update('matchDate', toDateStr(d))}
+    error={errors.matchDate}
+  />
+</View>
 
                         <View style={{ flex: 1 }}>
-                          <Text style={{ marginBottom: tokens.spacing.xs, color: theme.colors.textPrimary, fontSize: tokens.typography.sizes.small }}>Time</Text>
-                          {Platform.OS === 'web' ? (
-                            <input type="time" value={formData.matchTime} onChange={(e: any) => update('matchTime', e.target.value)} style={webInputStyle} />
-                          ) : (
-                            <Input placeholder="HH:MM" value={formData.matchTime} onChangeText={(value: any) => update('matchTime', value)} />
-                          )}
-                          {errors.matchTime && <Text style={errorTextStyle}>{errors.matchTime}</Text>}
-                        </View>
+  <TimePicker
+    label="Time"
+    value={formData.matchTime}
+    onChange={(t) => update('matchTime', t)}
+    error={errors.matchTime}
+  />
+</View>
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
@@ -417,7 +458,32 @@ export default function CreateMatchModal({
                       </View>
 
                       <View>
-                        <Select
+                        <Input
+                          label="Quarter Duration (mins)"
+                          placeholder="e.g. 8"
+                          type="number"
+                          value={formData.quarterDuration}
+                          onChangeText={(value: any) => update('quarterDuration', value.replace(/[^0-9]/g, ''))}
+                        />
+                        {errors.quarterDuration && <Text style={errorTextStyle}>{errors.quarterDuration}</Text>}
+                      </View>
+
+                      <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
+                        <View style={{ flex: 1 }}>
+                          <RadioGroup
+                        label="Gender"
+                        value={formData.gender}
+                        onChange={(value: any) => update('gender', value)}
+                        options={[
+                          { label: 'Men', value: 'Men' },
+                          { label: 'Women', value: 'Women' },
+                        ]}
+                      />
+                        
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                      <Select
                           label="Age Category"
                           value={formData.ageCategory}
                           onChange={(value: any) => update('ageCategory', value)}
@@ -429,16 +495,7 @@ export default function CreateMatchModal({
                         />
                         {errors.ageCategory && <Text style={errorTextStyle}>{errors.ageCategory}</Text>}
                       </View>
-
-                      <RadioGroup
-                        label="Gender"
-                        value={formData.gender}
-                        onChange={(value: any) => update('gender', value)}
-                        options={[
-                          { label: 'Men', value: 'Men' },
-                          { label: 'Women', value: 'Women' },
-                        ]}
-                      />
+                      </View>
                     </>
                   )}
 
@@ -465,36 +522,71 @@ export default function CreateMatchModal({
                   {currentStep === 3 && (
                     <>
                       <View>
-                        <Select label="Digital Scorer" value={formData.digitalScorerCode} onChange={(value: any) => update('digitalScorerCode', value)} options={scorerOptions.length > 0 ? scorerOptions : officialOptions} />
+                        <Select
+                          label="Digital Scorer"
+                          value={formData.digitalScorerCode}
+                          onChange={(value: any) => update('digitalScorerCode', value)}
+                          options={availableFor(formData.digitalScorerCode, scorerOptions.length > 0 ? scorerOptions : officialOptions)}
+                        />
                         {errors.digitalScorerCode && <Text style={errorTextStyle}>{errors.digitalScorerCode}</Text>}
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-                          <Select label="Referee 1" value={formData.referee1Code} onChange={(value: any) => update('referee1Code', value)} options={refereeOptions.length > 0 ? refereeOptions : officialOptions} />
+                          <Select
+                            label="Referee 1"
+                            value={formData.referee1Code}
+                            onChange={(value: any) => update('referee1Code', value)}
+                            options={availableFor(formData.referee1Code, refereeOptions.length > 0 ? refereeOptions : officialOptions)}
+                          />
                           {errors.referee1Code && <Text style={errorTextStyle}>{errors.referee1Code}</Text>}
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Select label="Referee 2" value={formData.referee2Code} onChange={(value: any) => update('referee2Code', value)} options={refereeOptions.length > 0 ? refereeOptions : officialOptions} />
+                          <Select
+                            label="Referee 2"
+                            value={formData.referee2Code}
+                            onChange={(value: any) => update('referee2Code', value)}
+                            options={availableFor(formData.referee2Code, refereeOptions.length > 0 ? refereeOptions : officialOptions)}
+                          />
                           {errors.referee2Code && <Text style={errorTextStyle}>{errors.referee2Code}</Text>}
                         </View>
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-                          <Select label="Goal Judge 1" value={formData.goaljudge1Code} onChange={(value: any) => update('goaljudge1Code', value)} options={judgeOptions.length > 0 ? judgeOptions : officialOptions} />
+                          <Select
+                            label="Goal Judge 1"
+                            value={formData.goaljudge1Code}
+                            onChange={(value: any) => update('goaljudge1Code', value)}
+                            options={availableFor(formData.goaljudge1Code, judgeOptions.length > 0 ? judgeOptions : officialOptions)}
+                          />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Select label="Goal Judge 2" value={formData.goaljudge2Code} onChange={(value: any) => update('goaljudge2Code', value)} options={judgeOptions.length > 0 ? judgeOptions : officialOptions} />
+                          <Select
+                            label="Goal Judge 2"
+                            value={formData.goaljudge2Code}
+                            onChange={(value: any) => update('goaljudge2Code', value)}
+                            options={availableFor(formData.goaljudge2Code, judgeOptions.length > 0 ? judgeOptions : officialOptions)}
+                          />
                         </View>
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-                          <Select label="Timekeeper 1" value={formData.timekeeper1Code} onChange={(value: any) => update('timekeeper1Code', value)} options={timekeeperOptions.length > 0 ? timekeeperOptions : officialOptions} />
+                          <Select
+                            label="Timekeeper 1"
+                            value={formData.timekeeper1Code}
+                            onChange={(value: any) => update('timekeeper1Code', value)}
+                            options={availableFor(formData.timekeeper1Code, timekeeperOptions.length > 0 ? timekeeperOptions : officialOptions)}
+                          />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Select label="Timekeeper 2" value={formData.timekeeper2Code} onChange={(value: any) => update('timekeeper2Code', value)} options={timekeeperOptions.length > 0 ? timekeeperOptions : officialOptions} />
+                          <Select
+                            label="Timekeeper 2"
+                            value={formData.timekeeper2Code}
+                            onChange={(value: any) => update('timekeeper2Code', value)}
+                            options={availableFor(formData.timekeeper2Code, timekeeperOptions.length > 0 ? timekeeperOptions : officialOptions)}
+                          />
                         </View>
                       </View>
                     </>

@@ -25,9 +25,9 @@ export default function Sidebar({
         zIndex: 5,
       }}
     >
-      <TouchableOpacity onPress={onClose} style={{ marginBottom: 20 }}>
+      {/* <TouchableOpacity onPress={onClose} style={{ marginBottom: 20 }}>
         <Text style={{ color: theme.colors.primary }}>Close ✕</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* {menu.map((item: any) => (
         <TouchableOpacity

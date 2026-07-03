@@ -12,7 +12,7 @@ export default function TournamentHeader({
   return (
     <View
       style={{
-        marginBottom: 24,
+        marginBottom: 10,
 
         flexDirection: 'row',
 
@@ -41,7 +41,7 @@ export default function TournamentHeader({
 
             color: theme.colors.textPrimary,
 
-            fontSize: theme.typography.h2,
+            fontSize: theme.typography.sizes.h2,
           }}
         >
           Tournaments
@@ -54,7 +54,7 @@ export default function TournamentHeader({
             marginTop: 4,
 
             fontSize:
-              theme.typography.small,
+              theme.typography.sizes.small,
           }}
         >
           Manage tournaments

@@ -1,279 +1,159 @@
 import React, { useState } from 'react';
-import {
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Pencil, Trash2 } from 'lucide-react-native';
-
 import { useTheme } from '@/theme/themeContext';
+import { tokens } from '@/theme/token';
+const ACTION_WIDTH = 80;
+
+// Cast to any so TypeScript skips prop-checking on web-only onMouseEnter/onMouseLeave
+const HoverView = View as any;
 
 export default function UserManagementTable({
     tournaments,
+    total,
+    page,
+    rowsPerPage,
+    onPageChange,
+    onRowsPerPageChange,
     onEdit,
     onDelete,
 }: any) {
     const theme = useTheme();
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
+    const paginated = tournaments || [];
+
+    const hdrStyle = {
+        fontSize: tokens.typography.sizes.cooldownTimer,
+        fontWeight: tokens.typography.weights.bold as any,
+        textTransform: 'uppercase' as const,
+        letterSpacing: 1.2,
+        color: theme.colors.textSecondary || '#64748B',
+        fontFamily: theme.typography.fontFamily,
+    };
+
+    const cellStyle = {
+        fontSize: tokens.typography.sizes.tableText,
+        color: theme.colors.textPrimary || '#0F172A',
+        fontWeight: tokens.typography.weights.medium as any,
+        fontFamily: theme.typography.fontFamily,
+    };
+
     return (
-        <View style={{ width: '100%', alignSelf: 'center' }}>
+        <View style={{ flex: 1 }}>
+            {/* Card fills all height above pagination */}
             <View
                 style={{
                     flex: 1,
-                    minWidth: 1050,
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 18,
+                    backgroundColor: theme.colors.surface || '#FFFFFF',
+                    borderRadius: tokens.radius.lg,
                     overflow: 'hidden',
-                    borderWidth: 1,
-                    borderColor: 'rgba(15,23,42,0.06)',
-                    shadowColor: '#0F172A',
-                    shadowOpacity: 0.04,
-                    shadowRadius: 16,
-                    shadowOffset: {
-                        width: 0,
-                        height: 4,
-                    },
-                    elevation: 2,
+                    borderWidth: tokens.layout.dividerHeight,
+                    borderColor: theme.colors.border || 'rgba(15,23,42,0.06)',
+                    ...tokens.shadow?.light,
                 }}
             >
-                {/* FIXED HEADER */}
+                {/* STICKY HEADER — outside the ScrollView, always visible */}
                 <View
                     style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        paddingVertical: 16,
-                        paddingHorizontal: 22,
-                        backgroundColor: '#FAFBFC',
-                        borderBottomWidth: 1,
-                        borderBottomColor: 'rgba(15,23,42,0.06)',
+                        paddingVertical: tokens.spacing.md,
+                        paddingHorizontal: tokens.spacing.lg,
+                        backgroundColor: theme.colors.secondary || '#FAFBFC',
+                        borderBottomWidth: tokens.layout.dividerHeight,
+                        borderBottomColor: theme.colors.border || 'rgba(15,23,42,0.06)',
                     }}
                 >
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.2,
-                            color: '#64748B',
-                            fontFamily: theme.typography.fontFamily,
-                            flex: 1.3,
-                        }}
-                    >
-                        Name
-                    </Text>
-
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.2,
-                            color: '#64748B',
-                            fontFamily: theme.typography.fontFamily,
-                            flex: 1.2,
-                        }}
-                    >
-                        Email
-                    </Text>
-
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.2,
-                            color: '#64748B',
-                            fontFamily: theme.typography.fontFamily,
-                            flex: 1.2,
-                        }}
-                    >
-                        Role
-                    </Text>
-
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.2,
-                            color: '#64748B',
-                            fontFamily: theme.typography.fontFamily,
-                            flex: 1,
-                        }}
-                    >
-                        Is Active
-                    </Text>
-
-                    <Text
-                        style={{
-                            fontSize: 11,
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.2,
-                            color: '#64748B',
-                            fontFamily: theme.typography.fontFamily,
-                            width: 100,
-                        }}
-                    >
-                        Actions
-                    </Text>
+                    <Text numberOfLines={1} style={[hdrStyle, { flex: 1.5 }]}>Name</Text>
+                    <Text numberOfLines={1} style={[hdrStyle, { flex: 1.8 }]}>Email</Text>
+                    <Text numberOfLines={1} style={[hdrStyle, { flex: 1.2 }]}>Role</Text>
+                    <Text numberOfLines={1} style={[hdrStyle, { flex: 1 }]}>Active</Text>
+                    <Text numberOfLines={1} style={[hdrStyle, { width: ACTION_WIDTH }]}>Actions</Text>
                 </View>
 
-                {/* SCROLLABLE BODY */}
-                <View style={{ maxHeight: 500 }}>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                        {tournaments.length > 0 ? (
-                            tournaments.map((t: any, index: number) => {
-                                const isHovered = hoveredRow === t.id;
+                {/* DATA ROWS — vertically scrollable */}
+                <ScrollView
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
+                >
+                    {paginated.length > 0 ? (
+                        paginated.map((t: any, index: number) => {
+                            const isHovered = hoveredRow === t.id;
 
-                                return (
-                                    <View
-                                        key={t.id}
-                                        // @ts-ignore web hover only
-                                        onMouseEnter={() => setHoveredRow(t.id)}
-                                        // @ts-ignore web hover only
-                                        onMouseLeave={() => setHoveredRow(null)}
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            paddingVertical: 14,
-                                            paddingHorizontal: 22,
-                                            borderBottomWidth: index !== tournaments.length - 1 ? 1 : 0,
-                                            borderBottomColor: 'rgba(15,23,42,0.05)',
-                                            backgroundColor: isHovered ? '#F8FAFC' : '#FFFFFF',
-                                        }}
-                                    >
-                                        {/* Name */}
-                                        <View
-                                            style={{
-                                                flex: 1.1,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: 10,
-                                            }}
-                                        >
-                                            <Text
-                                                numberOfLines={1}
-                                                style={{
-                                                    fontSize: 14,
-                                                    fontWeight: '700',
-                                                    color: '#0F172A',
-                                                    fontFamily: theme.typography.fontFamily,
-                                                }}
-                                            >
-                                                {t.name}
-                                            </Text>
-                                        </View>
-
-                                        {/* Email */}
-                                        <Text
-                                            style={{
-                                                fontSize: 13,
-                                                color: '#0F172A',
-                                                fontWeight: '500',
-                                                fontFamily: theme.typography.fontFamily,
-                                                flex: 1.3,
-                                            }}
-                                        >
-                                            {t.email || '—'}
-                                        </Text>
-
-                                        {/* Role */}
-                                        <Text
-                                            style={{
-                                                fontSize: 13,
-                                                color: '#0F172A',
-                                                fontWeight: '500',
-                                                fontFamily: theme.typography.fontFamily,
-                                                flex: 1.2,
-                                            }}
-                                        >
-                                            {t.role?.role_name || '—'}
-                                        </Text>
-
-                                        {/* IsActive Badge */}
-                                        <View style={{ flex: 1 }}>
-                                            <View
-                                                style={{
-                                                    alignSelf: 'flex-start',
-                                                    paddingHorizontal: 10,
-                                                    paddingVertical: 5,
-                                                    borderRadius: 999,
-                                                    backgroundColor: t.role?.is_active ? '#ECFDF3' : '#FEF2F2',
-                                                }}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        fontSize: 12,
-                                                        fontWeight: '600',
-                                                        color: t.role?.is_active ? '#16A34A' : '#DC2626',
-                                                        fontFamily: theme.typography.fontFamily,
-                                                    }}
-                                                >
-                                                    {t.role?.is_active === true
-                                                        ? 'Active'
-                                                        : t.role?.is_active === false
-                                                        ? 'Inactive'
-                                                        : '—'}
-                                                </Text>
-                                            </View>
-                                        </View>
-
-                                        {/* ACTIONS */}
-                                        <View
-                                            style={{
-                                                width: 100,
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: 14,
-                                            }}
-                                        >
-                                            {/* UPDATE */}
-                                            <TouchableOpacity onPress={() => onEdit(t)}>
-                                                <Pencil
-                                                    size={16}
-                                                    color="#4F46E5"
-                                                    strokeWidth={2.3}
-                                                />
-                                            </TouchableOpacity>
-
-                                            {/* DELETE */}
-                                            <TouchableOpacity onPress={() => onDelete(t)}>
-                                                <Trash2
-                                                    size={16}
-                                                    color="#EF4444"
-                                                    strokeWidth={2.3}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                );
-                            })
-                        ) : (
-                            <View
-                                style={{
-                                    paddingVertical: 70,
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Text
+                            return (
+                                <HoverView
+                                    key={t.id}
+                                    onMouseEnter={() => setHoveredRow(t.id)}
+                                    onMouseLeave={() => setHoveredRow(null)}
                                     style={{
-                                        fontSize: 14,
-                                        color: '#64748B',
-                                        fontFamily: theme.typography.fontFamily,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingVertical: tokens.spacing.sm + tokens.spacing.xs / 2,
+                                        paddingHorizontal: tokens.spacing.lg,
+                                        borderBottomWidth: index !== paginated.length - 1 ? tokens.layout.dividerHeight : 0,
+                                        borderBottomColor: theme.colors.border || 'rgba(15,23,42,0.05)',
+                                        backgroundColor: isHovered
+                                            ? (theme.colors.background || '#F8FAFC')
+                                            : (theme.colors.surface || '#FFFFFF'),
                                     }}
                                 >
-                                    No tournaments found
-                                </Text>
-                            </View>
-                        )}
-                    </ScrollView>
-                </View>
+                                    {/* NAME */}
+                                    <Text numberOfLines={1} style={[cellStyle, { flex: 1.5, fontWeight: tokens.typography.weights.bold as any }]}>
+                                        {t.name || '—'}
+                                    </Text>
+
+                                    {/* EMAIL */}
+                                    <Text numberOfLines={1} style={[cellStyle, { flex: 1.8 }]}>
+                                        {t.email || '—'}
+                                    </Text>
+
+                                    {/* ROLE */}
+                                    <Text numberOfLines={1} style={[cellStyle, { flex: 1.2 }]}>
+                                        {t.role?.role_name || '—'}
+                                    </Text>
+
+                                    {/* IS ACTIVE */}
+                                    <View style={{ flex: 1 }}>
+                                        <View
+                                            style={{
+                                                alignSelf: 'flex-start',
+                                                paddingHorizontal: tokens.spacing.xs,
+                                                paddingVertical: tokens.spacing.xs,
+                                                borderRadius: tokens.radius.round,
+                                                backgroundColor: t.role?.is_active ? '#ECFDF3' : '#FEF2F2',
+                                            }}
+                                        >
+                                            <Text numberOfLines={1} style={{ fontSize: tokens.typography.sizes.tableText, fontWeight: '600', color: t.role?.is_active ? '#16A34A' : '#DC2626', fontFamily: theme.typography.fontFamily }}>
+                                                {t.role?.is_active === true ? 'Active' : t.role?.is_active === false ? 'Inactive' : '—'}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    {/* ACTIONS */}
+                                    <View style={{ width: ACTION_WIDTH, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm }}>
+                                        <TouchableOpacity onPress={() => onEdit(t)}>
+                                            <Pencil size={14} color={theme.colors.primary || '#4F46E5'} strokeWidth={2.3} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => onDelete(t)}>
+                                            <Trash2 size={14} color={theme.colors.error || '#EF4444'} strokeWidth={2.3} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </HoverView>
+                            );
+                        })
+                    ) : (
+                        <View style={{ paddingVertical: tokens.spacing.xl * 2, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontSize: tokens.typography.sizes.small, color: theme.colors.textSecondary || '#64748B', fontFamily: theme.typography.fontFamily }}>
+                                No users found
+                            </Text>
+                        </View>
+                    )}
+                </ScrollView>
             </View>
+
         </View>
     );
 }

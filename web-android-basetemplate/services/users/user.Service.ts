@@ -2,8 +2,8 @@ import ApiService from '../api/api.service';
 
 class UserService {
 
-  async getUsers() {
-    return ApiService.get('/users');
+  async getUsers(params?: Record<string, any>) {
+    return ApiService.get('/users', params);
   }
 
   async createUser(payload: any) {

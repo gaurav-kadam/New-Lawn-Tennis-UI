@@ -289,13 +289,14 @@ export default function MatchSidePanel({ side }: MatchSidePanelProps) {
       overflow: 'visible', 
       zIndex: 10, 
       elevation: theme.shadow.medium.elevation * theme.layout.elevationMultiplier,
+      
     }}> 
       <View style={{
         flex: theme.layout.flexFull, 
         backgroundColor: theme.colors.matchScreen.sidePanel1, 
         overflow: 'visible',
       }}>
-        <View style={{
+        {/* <View style={{
           flex: theme.layout.flexFull, 
           justifyContent: 'center', 
           alignItems: 'center',
@@ -305,7 +306,7 @@ export default function MatchSidePanel({ side }: MatchSidePanelProps) {
             fontSize: theme.typography.sizes.body, 
             fontWeight: theme.typography.weights.bold as '700',
           }}>Team</Text>
-        </View>
+        </View> */}
 
         <View style={{
           height: theme.layout.dividerHeight, 
@@ -317,8 +318,9 @@ export default function MatchSidePanel({ side }: MatchSidePanelProps) {
           flex: 9, 
           justifyContent: 'flex-start', 
           alignItems: 'center', 
-          paddingTop: theme.spacing.xl, 
+          paddingTop: 110, 
           overflow: 'visible',
+          
         }}>
           <View style={{
             width: '100%', 

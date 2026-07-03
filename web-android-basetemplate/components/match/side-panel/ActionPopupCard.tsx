@@ -70,7 +70,7 @@ export default function ActionPopupCard({ selectedAction, onClose, side = 'left'
   const [displayAction, setDisplayAction] = useState<string | null>(null);
   const [selectedSubAction, setSelectedSubAction] = useState<string | null>(null);
   
-  const { addLog } = useMatch();
+  const { addLog, clearSelection, isRunning, toggleTimer } = useMatch();
   
   const cardWidth = theme.layout.popupCard.width;
   const slideAnim = useRef(new Animated.Value(cardWidth)).current;
@@ -113,10 +113,17 @@ export default function ActionPopupCard({ selectedAction, onClose, side = 'left'
   }
 
   const handleConfirmPress = () => {
-    if (selectedSubAction) {
-      addLog(selectedSubAction); 
-      onClose(selectedSubAction); 
+    if (!selectedSubAction) return;
+
+    if (selectedSubAction === 'Timeout') {
+      if (isRunning) toggleTimer();
+      addLog('TimeOut', side, ' ---', '-');
+    } else {
+      addLog(selectedSubAction);
     }
+
+    clearSelection();
+    onClose(selectedSubAction);
   };
 
   return (

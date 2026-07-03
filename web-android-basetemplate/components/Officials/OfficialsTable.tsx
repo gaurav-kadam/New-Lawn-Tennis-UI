@@ -1,38 +1,54 @@
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Pencil, Trash2 } from 'lucide-react-native';
-
 import { useTheme } from '@/theme/themeContext';
 import { tokens } from '@/theme/token';
+const ACTION_WIDTH = 80;
 
-const TABLE_MAX_HEIGHT = 500;
+// Cast to any so TypeScript skips prop-checking on web-only onMouseEnter/onMouseLeave
+const HoverView = View as any;
 
 export default function OfficialsTable({
   tournaments,
   officials,
+  total,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
   onEdit,
   onDelete,
 }: any) {
   const theme = useTheme();
-
-  const data = officials || tournaments || [];
-
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const getFullName = (item: any) =>
     `${item.first_name || ''} ${item.last_name || ''}`.trim() || '—';
 
+  const paginated = officials || tournaments || [];
+
+  const hdrStyle = {
+    fontSize: tokens.typography.sizes.cooldownTimer,
+    fontWeight: tokens.typography.weights.bold as any,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1.2,
+    color: theme.colors.textSecondary,
+    fontFamily: theme.typography.fontFamily,
+  };
+
+  const cellStyle = {
+    fontSize: tokens.typography.sizes.tableText,
+    fontWeight: tokens.typography.weights.medium as any,
+    color: theme.colors.textPrimary,
+    fontFamily: theme.typography.fontFamily,
+  };
+
   return (
-    <View style={{ width: '100%', alignSelf: 'center', paddingHorizontal: tokens.spacing.md }}>
-      <View 
+    <View style={{ flex: 1 }}>
+      {/* Card fills all height above pagination */}
+      <View
         style={{
-          width: '100%',
+          flex: 1,
           backgroundColor: theme.colors.surface,
           borderRadius: tokens.radius.lg,
           overflow: 'hidden',
@@ -41,298 +57,115 @@ export default function OfficialsTable({
           ...tokens.shadow.light,
         }}
       >
-        {/* Header Row */}
-        <View 
+        {/* STICKY HEADER — outside the ScrollView, always visible */}
+        <View
           style={{
+            paddingLeft:50,
+            
             flexDirection: 'row',
             alignItems: 'center',
             paddingVertical: tokens.spacing.md,
-            paddingHorizontal: tokens.spacing.md,
+            paddingHorizontal: tokens.spacing.lg,
             backgroundColor: theme.colors.secondary,
             borderBottomWidth: tokens.layout.dividerHeight,
             borderBottomColor: theme.colors.border,
           }}
         >
-          <Text 
-            style={{
-              width: '18%',
-              textAlign: 'left',
-              fontSize: tokens.typography.sizes.caption || 11,
-              fontWeight: tokens.typography.weights.bold as any,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: theme.colors.textSecondary,
-              fontFamily: theme.typography.fontFamily,
-            }}
-          >
-            Name
-          </Text>
-
-          <Text 
-            style={{
-              width: '24%',
-              textAlign: 'left',
-              paddingHorizontal: tokens.spacing.xs,
-              fontSize: tokens.typography.sizes.caption || 11,
-              fontWeight: tokens.typography.weights.bold as any,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: theme.colors.textSecondary,
-              fontFamily: theme.typography.fontFamily,
-            }}
-          >
-            Email
-          </Text>
-
-          <Text 
-            style={{
-              width: '18%',
-              textAlign: 'center',
-              fontSize: tokens.typography.sizes.caption || 11,
-              fontWeight: tokens.typography.weights.bold as any,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: theme.colors.textSecondary,
-              fontFamily: theme.typography.fontFamily,
-            }}
-          >
-            Phone Number
-          </Text>
-
-          <Text 
-            style={{
-              width: '12%',
-              textAlign: 'center',
-              fontSize: tokens.typography.sizes.caption || 11,
-              fontWeight: tokens.typography.weights.bold as any,
-              textTransform: 'uppercase',
-              letterSpacing: 0.5,
-              color: theme.colors.textSecondary,
-              fontFamily: theme.typography.fontFamily,
-            }}
-          >
-            State
-          </Text>
-
-          <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
-            <Text 
-              style={{
-                fontSize: tokens.typography.sizes.caption || 11,
-                fontWeight: tokens.typography.weights.bold as any,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                color: theme.colors.textSecondary,
-                fontFamily: theme.typography.fontFamily,
-              }}
-            >
-              Gender
-            </Text>
-          </View>
-
-          <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
-            <Text 
-              style={{
-                fontSize: tokens.typography.sizes.caption || 11,
-                fontWeight: tokens.typography.weights.bold as any,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                color: theme.colors.textSecondary,
-                fontFamily: theme.typography.fontFamily,
-              }}
-            >
-              Is Active
-            </Text>
-          </View>
-
-          <View style={{ width: '6%', alignItems: 'center', justifyContent: 'center' }}>
-            <Text 
-              style={{
-                fontSize: tokens.typography.sizes.caption || 11,
-                fontWeight: tokens.typography.weights.bold as any,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                color: theme.colors.textSecondary,
-                fontFamily: theme.typography.fontFamily,
-              }}
-            >
-              Actions
-            </Text>
-          </View>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 2 }]}>Name</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.9 }]}>Email</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.5 }]}>Phone</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.2 }]}>State</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.1 }]}>Gender</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.1 }]}>Active</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { width: ACTION_WIDTH }]}>Actions</Text>
         </View>
 
-        {/* Data Rows Area */}
-        <View style={{ maxHeight: TABLE_MAX_HEIGHT }}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {data.length > 0 ? (
-              data.map((item: any, index: number) => {
-                const isHovered = hoveredRow === item.id;
+        {/* DATA ROWS — vertically scrollable */}
+        <ScrollView
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: tokens.spacing.xl }}
+        >
+          {paginated.length > 0 ? (
+            paginated.map((item: any, index: number) => {
+              const isHovered = hoveredRow === item.id;
 
-                return (
-                  <View
-                    key={item.id}
-                    // @ts-ignore web hover only
-                    onMouseEnter={() => setHoveredRow(item.id)}
-                    // @ts-ignore web hover only
-                    onMouseLeave={() => setHoveredRow(null)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingVertical: tokens.spacing.sm + tokens.spacing.xs,
-                      paddingHorizontal: tokens.spacing.md,
-                      borderBottomWidth: index !== data.length - 1 ? tokens.layout.dividerHeight : 0,
-                      borderBottomColor: theme.colors.border,
-                      backgroundColor: isHovered ? theme.colors.background : theme.colors.surface,
-                    }}
-                  >
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        width: '18%',
-                        textAlign: 'left',
-                        fontSize: tokens.typography.sizes.small,
-                        fontWeight: tokens.typography.weights.bold as any,
-                        color: theme.colors.textPrimary,
-                        fontFamily: theme.typography.fontFamily,
-                      }}
-                    >
-                      {getFullName(item)}
-                    </Text>
-
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        width: '24%',
-                        textAlign: 'left',
-                        paddingHorizontal: tokens.spacing.xs,
-                        fontSize: tokens.typography.sizes.tableText,
-                        fontWeight: tokens.typography.weights.medium as any,
-                        color: theme.colors.textPrimary,
-                        fontFamily: theme.typography.fontFamily,
-                      }}
-                    >
-                      {item.email || '—'}
-                    </Text>
-
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        width: '18%',
-                        textAlign: 'center',
-                        fontSize: tokens.typography.sizes.tableText,
-                        fontWeight: tokens.typography.weights.medium as any,
-                        color: theme.colors.textPrimary,
-                        fontFamily: theme.typography.fontFamily,
-                      }}
-                    >
-                      {item.phone_no || '—'}
-                    </Text>
-
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        width: '12%',
-                        textAlign: 'center',
-                        fontSize: tokens.typography.sizes.tableText,
-                        fontWeight: tokens.typography.weights.medium as any,
-                        color: theme.colors.textPrimary,
-                        fontFamily: theme.typography.fontFamily,
-                      }}
-                    >
-                      {item.state || '—'}
-                    </Text>
-
-                    <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
-                      <View 
-                        style={{
-                          paddingHorizontal: tokens.spacing.sm,
-                          paddingVertical: tokens.spacing.xs,
-                          borderRadius: tokens.radius.round,
-                          backgroundColor: theme.colors.secondary,
-                        }}
-                      >
-                        <Text 
-                          style={{
-                            fontSize: tokens.typography.sizes.badge,
-                            fontWeight: tokens.typography.weights.medium as any,
-                            color: theme.colors.primary,
-                            fontFamily: theme.typography.fontFamily,
-                          }}
-                        >
-                          {item.gender || '—'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={{ width: '11%', alignItems: 'center', justifyContent: 'center' }}>
-                      <View 
-                        style={{
-                          paddingHorizontal: tokens.spacing.sm,
-                          paddingVertical: tokens.spacing.xs,
-                          borderRadius: tokens.radius.round,
-                          backgroundColor: item.is_active ? tokens.colors.actions.saveBg : tokens.colors.actions.deleteBg,
-                        }}
-                      >
-                        <Text 
-                          style={{
-                            fontSize: tokens.typography.sizes.badge,
-                            fontWeight: tokens.typography.weights.medium as any,
-                            color: item.is_active ? tokens.colors.success : tokens.colors.error,
-                            fontFamily: theme.typography.fontFamily,
-                          }}
-                        >
-                          {item.is_active === true
-                            ? 'Active'
-                            : item.is_active === false
-                              ? 'Inactive'
-                              : '—'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View 
-                      style={{
-                        width: '6%',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: tokens.spacing.sm,
-                      }}
-                    >
-                      <TouchableOpacity onPress={() => onEdit(item)}>
-                        <Pencil
-                          size={tokens.typography.sizes.body}
-                          color={theme.colors.primary}
-                          strokeWidth={tokens.layout.elevationMultiplier}
-                        />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={() => onDelete(item.id)}>
-                        <Trash2
-                          size={tokens.typography.sizes.body}
-                          color={theme.colors.error}
-                          strokeWidth={tokens.layout.elevationMultiplier}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              })
-            ) : (
-              <View style={{ paddingVertical: tokens.spacing.xl * 2, alignItems: 'center', justifyContent: 'center' }}>
-                <Text 
+              return (
+                <HoverView
+                  key={item.id}
+                  onMouseEnter={() => setHoveredRow(item.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
                   style={{
-                    fontSize: tokens.typography.sizes.small,
-                    color: theme.colors.textSecondary,
-                    fontFamily: theme.typography.fontFamily,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: tokens.spacing.sm + tokens.spacing.xs / 2,
+                    paddingHorizontal: tokens.spacing.lg,
+                    borderBottomWidth: index !== paginated.length - 1 ? tokens.layout.dividerHeight : 0,
+                    borderBottomColor: theme.colors.border,
+                    backgroundColor: isHovered ? theme.colors.background : theme.colors.surface,
                   }}
                 >
-                  No officials found
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
+                  {/* NAME */}
+                  <Text numberOfLines={1} style={[cellStyle, { flex: 1.8, fontWeight: tokens.typography.weights.bold as any }]}>
+                    {getFullName(item)}
+                  </Text>
+
+                  {/* EMAIL */}
+                  <Text numberOfLines={1} style={[cellStyle, { flex: 2.2 }]}>
+                    {item.email || '—'}
+                  </Text>
+
+                  {/* PHONE */}
+                  <Text numberOfLines={1} style={[cellStyle, { flex: 1.5 }]}>
+                    {item.phone_no || '—'}
+                  </Text>
+
+                  {/* STATE */}
+                  <Text numberOfLines={1} style={[cellStyle, { flex: 1.3 }]}>
+                    {item.state || '—'}
+                  </Text>
+
+                  {/* GENDER */}
+                  <View style={{ flex: 1.1 }}>
+                    <View style={{ alignSelf: 'flex-start', paddingHorizontal: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.round, backgroundColor: theme.colors.secondary }}>
+                      <Text numberOfLines={1} style={{ fontSize: tokens.typography.sizes.tableText, fontWeight: tokens.typography.weights.medium as any, color: theme.colors.primary, fontFamily: theme.typography.fontFamily }}>
+                        {item.gender || '—'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* IS ACTIVE */}
+                  <View style={{ flex: 1 }}>
+                    <View style={{ alignSelf: 'flex-start', paddingHorizontal: tokens.spacing.xs, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.round, backgroundColor: item.is_active ? tokens.colors.actions.saveBg : tokens.colors.actions.deleteBg }}>
+                      <Text numberOfLines={1} style={{ fontSize: tokens.typography.sizes.tableText, fontWeight: tokens.typography.weights.medium as any, color: item.is_active ? tokens.colors.success : tokens.colors.error, fontFamily: theme.typography.fontFamily }}>
+                        {item.is_active === true ? 'Active' : item.is_active === false ? 'Inactive' : '—'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* ACTIONS */}
+                  <View style={{ width: ACTION_WIDTH, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }}>
+                    <TouchableOpacity onPress={() => onEdit(item)}>
+                      <Pencil size={14} color={theme.colors.primary} strokeWidth={tokens.layout.elevationMultiplier} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => onDelete(item.id)}>
+                      <Trash2 size={14} color={theme.colors.error} strokeWidth={tokens.layout.elevationMultiplier} />
+                    </TouchableOpacity>
+                  </View>
+                </HoverView>
+              );
+            })
+          ) : (
+            <View style={{ paddingVertical: tokens.spacing.xl * 2, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: tokens.typography.sizes.small, color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}>
+                No officials found
+              </Text>
+            </View>
+          )}
+        </ScrollView>
       </View>
+
     </View>
   );
 }

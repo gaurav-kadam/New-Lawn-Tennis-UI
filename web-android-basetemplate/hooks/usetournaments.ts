@@ -1,38 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import tournamentService from '../services/tournament/tournamment.service';
-// Note: Ensure you create the Tournament type in a .types file as well
 import { Tournament } from '../services/tournament/tournament.type';
 
-export const useTournaments = () => {
+export const useTournaments = (isActive?: boolean, search?: string, page = 0, rowsPerPage = 10) => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const loadTournaments = async () => {
+  const loadTournaments = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-
-      const response = await tournamentService.getTournaments();
-
-      // Based on your backend route format: { "message": "...", "data": [...] }
-      // You might need to access response.data depending on your ApiService logic
-      setTournaments(response.data || response);
+      const params: Record<string, any> = {
+        skip: page * rowsPerPage,
+        limit: rowsPerPage,
+      };
+      if (isActive !== undefined) params.is_active = isActive;
+      if (search) params.search = search;
+      const response = await tournamentService.getTournaments(params);
+      const raw: Tournament[] = response?.data?.data ?? response?.data ?? (Array.isArray(response) ? response : []);
+      const serverTotal: number = response?.data?.total ?? response?.total ?? raw.length;
+      const result = isActive !== undefined
+        ? raw.filter((t) => !!t.is_active === isActive)
+        : raw;
+      setTournaments(result);
+      setTotal(serverTotal);
     } catch (err: any) {
       setError(err.message || 'Something went wrong while fetching tournaments');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isActive, search, page, rowsPerPage]);
 
   useEffect(() => {
     loadTournaments();
-  }, []);
+  }, [loadTournaments]);
 
-  return {
-    tournaments,
-    loading,
-    error,
-    reload: loadTournaments,
-  };
+  return { tournaments, total, loading, error, reload: loadTournaments };
 };

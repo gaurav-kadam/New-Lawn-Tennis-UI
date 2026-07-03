@@ -8,4 +8,6 @@ export interface Tournament {
   venue: string;
   section: string;
   gender: string;
+  is_active?: boolean;
+  tournament_code?: string;
 }

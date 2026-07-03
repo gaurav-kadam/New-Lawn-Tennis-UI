@@ -12,7 +12,7 @@ export default function MatchesHeader({
   return (
     <View
       style={{
-        marginBottom: 24,
+        marginBottom: 10,
 
         flexDirection: 'row',
 

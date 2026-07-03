@@ -13,8 +13,8 @@ setupInterceptors(api);
 
 class ApiService {
 
-  async get(url: string) {
-    const response = await api.get(url);
+  async get(url: string, params?: Record<string, any>) {
+    const response = await api.get(url, { params });
     return response.data;
   }
 

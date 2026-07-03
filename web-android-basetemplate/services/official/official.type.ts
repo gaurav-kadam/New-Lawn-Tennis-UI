@@ -7,4 +7,5 @@ export interface Official {
   gender: string;
   state: string;
   city: string;
+  is_active?: boolean;
 }

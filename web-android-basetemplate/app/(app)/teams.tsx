@@ -1,56 +1,56 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, View, useWindowDimensions } from 'react-native';
+import FilterSearchBar, { FilterTab } from '@/components/ui/FilterSearchBar';
 
 import TeamCardList from '@/components/Teams/TeamCardList';
 import TeamHeader from '@/components/Teams/TeamHeader';
 import TeamTable from '@/components/Teams/TeamTable';
+import NotificationModal from '@/components/ui/NotificationModal';
 import CreateTeamModal from '../../components/elements/AddTeam';
 
 import { useTeams } from '../../hooks/useteams';
 import teamService from '../../services/team/team.service';
 import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
+import Pagination from '@/components/ui/Pagination';
 
 const TABLET_BREAKPOINT = 768;
-const MODAL_Z_INDEX = 1000;
+
+type NotifState = { visible: boolean; type: 'success' | 'error'; title: string; message: string };
+type ConfirmState = { visible: boolean; onConfirm: () => void };
 
 export default function TeamsScreen() {
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
-
   const isMobile = screenWidth < TABLET_BREAKPOINT;
 
-  const { teams, loading, reload } = useTeams();
-
+  const [filter, setFilter] = useState<FilterTab>('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const isActive = filter === 'all' ? undefined : filter === 'active';
+  const { teams, total, loading, reload } = useTeams({ isActive, search, page, rowsPerPage });
   const [openModal, setOpenModal] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
+  const [notif, setNotif] = useState<NotifState>({ visible: false, type: 'success', title: '', message: '' });
+  const [confirm, setConfirm] = useState<ConfirmState>({ visible: false, onConfirm: () => {} });
+
+  const showNotif = (type: 'success' | 'error', title: string, message: string) =>
+    setNotif({ visible: true, type, title, message });
 
   const handleSave = async (data: any) => {
     try {
       if (editingTeam) {
-        // Updating an existing team
         await teamService.updateTeam(editingTeam.id, data);
+        showNotif('success', 'Success', 'Team updated successfully.');
       } else {
-        // Registering a new team (handles both text parameters and Excel player sheets via FormData)
         await teamService.createTeam(data);
+        showNotif('success', 'Success', 'Team registered successfully.');
       }
-
       await reload();
       closeModal();
-    } catch (error) {
-      console.error('Error handling save team registration operation:', error);
-      if (Platform.OS === 'web') {
-        window.alert('Failed to save team data and process player spreadsheet.');
-      } else {
-        Alert.alert('Error', 'Failed to save team data and process player spreadsheet.');
-      }
+    } catch {
+      showNotif('error', 'Error', 'Failed to save team data and process player spreadsheet.');
     }
   };
 
@@ -59,33 +59,12 @@ export default function TeamsScreen() {
       try {
         await teamService.deleteTeam(id);
         await reload();
+        showNotif('success', 'Deleted', 'Team deleted successfully.');
       } catch {
-        if (Platform.OS === 'web') {
-          window.alert('Failed to delete team.');
-        } else {
-          Alert.alert('Error', 'Failed to delete team.');
-        }
+        showNotif('error', 'Error', 'Failed to delete team.');
       }
     };
-
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure, want to delete Team Details?')) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Team',
-        'Are you sure, want to delete Team Details?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: performDelete,
-          },
-        ]
-      );
-    }
+    setConfirm({ visible: true, onConfirm: performDelete });
   };
 
   const openCreateModal = () => {
@@ -106,7 +85,6 @@ export default function TeamsScreen() {
       coach: team.coach,
       manager: team.manager,
     });
-
     setOpenModal(true);
   };
 
@@ -115,65 +93,89 @@ export default function TeamsScreen() {
     setEditingTeam(null);
   };
 
+  const filteredTeams = (teams || []).filter((t: any) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      t.team_name?.toLowerCase().includes(q) ||
+      t.city?.toLowerCase().includes(q) ||
+      t.state?.toLowerCase().includes(q) ||
+      t.section?.toLowerCase().includes(q)
+    );
+  });
+
+  const topSection = (
+    <>
+      <TeamHeader onEdit={openCreateModal} />
+      {loading && <ActivityIndicator size="large" color={theme.colors.primary || tokens.colors.primary} />}
+      <FilterSearchBar
+        filter={filter}
+        onFilterChange={(f: FilterTab) => { setFilter(f); setPage(0); }}
+        search={search}
+        onSearchChange={(s: string) => { setSearch(s); setPage(0); }}
+        searchPlaceholder="Search teams..."
+      />
+    </>
+  );
+
   return (
-    <View 
-      style={{
-        flex: tokens.layout.flexFull,
-        backgroundColor: theme.colors.background || tokens.colors.background,
-      }}
-    >
-      <ScrollView
-        scrollEnabled={isMobile}
-        contentContainerStyle={{
-          flexGrow: tokens.layout.flexFull,
-          padding: isMobile 
-            ? tokens.spacing.md 
-            : tokens.spacing.xl,
-        }}
-      >
-        <TeamHeader onEdit={openCreateModal} />
-
-        {loading && (
-          <ActivityIndicator
-            size="large"
-            color={theme.colors.primary || tokens.colors.primary}
-          />
-        )}
-
-        <View 
-          style={{
-            flex: tokens.layout.flexFull,
-            minHeight: isMobile ? undefined : 0,
-          }}
-        >
-          {isMobile ? (
-            <TeamCardList
-              teams={teams}
+    <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background || tokens.colors.background }}>
+      {isMobile ? (
+        /*
+         * MOBILE: outer ScrollView + card list — no inner ScrollView conflict.
+         */
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: tokens.spacing.md }}>
+          {topSection}
+          <TeamCardList teams={filteredTeams} onEdit={openEditModal} onDelete={handleDelete} />
+        </ScrollView>
+      ) : (
+        <View style={{ flex: 1, padding: tokens.spacing.xl }}>
+          <View style={{ flexShrink: 0 }}>
+            {topSection}
+          </View>
+          <View style={{ height: 'calc(100vh - 360px)' as any, width: '100%' }}>
+            <TeamTable
+              tournaments={filteredTeams}
               onEdit={openEditModal}
               onDelete={handleDelete}
             />
-          ) : (
-            <View style={{ flex: tokens.layout.flexFull, overflow: 'hidden' }}>
-              <TeamTable
-                tournaments={teams}
-                onEdit={openEditModal}
-                onDelete={handleDelete}
-              />
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {openModal && (
-        <View>
-          <CreateTeamModal
-          visible={openModal}
-            onSave={handleSave}
-            onClose={closeModal}
-            initialData={editingTeam}
+          </View>
+          <Pagination
+            total={total ?? 0}
+            page={page ?? 0}
+            rowsPerPage={rowsPerPage ?? 10}
+            onPageChange={setPage}
+            onRowsPerPageChange={(rpp: number) => { setRowsPerPage(rpp); setPage(0); }}
           />
         </View>
       )}
+
+      {openModal ? (
+        <CreateTeamModal
+          visible={openModal}
+          onSave={handleSave}
+          onClose={closeModal}
+          initialData={editingTeam}
+        />
+      ) : null}
+
+      <NotificationModal
+        visible={notif.visible}
+        type={notif.type}
+        title={notif.title}
+        message={notif.message}
+        onClose={() => setNotif(n => ({ ...n, visible: false }))}
+      />
+
+      <NotificationModal
+        visible={confirm.visible}
+        type="confirm"
+        title="Delete Team"
+        message="Are you sure you want to delete this team?"
+        confirmLabel="Delete"
+        onClose={() => setConfirm(c => ({ ...c, visible: false }))}
+        onConfirm={confirm.onConfirm}
+      />
     </View>
   );
 }

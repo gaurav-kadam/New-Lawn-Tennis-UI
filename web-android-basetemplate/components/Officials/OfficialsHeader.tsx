@@ -12,7 +12,7 @@ export default function OfficialsHeader({
   return (
     <View
       style={{
-        marginBottom: 24,
+        marginBottom: 10,
 
         flexDirection: 'row',
 

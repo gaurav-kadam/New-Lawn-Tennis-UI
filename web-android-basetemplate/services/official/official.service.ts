@@ -1,8 +1,8 @@
 import ApiService from '../api/api.service';
 
 class OfficialService {
-  async getOfficials() {
-    return ApiService.get('/officials');
+  async getOfficials(params?: Record<string, any>) {
+    return ApiService.get('/officials', params);
   }
 
   async createOfficial(data: any) {

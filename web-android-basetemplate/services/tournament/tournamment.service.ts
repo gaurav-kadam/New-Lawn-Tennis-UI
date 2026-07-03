@@ -2,8 +2,8 @@ import ApiService from '../api/api.service';
 
 class TournamentService {
 
-  async getTournaments() {
-    return ApiService.get('/tournaments');
+  async getTournaments(params?: Record<string, any>) {
+    return ApiService.get('/tournaments', params);
   }
 
   async getTournamentById(id: number) {

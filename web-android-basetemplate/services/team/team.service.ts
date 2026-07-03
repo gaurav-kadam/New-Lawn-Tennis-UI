@@ -3,8 +3,8 @@ import ApiService from '../api/api.service';
 
 class TeamService {
 
-  async getTeams() {
-    return ApiService.get('/teams');
+  async getTeams(params?: Record<string, any>) {
+    return ApiService.get('/teams', params);
   }
 
   async getTeamById(id: number) {

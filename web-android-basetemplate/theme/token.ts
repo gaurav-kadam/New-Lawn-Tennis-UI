@@ -45,12 +45,12 @@ export const tokens = {
       },
      
       scoreboard: {
-        border: '#334155',
+        border: '#f8fbff',
         bg: '#0F172A',
         headerBg: '#1E293B',
         headerText: '#94A3B8',
-        teamA: '#22C55E',
-        teamB: '#6366F1',
+        team: '#22C55E',
+        
       }
     }
   },

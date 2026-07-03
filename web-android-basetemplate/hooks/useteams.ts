@@ -2,34 +2,48 @@ import { useCallback, useEffect, useState } from 'react';
 import teamService from '../services/team/team.service';
 import { Team } from '../services/team/team.type';
 
-// 🌟 Add config option param defaulting to an empty object
-export const useTeams = (options?: { lazy?: boolean }) => {
+export const useTeams = (options?: {
+  lazy?: boolean;
+  isActive?: boolean;
+  search?: string;
+  page?: number;
+  rowsPerPage?: number;
+}) => {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const { isActive, search, page = 0, rowsPerPage = 10 } = options || {};
 
   const loadTeams = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await teamService.getTeams();
-      const data = response?.data || response;
-      setTeams(data || []);
+      const params: Record<string, any> = {
+        skip: page * rowsPerPage,
+        limit: rowsPerPage,
+      };
+      if (isActive !== undefined) params.is_active = isActive;
+      if (search) params.search = search;
+      const response = await teamService.getTeams(params);
+      const raw: Team[] = response?.data?.data ?? response?.data ?? (Array.isArray(response) ? response : []);
+      const serverTotal: number = response?.data?.total ?? response?.total ?? raw.length;
+      const result = isActive !== undefined
+        ? raw.filter((t) => !!t.is_active === isActive)
+        : raw;
+      setTeams(result);
+      setTotal(serverTotal);
     } catch (err) {
       console.log('Fetch teams error:', err);
-      setTeams([]); 
+      setTeams([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isActive, search, page, rowsPerPage]);
 
   useEffect(() => {
-    // 🌟 Check if lazy execution is explicitly declared
     if (options?.lazy) return;
     loadTeams();
-  }, [loadTeams]); // Removed the option object dependency to avoid infinite cycles
+  }, [loadTeams, options?.lazy]);
 
-  return {
-    teams,
-    loading,
-    reload: loadTeams,
-  };
+  return { teams, total, loading, reload: loadTeams };
 };

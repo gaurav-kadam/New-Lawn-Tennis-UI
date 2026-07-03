@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View, Pressable } from 'react-native';
+import { Text, TouchableOpacity, View, Pressable, Image } from 'react-native';
 
 import { useTheme } from '../../../theme/themeContext';
 import { useHeader } from '../../../hooks/useHeader';
@@ -34,15 +34,21 @@ export default function Header({ onToggle }: any) {
         zIndex: 1000,
       }}
     >
-      {/* LEFT - HAMBURGER */}
-      <TouchableOpacity onPress={onToggle}>
-        <Text style={{ fontSize: theme.typography.sizes.h3, color: theme.colors.textPrimary }}>☰</Text>
-      </TouchableOpacity>
+      {/* LEFT GROUP: HAMBURGER + LOGO */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <TouchableOpacity onPress={onToggle} style={{ marginRight: theme.spacing.md }}>
+          <Text style={{ fontSize: theme.typography.sizes.h3, color: theme.colors.textPrimary }}>☰</Text>
+        </TouchableOpacity>
 
-      {/* CENTER - TITLE */}
-      <Text style={{ color: theme.colors.textPrimary, fontSize: theme.typography.sizes.h3, fontFamily: theme.typography.fontFamily, fontWeight: theme.typography.weights.bold as any }}>
-        Final Whistle
-      </Text>
+        <Image 
+          source={require('../../../assets/images/FW_logo.jpeg')} 
+          style={{ 
+            width: 100,    // Adjusted size to fit well next to hamburger
+            height: 35, 
+            resizeMode: 'contain' 
+          }} 
+        />
+      </View>
 
       {/* RIGHT - PROFILE DROPDOWN MANAGER */}
       <View style={{ position: 'relative' }}>
@@ -85,7 +91,7 @@ export default function Header({ onToggle }: any) {
               position: 'absolute',
               top: 45,
               right: 0,
-              width: theme.layout.popupCard.width - 80, // Evaluates clean relative to tokens
+              width: theme.layout.popupCard.width - 80,
               backgroundColor: theme.colors.surface,
               borderRadius: theme.radius.md,
               borderWidth: theme.layout.popupCard.borderWidth,
@@ -126,7 +132,6 @@ export default function Header({ onToggle }: any) {
         )}
       </View>
 
-      {/* DISPATCH SEPARATED PROFILE MODAL COMPONENT */}
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={closeProfileModal}

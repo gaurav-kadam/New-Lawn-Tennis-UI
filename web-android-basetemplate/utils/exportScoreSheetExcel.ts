@@ -1,7 +1,11 @@
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import * as XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 import { ScoreSheetData } from '@/components/results/score-sheet/scoreSheet.types';
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export const exportScoreSheetExcel = async (data: ScoreSheetData) => {
   const rows = [
@@ -39,22 +43,37 @@ export const exportScoreSheetExcel = async (data: ScoreSheetData) => {
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
-
   worksheet['!cols'] = [{ wch: 32 }, { wch: 38 }];
 
   const workbook = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Scoresheet');
 
   const fileName = `scoresheet_match_${data.matchNumber || Date.now()}.xlsx`;
 
   if (Platform.OS === 'web') {
     XLSX.writeFile(workbook, fileName);
-    return {
-      fileUri: '',
-      fileName,
-    };
+    return { fileUri: '', fileName };
   }
 
-  throw new Error('Excel export is currently configured for web only.');
+  // Native (Android / iOS)
+  const base64 = XLSX.write(workbook, { type: 'base64', bookType: 'xlsx' }) as string;
+  const dir = FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? '';
+  const fileUri = dir + fileName;
+
+  await FileSystem.writeAsStringAsync(fileUri, base64, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  const canShare = await Sharing.isAvailableAsync();
+  if (canShare) {
+    await Sharing.shareAsync(fileUri, {
+      mimeType: XLSX_MIME,
+      dialogTitle: 'Share Scoresheet',
+      UTI: 'com.microsoft.excel.xlsx',
+    });
+  } else {
+    Alert.alert('Export Successful', 'File saved to your documents folder.');
+  }
+
+  return { fileUri, fileName };
 };

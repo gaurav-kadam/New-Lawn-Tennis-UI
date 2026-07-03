@@ -216,15 +216,6 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                     </View>
                   </View>
 
-                  <View>
-                    <Input 
-                      label="Email Address" 
-                      placeholder="Enter Email ID"
-                      value={formData.email} 
-                      onChangeText={(v: string) => update('email', v)} 
-                    />
-                  </View>
-
                   <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                     <View style={{ flex: 1 }}>
                       <Input 
@@ -260,19 +251,13 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                       {errors.dob && <Text style={errorTextStyle}>{errors.dob}</Text>}
                     </View>
                   </View>
+                  
+                   
 
-                  <View>
-                    <RadioGroup 
-                      label="Gender" 
-                      value={formData.gender} 
-                      onChange={(v: any) => update('gender', v)} 
-                      options={[
-                        { label: 'Men', value: 'Men' }, 
-                        { label: 'Women', value: 'Women' }
-                      ]}
-                    />
-                    {errors.gender && <Text style={errorTextStyle}>{errors.gender}</Text>}
-                  </View>
+              
+
+
+                  
 
                   <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                     <View style={{ flex: 1 }}>
@@ -293,6 +278,33 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                       />
                       {errors.city && <Text style={errorTextStyle}>{errors.city}</Text>}
                     </View>
+                  </View>
+                  <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
+                  <View style={{ flex: 1.7 }}>
+                    <Input 
+                      label="Email Address" 
+                      placeholder="Enter Email ID"
+                      value={formData.email} 
+                      onChangeText={(v: string) => update('email', v)} 
+                    />
+                  </View>
+                  
+                  <View style={{ flex: 1 }}>
+                    <RadioGroup 
+                      label="Gender" 
+                      value={formData.gender} 
+                      onChange={(v: any) => update('gender', v)} 
+                      options={[
+                        { label: 'Men', value: 'Men' }, 
+                        { label: 'Women', value: 'Women' }
+                      ]}
+                    />
+                    {errors.gender && <Text style={errorTextStyle}>{errors.gender}</Text>}
+                  </View>
+
+              
+
+
                   </View>
                   
                 </View>

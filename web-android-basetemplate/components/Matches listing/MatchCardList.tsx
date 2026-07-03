@@ -34,7 +34,7 @@ export default function MatchCardList({
       (item: any) => String(item.id) === String(officialId)
     );
     if (!official) return '—';
-    
+
     const fullName = `${official.first_name || ''} ${official.last_name || ''}`.trim();
     return official.name || fullName || official.official_name || official.official_code || '—';
   };
