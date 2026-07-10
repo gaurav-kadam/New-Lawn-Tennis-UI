@@ -117,6 +117,7 @@ export default function MatchesScreen() {
         timekeeper2Code: match.timekeeper_2_code || '',
         goalJudge1Code: match.goaljudge_1_code || '',
         goalJudge2Code: match.goaljudge_2_code || '',
+        autoFullscreen: 'true',
       },
     });
   };

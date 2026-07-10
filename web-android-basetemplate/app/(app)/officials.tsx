@@ -111,9 +111,7 @@ export default function OfficialsScreen() {
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>
       {isMobile ? (
-        /*
-         * MOBILE: outer ScrollView + card list — no inner ScrollView conflict.
-         */
+       
         <ScrollView contentContainerStyle={{ flexGrow: 1, padding: theme.spacing.md || 15 }}>
           {topSection}
           <OfficialsCardList officials={filteredOfficials} onEdit={openEditModal} onDelete={handleDelete} />

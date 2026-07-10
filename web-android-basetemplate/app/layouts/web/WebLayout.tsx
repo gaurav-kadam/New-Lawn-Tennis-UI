@@ -11,7 +11,6 @@ import Footer from './Footer';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-// Keep /MatchScreen in permissions map so the layout system allows intercepting the action
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   supervisor: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen', '/users'],
   admin: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'],
@@ -39,14 +38,14 @@ export default function WebLayout({ children }: any) {
     { name: 'User Management', icon: 'person', path: '/users' },
   ];
 
-  // Extract lowercase role name string safely from context state fallback
+  
   const currentRole = user?.role?.role_name?.toLowerCase() || 'scorer';
   const allowedPaths = ROLE_PERMISSIONS[currentRole] || ROLE_PERMISSIONS['scorer'];
 
   // 1. Dynamic UI Navigation Menu Filtering Logic
   const filteredMenu = masterMenu.filter((item) => allowedPaths.includes(item.path));
 
-  // Extract clean base pathname splitting off any search/query routing params (e.g., ?match_id=...)
+  // Extract clean base pathname splitting off any search/query routing params
   const baseCleanPath = path.split('?')[0];
   
   // Guard condition to check if user is on the dedicated Match Tracking Interface
@@ -120,15 +119,15 @@ export default function WebLayout({ children }: any) {
   return (
     <View style={{ flex: theme.layout.flexFull }}>
       
-      {/* ================= HEADER ================= */}
+      {/*  HEADER */}
       {!isFullscreen && !isMatchScreen && (
         <Header onToggle={() => setSidebarOpen(!isSidebarOpen)} theme={theme} />
       )}
 
-      {/* ================= BODY ================= */}
+      {/*  BODY  */}
       <View style={{ flex: theme.layout.flexFull, flexDirection: 'row' }}>
         
-        {/* ================= SIDEBAR ================= */}
+        {/* SIDEBAR */}
         {!isFullscreen && !isMatchScreen && (
           <Sidebar
             menu={filteredMenu}
@@ -140,13 +139,13 @@ export default function WebLayout({ children }: any) {
           />
         )}
 
-        {/* ================= CONTENT ================= */}
+        {/* CONTENT */}
         <Content marginLeft={(isFullscreen || isMatchScreen) ? 0 : contentMargin} theme={theme}>
           {processedChildren}
         </Content>
       </View>
 
-      {/* ================= FOOTER ================= */}
+      {/*  FOOTER  */}
       {!isFullscreen && !isMatchScreen && <Footer theme={theme} />}
     </View>
   );

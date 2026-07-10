@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text} from 'react-native';
 import { useTheme } from '../../../theme/themeContext';
 import Button from '@/components/ui/Button';
 import { useMatch } from '../layout/MatchContext'; 
@@ -68,11 +68,10 @@ export default function PlayerNo({ side }: PlayerNoProps) {
     const lastTap = lastTapRef.current[playerNum] || 0;
 
     if (now - lastTap < DOUBLE_TAP_DELAY) {
-      // 🚨 DOUBLE TAP REGISTERED: Trigger exclusions dynamic countdown records
       setDisabledCooldowns((prev) => ({ ...prev, [playerNum]: 20 }));
       
       // Dynamic inline entry injection mapping core timeline engine metadata parameters directly
-      addLog('Exclusion Foul', side, '----------', playerNum);
+      addLog('Exclusion Foul', side, '---', playerNum);
       
       if (selectedPlayer?.number === playerNum && selectedPlayer?.side === side) {
         clearSelection();
@@ -80,7 +79,6 @@ export default function PlayerNo({ side }: PlayerNoProps) {
       
       delete lastTapRef.current[playerNum];
     } else {
-      // SINGLE TAP REGISTERED: toggle select/deselect
       lastTapRef.current[playerNum] = now;
       if (selectedPlayer?.number === playerNum && selectedPlayer?.side === side) {
         clearSelection();
@@ -91,21 +89,21 @@ export default function PlayerNo({ side }: PlayerNoProps) {
   };
 
   return (
+   <View style={{
+    width: theme.layout.playerBadge.containerWidth, 
+    height: '100%',
+    backgroundColor: theme.colors.matchScreen.sidePanel1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+  }}>
     <View style={{
-      width: theme.layout.playerBadge.containerWidth, 
-      height: '100%',
-      backgroundColor: theme.colors.matchScreen.sidePanel1, 
-      justifyContent: 'center',
+      flexDirection: 'column', 
+      justifyContent: 'center', 
       alignItems: 'center',
-      paddingVertical: theme.spacing.md,
+      width: '100%',
+      gap: theme.layout.playerBadge.stackRowGap,
     }}>
-      <View style={{
-        flexDirection: 'column', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        width: '100%',
-        gap: theme.layout.playerBadge.stackRowGap,
-      }}>
+
         {playerNumbers.map((item) => {
           const cooldownSeconds = disabledCooldowns[item];
           const isButtonDisabled = cooldownSeconds !== undefined;
@@ -129,9 +127,9 @@ export default function PlayerNo({ side }: PlayerNoProps) {
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ 
                 color: buttonTextColor, 
-                fontSize: theme.typography.sizes.playerNumber, 
-                fontWeight: theme.typography.weights.bold as '700',
-                lineHeight: 14
+                fontSize: theme.typography.sizes.playerNumber,
+                fontWeight: theme.typography.weights.bold as any,
+                // lineHeight: 14
               }}>
                 {item}
               </Text>
@@ -139,13 +137,14 @@ export default function PlayerNo({ side }: PlayerNoProps) {
                 <Text style={{ 
                   color: theme.colors.textSecondary, 
                   fontSize: theme.typography.sizes.cooldownTimer, 
-                  fontWeight: theme.typography.weights.medium as '500',
+                  fontWeight: theme.typography.weights.medium as any,
                   marginTop: theme.layout.playerBadge.cooldownSpacing,
-                  lineHeight: 10
+                  // lineHeight: 10
                 }}>
                   {cooldownSeconds}s
                 </Text>
               )}
+              
             </View>
           );
 
@@ -167,8 +166,7 @@ export default function PlayerNo({ side }: PlayerNoProps) {
                 style={{
                   width: theme.layout.playerBadge.buttonSize,  
                   height: theme.layout.playerBadge.buttonSize, 
-                  opacity: isButtonDisabled ? theme.layout.playerBadge.disabledOpacity : theme.layout.playerBadge.activeOpacity, 
-                  paddingVertical: 0,          
+                  opacity: isButtonDisabled ? theme.layout.playerBadge.disabledOpacity : theme.layout.playerBadge.activeOpacity,        
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
@@ -177,7 +175,8 @@ export default function PlayerNo({ side }: PlayerNoProps) {
             </View>
           );
         })}
-      </View>
+        
+     </View>
     </View>
   );
 }

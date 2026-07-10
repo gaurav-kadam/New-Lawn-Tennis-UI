@@ -6,24 +6,23 @@ import { tokens } from '../../../theme/token';
 export default function MatchField({ side }: { side?: 'left' | 'right' }) {
   const theme = useTheme();
 
-  // Store multiple tracking dots
   const [dots, setDots] = useState<{ x: number; y: number }[]>([]);
 
-  const DOT_SIZE = tokens.typography.sizes.inputMini; 
-  const GOAL_HEIGHT = 120; // Structural sport dimensions kept separate from design tokens
+  const DOT_SIZE = tokens.typography.sizes.dotsize; 
+  const GOAL_HEIGHT = 120; 
   const GOAL_WIDTH = 38;   
 
   const regions =
     side === 'right'
       ? [
-          { color: theme.colors.matchScreen.courtColor.region1, flex: 3 },
-          { color: theme.colors.matchScreen.courtColor.region2, flex: 2 },
-          { color: theme.colors.matchScreen.courtColor.region3, flex: 1 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#14d114', flex: 3 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#fffb00', flex: 2 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#FF0000', flex: 1 },
         ]
       : [
-          { color: theme.colors.matchScreen.courtColor.region3, flex: 1 },
-          { color: theme.colors.matchScreen.courtColor.region2, flex: 2 },
-          { color: theme.colors.matchScreen.courtColor.region1, flex: 3 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#FF0000', flex: 1 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#fffb00', flex: 2 },
+          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#14d114', flex: 3 },
         ];
 
   const handleTouch = (event: any) => {
@@ -51,22 +50,48 @@ export default function MatchField({ side }: { side?: 'left' | 'right' }) {
       style={{ flex: tokens.layout.flexFull + 3, flexDirection: 'row', position: 'relative' }}
     >
       {/* Background Court Regions */}
-      {regions.map((r, i) => (
-        <View
-          key={i}
-          pointerEvents="none" 
-          style={{
-            backgroundColor: r.color,
-            flex: r.flex,
-          }}
-        />
-      ))}
+      {regions.map((r, i) => {
+        // Determine if this specific block should render an inner vertical divider line
+        const showVerticalBorder = side === 'right' ? i > 0 : i < 2;
 
-      {/* ========================================================= */}
-      {/* 3D EDGE GOALPOSTS                                         */}
-      {/* ========================================================= */}
+        return (
+          <View
+            key={i}
+            pointerEvents="none" 
+            style={{
+              backgroundColor: r.color,
+              flex: r.flex,
+              position: 'relative', 
+              
+             
+              borderTopWidth: 6,
+              borderBottomWidth: 6,
+              borderTopColor: r.borderColor,
+              borderBottomColor: r.borderColor,
+            }}
+          >
+           
+            {showVerticalBorder && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  ...(side === 'right' ? { left: 0 } : { right: 0 }),
+                  width: 2, 
+                  borderWidth: 1, 
+                  borderColor: r.borderColor,
+                  borderStyle: 'dashed',
+                }}
+              />
+            )}
+          </View>
+        );
+      })}
+
       
-      {/* LEFT HALF OUTER 3D GOALPOST */}
+      {/* 3D EDGE GOALPOSTS  */}
+     {/* LEFT HALF OUTER 3D GOALPOST */}
       {side !== 'right' && (
         <View
           pointerEvents="none"
@@ -158,7 +183,6 @@ export default function MatchField({ side }: { side?: 'left' | 'right' }) {
         </View>
       )}
 
-      {/* ========================================================= */}
 
       {/* Render heat map tracking dots */}
       {dots.map((dot, index) => (
@@ -166,12 +190,12 @@ export default function MatchField({ side }: { side?: 'left' | 'right' }) {
           key={index}
           style={{
             position: 'absolute',
-            left: dot.x - DOT_SIZE / 2, 
-            top: dot.y - DOT_SIZE / 2,  
+            left: dot.x - DOT_SIZE/2 , 
+            top: dot.y - DOT_SIZE/2 ,  
             width: DOT_SIZE,
             height: DOT_SIZE,
             borderRadius: tokens.radius.round,
-            backgroundColor: tokens.colors.overlay,       
+            backgroundColor: tokens.colors.black,       
             borderWidth: 2,
             borderColor: tokens.colors.textLight,          
             ...tokens.shadow.medium,

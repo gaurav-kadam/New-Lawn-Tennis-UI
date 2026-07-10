@@ -15,7 +15,7 @@ const POPUP_ACTIONS: Record<string, string[]> = {
   Coach: ['Yellow Card', 'Red Card', 'Timeout'],
 };
 
-// 🎯 Distinct Icon Definitions for Every Sub-Button Action
+
 const ACTION_ICONS: Record<string, string> = {
   // Goals
   'Action Goal': 'football-outline',
@@ -200,7 +200,7 @@ export default function ActionPopupCard({ selectedAction, onClose, side = 'left'
                       fontWeight: theme.typography.weights.medium,
                       textAlign: 'center', 
                       textAlignVertical: 'center',
-                      lineHeight: 12,
+                      // lineHeight: 12,
                       color: isCurrentSelection ? theme.colors.surface : undefined,
                     }}
                     onPress={() => setSelectedSubAction(subAction)} 

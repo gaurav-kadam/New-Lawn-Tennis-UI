@@ -95,7 +95,7 @@ export default function SettingsScreen() {
 
           <Text
             style={{
-              fontSize: theme.typography.h2,
+              fontSize: theme.typography.sizes.h2,
               fontWeight: '800',
 
               color:
@@ -173,7 +173,7 @@ export default function SettingsScreen() {
                 <Text
                   style={{
                     fontSize:
-                      theme.typography.body,
+                      theme.typography.sizes.body,
 
                     color:
                       theme.colors.textPrimary,

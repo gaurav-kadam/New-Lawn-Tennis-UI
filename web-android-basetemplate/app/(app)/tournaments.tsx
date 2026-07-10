@@ -129,10 +129,7 @@ export default function TournamentsScreen() {
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>
       {isMobile ? (
-        /*
-         * MOBILE: outer ScrollView is correct — TournamentCardList has natural
-         * height so a single outer scroll handles the whole page.
-         */
+       
         <ScrollView contentContainerStyle={{ flexGrow: 1, padding: theme.spacing.md || 15 }}>
           {topSection}
           <TournamentCardList

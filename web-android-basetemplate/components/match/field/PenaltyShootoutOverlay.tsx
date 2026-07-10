@@ -1,6 +1,6 @@
 // PenaltyShootoutOverlay.tsx
 import React, { useState, useEffect } from 'react';
-import { Alert, View, Pressable, StyleSheet, Text } from 'react-native';
+import { Alert, View, Pressable, Text } from 'react-native';
 import Button from '@/components/ui/Button';
 import { useMatch } from '../layout/MatchContext';
 
@@ -35,7 +35,8 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
   };
 
   const getCellBackgroundColor = (index: number) => {
-    // 1. If this round has a completed attempt, show the final dark/light locked colors (From Old Code)
+
+    // 1. If this round has a completed attempt, show the dark/light locked colors 
     const attempt = attempts[activeRound];
     if (attempt) {
       const selected = attempt.targetCell === index;
@@ -88,23 +89,38 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
     const shooterCap = shooters?.[activeRound] || (activeRound + 1).toString();
     addPenaltyLog?.(selectedResult, side, cellIndex, shooterCap);
     
-    // Clear selection state context tooltips cleanly
+    
     setSelectedResult(null);
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.gridContainer}>
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 90, paddingBottom: 10, alignItems: 'center', backgroundColor: '#8be0f5' }}>
+      <View style={{
+        width: '90%',
+        aspectRatio: 5 / 3,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignContent: 'center',
+        borderWidth: 6,
+        borderColor: '#1E293B',
+        borderRadius: 6,
+        overflow: 'hidden'
+      }}>
         {[...Array(15)].map((_, i) => (
           <Pressable
             key={i}
-            style={[styles.squareCell, getCellBorderStyle(i), { backgroundColor: getCellBackgroundColor(i) }]}
+            style={[
+              { width: '20%', aspectRatio: 1, borderWidth: 0.5, borderColor: 'rgba(0, 0, 0, 0.4)' },
+              getCellBorderStyle(i),
+              { backgroundColor: getCellBackgroundColor(i) }
+            ]}
             onPress={() => handleCellPress(i)}
           />
         ))}
       </View>
 
-      <View style={styles.buttonRow}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20, marginVertical: 30 }}>
         {(['goal', 'save', 'bar'] as const).map((res) => (
           <Button
             key={res}
@@ -117,7 +133,7 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
         ))}
       </View>
 
-      <View style={styles.trackerRow}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 15, marginTop: 20 }}>
         {attempts.map((attempt, index) => {
           let bgColor = index === activeRound ? '#FFFFFF' : '#dbdcdf';
           if (attempt?.result === 'goal') bgColor = '#4CAF50';
@@ -125,7 +141,7 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
 
           return (
             <Pressable key={index} onPress={() => setActiveRound(index)}>
-              <View style={[styles.trackBox, { backgroundColor: bgColor, justifyContent: 'center', alignItems: 'center' }]}>
+              <View style={{ width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#000', backgroundColor: bgColor, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ fontWeight: 'bold' }}>{shooters?.[index] || index + 1}</Text>
               </View>
             </Pressable>
@@ -135,23 +151,3 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 90, paddingBottom: 10, alignItems: 'center', backgroundColor: '#8be0f5' },
-  gridContainer: { 
-    width: '90%', // Decreased from 100% to make the grid more compact
-    aspectRatio: 5 / 3, // Maintains proportional scalable height automatically
-    flexDirection: 'row', 
-    flexWrap: 'wrap',  
-    justifyContent: 'center', 
-    alignContent: 'center',
-    borderWidth: 6, // Added solid outer border framework
-    borderColor: '#1E293B', // Dark charcoal/slate color outline
-    borderRadius: 6, // Clean subtle rounding on corners
-    overflow: 'hidden' // Keeps inner cells perfectly inside the borders
-  },
-  squareCell: { width: '20%', aspectRatio: 1, borderWidth: 0.5, borderColor: 'rgba(0, 0, 0, 0.4)' },
-  buttonRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginVertical: 30 },
-  trackerRow: { flexDirection: 'row', justifyContent: 'center', gap: 15, marginTop: 20 },
-  trackBox: { width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#000' },
-});

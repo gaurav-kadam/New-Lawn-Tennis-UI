@@ -43,8 +43,8 @@ export default function MatchBody() {
             paddingTop: 8,
             paddingBottom: 8,
             paddingLeft: 8,
-            paddingRight: 0, // Remove padding from middle
-            backgroundColor: '#a1c6ec' 
+            paddingRight: 0, 
+            backgroundColor: theme.colors.textSecondary
           }}>
             <View style={{ 
               flex: 1, 
@@ -135,7 +135,7 @@ export default function MatchBody() {
             paddingBottom: 8,
             paddingLeft: 0, // Remove padding from middle
             paddingRight: 8,
-            backgroundColor: '#a1c6ec' 
+            backgroundColor:theme.colors.textSecondary
           }}>
             <View style={{ 
               flex: 1, 

@@ -97,7 +97,7 @@ export default function MatchesTable({
           <Text numberOfLines={1} style={[hdrStyle, { flex: 1.5 }]}>White Team</Text>
           <Text numberOfLines={1} style={[hdrStyle, { flex: 1.5 }]}>Blue Team</Text>
           <Text numberOfLines={1} style={[hdrStyle, { flex: 1.1 }]}>Category</Text>
-          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.0 }]}>Gen</Text>
+          <Text numberOfLines={1} style={[hdrStyle, { flex: 1.0 }]}>Gender</Text>
           <Text numberOfLines={1} style={[hdrStyle, { flex: 1.4 }]}>Scorer</Text>
           <Text numberOfLines={1} style={[hdrStyle, { width: ACTION_WIDTH }]}>Actions</Text>
         </View>

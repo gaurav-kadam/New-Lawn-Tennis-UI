@@ -95,7 +95,7 @@ export default function MobileTimerScreen({
   const DANGER = theme.colors.error || '#ef4444';
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG } as ViewStyle}>
+    <View style={{ flex: 1, backgroundColor: BG }}>
 
       {/* ── Top info bar ───────────────────────────────────────────── */}
       <View style={{
@@ -106,16 +106,16 @@ export default function MobileTimerScreen({
         borderBottomColor: BORDER,
         gap: 4,
       } as ViewStyle}>
-        <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' } as TextStyle}>
+        <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' } }>
           Match {activeMatch?.match_no || '—'}
         </Text>
-        <Text style={{ color: TEXT_PRIMARY, fontSize: 15, fontWeight: '700' } as TextStyle} numberOfLines={1}>
+        <Text style={{ color: TEXT_PRIMARY, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>
           {whiteTeamName} (W)  vs  {blueTeamName} (B)
         </Text>
       </View>
 
       {/* ── Quarter badge ──────────────────────────────────────────── */}
-      <View style={{ alignItems: 'center', paddingTop: 28 } as ViewStyle}>
+      <View style={{ alignItems: 'center', paddingTop: 28 }}>
         <View style={{
           paddingHorizontal: 16,
           paddingVertical: 5,
@@ -123,69 +123,69 @@ export default function MobileTimerScreen({
           borderWidth: 1,
           borderColor: ACCENT,
           backgroundColor: `${ACCENT}18`,
-        } as ViewStyle}>
-          <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700', letterSpacing: 0.8 } as TextStyle}>
+        }}>
+          <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700', letterSpacing: 0.8 }}>
             {penaltyPhase ? 'PENALTY SHOOTOUT' : `QUARTER  ${currentQuarter}  /  4`}
           </Text>
         </View>
       </View>
 
       {/* ── Main clock ─────────────────────────────────────────────── */}
-      <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 36, paddingBottom: 20 } as ViewStyle}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 36, paddingBottom: 20 }}>
         <Text style={{
           fontSize: 88,
           fontWeight: '900',
           color: TEXT_PRIMARY,
           fontVariant: ['tabular-nums'] as any,
           letterSpacing: -2,
-        } as TextStyle}>
+        } }>
           {formatTime(secondsElapsed)}
         </Text>
-        <Text style={{ color: TEXT_SECONDARY, fontSize: 13, marginTop: 4 } as TextStyle}>
+        <Text style={{ color: TEXT_SECONDARY, fontSize: 13, marginTop: 4 }}>
           {formatTime(remainingSeconds)} remaining
         </Text>
       </View>
 
       {/* ── Progress bar ───────────────────────────────────────────── */}
-      <View style={{ paddingHorizontal: 28, paddingBottom: 36 } as ViewStyle}>
-        <View style={{ height: 6, backgroundColor: BORDER, borderRadius: 3, overflow: 'hidden' } as ViewStyle}>
+      <View style={{ paddingHorizontal: 28, paddingBottom: 36 }}>
+        <View style={{ height: 6, backgroundColor: BORDER, borderRadius: 3, overflow: 'hidden' }}>
           <View style={{
             width: `${progressPercent * 100}%` as any,
             height: '100%',
             backgroundColor: progressPercent >= 1 ? DANGER : ACCENT,
             borderRadius: 3,
-          } as ViewStyle} />
+          }} />
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 } as ViewStyle}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
           <Text style={{ color: TEXT_SECONDARY, fontSize: 11 } as TextStyle}>{formatTime(0)}</Text>
           <Text style={{ color: TEXT_SECONDARY, fontSize: 11 } as TextStyle}>{formatTime(quarterDurationSeconds)}</Text>
         </View>
       </View>
 
       {/* ── Primary timer control ──────────────────────────────────── */}
-      <View style={{ paddingHorizontal: 24, gap: 14 } as ViewStyle}>
+      <View style={{ paddingHorizontal: 24, gap: 14 } }>
         <Button
           title={isRunning ? '⏸  Pause Clock' : '▶  Start Clock'}
           variant={isRunning ? 'outline' : 'primary'}
           onPress={isRunning ? pauseTimer : startTimer}
-          style={{ height: 62, borderRadius: 14 } as ViewStyle}
-          textStyle={{ fontSize: 20, fontWeight: '800' } as TextStyle}
+          style={{ height: 62, borderRadius: 14 }}
+          textStyle={{ fontSize: 20, fontWeight: '800' } }
         />
 
-        <View style={{ flexDirection: 'row', gap: 12 } as ViewStyle}>
+        <View style={{ flexDirection: 'row', gap: 12 } }>
           <Button
             title="Reset Clock"
             variant="ghost"
             onPress={resetTimer}
-            style={{ flex: 1, height: 48, borderWidth: 1, borderColor: BORDER, borderRadius: 10,backgroundColor:'#faca50' } as ViewStyle}
-            textStyle={{ fontSize: 14 } as TextStyle}
+            style={{ flex: 1, height: 48, borderWidth: 1, borderColor: BORDER, borderRadius: 10,backgroundColor:'#faca50' }}
+            textStyle={{ fontSize: 14 }}
           />
           <Button
             title="End Quarter"
             variant="danger"
             onPress={handleEndQuarter}
-            style={{ flex: 1, height: 48, borderRadius: 10 } as ViewStyle}
-            textStyle={{ fontSize: 14 } as TextStyle}
+            style={{ flex: 1, height: 48, borderRadius: 10 } }
+            textStyle={{ fontSize: 14 } }
           />
         </View>
       </View>
@@ -199,49 +199,49 @@ export default function MobileTimerScreen({
         borderWidth: 1,
         borderColor: BORDER,
         overflow: 'hidden',
-      } as ViewStyle}>
+      } }>
         {/* Header row */}
-        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: BORDER, backgroundColor: '#252525' } as ViewStyle}>
-          <View style={{ width: 90, paddingVertical: 8, paddingLeft: 12 } as ViewStyle}>
-            <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } as TextStyle}>Quarter</Text>
+        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: BORDER, backgroundColor: '#252525' } }>
+          <View style={{ width: 90, paddingVertical: 8, paddingLeft: 12 } }>
+            <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } }>Quarter</Text>
           </View>
           {[1, 2, 3, 4].map((q) => (
-            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-              <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } as TextStyle}>{q}</Text>
+            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderLeftWidth: 1, borderColor: BORDER } }>
+              <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } }>{q}</Text>
             </View>
           ))}
-          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 8, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-            <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } as TextStyle}>Total</Text>
+          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 8, borderLeftWidth: 1, borderColor: BORDER } }>
+            <Text style={{ color: TEXT_SECONDARY, fontSize: 11, fontWeight: '600' } }>Total</Text>
           </View>
         </View>
 
         {/* White row */}
-        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: BORDER } as ViewStyle}>
-          <View style={{ width: 90, paddingVertical: 10, paddingLeft: 12 } as ViewStyle}>
-            <Text style={{ color: '#93c5fd', fontSize: 12, fontWeight: '700' } as TextStyle} numberOfLines={1}>WHITE</Text>
+        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: BORDER } }>
+          <View style={{ width: 90, paddingVertical: 10, paddingLeft: 12 }}>
+            <Text style={{ color: '#93c5fd', fontSize: 12, fontWeight: '700' } } numberOfLines={1}>WHITE</Text>
           </View>
           {[1, 2, 3, 4].map((q) => (
-            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-              <Text style={{ color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' } as TextStyle}>{getQuarterScore('left', q)}</Text>
+            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } }>
+              <Text style={{ color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' } }>{getQuarterScore('left', q)}</Text>
             </View>
           ))}
-          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-            <Text style={{ color: '#93c5fd', fontSize: 16, fontWeight: '900' } as TextStyle}>{scoreA}</Text>
+          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } }>
+            <Text style={{ color: '#93c5fd', fontSize: 16, fontWeight: '900' } }>{scoreA}</Text>
           </View>
         </View>
 
         {/* Blue row */}
-        <View style={{ flexDirection: 'row' } as ViewStyle}>
-          <View style={{ width: 90, paddingVertical: 10, paddingLeft: 12 } as ViewStyle}>
-            <Text style={{ color: '#fbbf24', fontSize: 12, fontWeight: '700' } as TextStyle} numberOfLines={1}>BLUE</Text>
+        <View style={{ flexDirection: 'row' } }>
+          <View style={{ width: 90, paddingVertical: 10, paddingLeft: 12 } }>
+            <Text style={{ color: '#fbbf24', fontSize: 12, fontWeight: '700' }} numberOfLines={1}>BLUE</Text>
           </View>
           {[1, 2, 3, 4].map((q) => (
-            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-              <Text style={{ color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' } as TextStyle}>{getQuarterScore('right', q)}</Text>
+            <View key={q} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER }}>
+              <Text style={{ color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' } }>{getQuarterScore('right', q)}</Text>
             </View>
           ))}
-          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER } as ViewStyle}>
-            <Text style={{ color: '#fbbf24', fontSize: 16, fontWeight: '900' } as TextStyle}>{scoreB}</Text>
+          <View style={{ flex: 1.5, alignItems: 'center', paddingVertical: 10, borderLeftWidth: 1, borderColor: BORDER }}>
+            <Text style={{ color: '#fbbf24', fontSize: 16, fontWeight: '900' }}>{scoreB}</Text>
           </View>
         </View>
       </View>

@@ -4,7 +4,7 @@
     "slug": "ems-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/FW_Logo1.png",
     "scheme": "emsapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -24,7 +24,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/FW_Logo1.png"
     },
     "plugins": [
       "expo-router",

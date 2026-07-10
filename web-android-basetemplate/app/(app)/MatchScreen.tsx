@@ -2,16 +2,20 @@
 import MatchBody from '@/components/match/layout/MatchBody';
 import { MatchProvider, useMatch } from '@/components/match/layout/MatchContext';
 import MobileTimerScreen from '../../components/match/mobile/MobileTimerScreen';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import MatchHeader from '../../components/match/header/MatchHeader';
 import { useLocalSearchParams } from 'expo-router';
+import MatchFullscreenButton from '../../components/match/controls/MatchFullscreenButton';
+// Double check this path matches your design system config!
 
 const MOBILE_BREAKPOINT = 768;
+
 
 // Inner wrapper: reads context + params once; routes to mobile or web layout via explicit props.
 function MatchScreenContent() {
   const { setActiveMatch } = useMatch();
+  const [isFullscreen,setIsFullscreen]=useState(false);
   const params = useLocalSearchParams<{
     matchId?: string;
     whiteTeamName?: string;
@@ -31,6 +35,7 @@ function MatchScreenContent() {
     timekeeper2Code?: string;
     goalJudge1Code?: string;
     goalJudge2Code?: string;
+    autoFullscreen?: string;
   }>();
 
   const { width } = useWindowDimensions();
@@ -39,8 +44,52 @@ function MatchScreenContent() {
   // Derive display values once so they can flow down as explicit props to either layout.
   const displayWhiteTeam = params.whiteTeamName || 'Team A';
   const displayBlueTeam  = params.blueTeamName  || 'Team B';
-  const resolvedWhiteCode = params.whiteTeamCode || '';
-  const resolvedBlueCode  = params.blueTeamCode  || '';
+  const resolvedWhiteCode = params.whiteTeamCode || 'Team A';
+  const resolvedBlueCode  = params.blueTeamCode  || 'Team B';
+
+  // Synchronize layout tracking
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement); 
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (typeof document === 'undefined') return;
+
+    try {
+      if (!document.fullscreenElement) {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn("Fullscreen toggle failed", err);
+    }
+  };
+
+  // ◄ 2. NEW EFFECT: Auto-trigger fullscreen if user arrived via the "Start" button
+  useEffect(() => {
+    if (!isMobile && params.autoFullscreen === 'true') {
+      // Small timeout ensures the DOM is fully ready to handle the transition
+      const timer = setTimeout(() => {
+        toggleFullscreen();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [params.autoFullscreen, isMobile]);
 
   useEffect(() => {
     if (params.matchId) {
@@ -78,7 +127,9 @@ function MatchScreenContent() {
     setActiveMatch,
   ]);
 
-  // ── Mobile (phone) viewport → dedicated timekeeper screen ─────────
+  
+
+  //Mobile  viewport → dedicated timekeeper screen
   if (isMobile) {
     return (
       <MobileTimerScreen
@@ -90,36 +141,31 @@ function MatchScreenContent() {
     );
   }
 
-  // ── Web / Tablet viewport → full scorer dashboard (unchanged) ─────
+  //Web / Tablet viewport → full scorer dashboard
   return (
     <>
       <MatchHeader />
       <MatchBody />
+
+      {/* <MatchFullscreenButton
+      isFullscreen = {isFullscreen}
+      onPress={toggleFullscreen}
+      /> */}
     </>
   );
 }
 
 export default function MatchScreen() {
-  const isBrowserWindow = typeof document !== 'undefined';
+  
 
   useEffect(() => {
-    if (isBrowserWindow) {
-      const enterFullScreen = async () => {
-        try {
-          const docEl = document.documentElement;
-          if (docEl.requestFullscreen) await docEl.requestFullscreen();
-        } catch {
-          console.log("Browser blocked automatic full screen initialization.");
-        }
-      };
-      enterFullScreen();
       return () => {
-        if (document.fullscreenElement) {
+        if ( typeof document !== 'undefined' && document.fullscreenElement) {
           document.exitFullscreen().catch((err) => console.log(err));
         }
       };
-    }
-  }, [isBrowserWindow]);
+  
+  }, []);
 
   return (
     <MatchProvider>

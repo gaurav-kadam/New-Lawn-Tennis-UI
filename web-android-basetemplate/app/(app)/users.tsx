@@ -102,10 +102,7 @@ export default function UsersScreen() {
   );
 
   return (
-    /*
-     * Root must be a View with flex: 1 — the original Fragment (<>) had no
-     * height boundary, so no flex constraint reached the table's ScrollView.
-     */
+   
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>
       {isMobile ? (
         /*

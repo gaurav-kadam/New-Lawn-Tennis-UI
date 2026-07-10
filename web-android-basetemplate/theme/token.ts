@@ -6,6 +6,7 @@ export const tokens = {
     secondary: '#F8FAFC',
     accent: '#22C55E',
     success: '#22C55E',
+    black:'#000000',
 
     background: '#F8FAFC',
     surface: '#FFFFFF',
@@ -42,6 +43,7 @@ export const tokens = {
         region1: '#6ce439',
         region2: '#d9e854',
         region3: '#e84837',
+         region4: '#66c7fe',
       },
      
       scoreboard: {
@@ -72,7 +74,8 @@ export const tokens = {
       inputMini: 11,        
       caption: 12,
       miniLabel: 10,        // Mini sub labels like HOME/AWAY/Scoreboard
-      tableCell: 9,         // Scoreboard grid dimensions
+      tableCell: 9,  
+      dotsize : 9,       // Scoreboard grid dimensions
     },
 
     weights: {
@@ -97,6 +100,14 @@ export const tokens = {
     md: 10,
     lg: 16,
     round: 9999,
+  },
+  borderRadius:{
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 22,
+
   },
 
   layout: {

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import Card from '../../components/ui/Card';
 import { useDashboard } from '../../hooks/usedashboard';
 import { useTheme } from '../../theme/themeContext';
@@ -30,8 +30,8 @@ export default function Dashboard() {
   };
 
   return (
-    <ScrollView 
-      contentContainerStyle={[styles.scrollContainer, { backgroundColor: theme.colors.background }]}
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, padding: 24, backgroundColor: theme.colors.background }}
     >
        <View style={{marginBottom: 24}}>
               
@@ -72,69 +72,68 @@ export default function Dashboard() {
               </View>
 
       {loading && (
-        <View style={styles.centerWrapper}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       )}
 
       {error ? (
-        <View style={styles.centerWrapper}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
           <Text style={{ color: 'theme.colors.textprimary', fontWeight: '500' }}>{error}</Text>
         </View>
       ) : null}
 
       {!loading && !error && (
-        <View style={styles.gridRow}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 }}>
           {modules.map((item) => (
-            <View 
-              key={item.id} 
-              style={[styles.cardWrapper, { width: isMobile ? '100%' : '50%' }]}
+            <View
+              key={item.id}
+              style={{ padding: 8, width: isMobile ? '100%' : '50%' }}
             >
               <Card variant="elevated" onPress={() => handleCardPress(item.path)}>
-                <View style={styles.cardContent}>
-                  
-                  <Text 
+                <View style={{ minHeight: 110, justifyContent: 'space-between' }}>
+
+                  <Text
                     numberOfLines={1}
                     adjustsFontSizeToFit
-                    style={[
-                      styles.cardTitle, 
-                      { 
-                        color: theme.colors.textPrimary, 
-                        fontSize: theme.typography.sizes.h2,
-                        fontFamily: theme.typography.fontFamily 
-                      }
-                    ]}
+                    style={{
+                      fontWeight: '700',
+                      letterSpacing: -0.3,
+                      color: theme.colors.textPrimary,
+                      fontSize: theme.typography.sizes.h2,
+                      fontFamily: theme.typography.fontFamily
+                    }}
                   >
                     {item.title}
                   </Text>
-                  
-                  <View style={styles.metricsContainer}>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 12 }}>
                     {/* Active Column */}
-                    <View style={styles.metricBlock}>
-                      <Text style={[styles.metricLabel, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         Active
                       </Text>
-                      <Text style={[styles.metricValue, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         {item.active ?? 0}
                       </Text>
                     </View>
 
                     {/* Inactive Column */}
-                    <View style={[styles.metricBlock, styles.middleMetricBlock, { borderColor: theme.colors.border }]}>
-                      <Text style={[styles.metricLabel, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                    <View style={{ flex: 1, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: theme.colors.border }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         Inactive
                       </Text>
-                      <Text style={[styles.metricValue, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         {item.inactive ?? 0}
                       </Text>
                     </View>
 
                     {/* All Column */}
-                    <View style={styles.metricBlock}>
-                      <Text style={[styles.metricLabel, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         All
                       </Text>
-                      <Text style={[styles.metricValue, { color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }]}>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
                         {item.total ?? 0}
                       </Text>
                     </View>
@@ -149,66 +148,3 @@ export default function Dashboard() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    padding: 24,
-  },
-  headerSection: {
-    marginBottom: 24,
-  },
-  welcomeText: {
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  titleText: {
-    fontWeight: 'bold',
-  },
-  gridRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -8, 
-  },
-  cardWrapper: {
-    padding: 8,   
-  },
-  cardContent: {
-    minHeight: 110, 
-    justifyContent: 'space-between',
-  },
-  cardTitle: {
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  metricsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 12,
-  },
-  metricBlock: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  middleMetricBlock: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-  },
-  metricLabel: {
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  metricValue: {
-    fontWeight: '700',
-  },
-  centerWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 200,
-  }
-});

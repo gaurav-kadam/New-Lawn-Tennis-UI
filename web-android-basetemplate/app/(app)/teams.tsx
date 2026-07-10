@@ -121,9 +121,8 @@ export default function TeamsScreen() {
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background || tokens.colors.background }}>
       {isMobile ? (
-        /*
-         * MOBILE: outer ScrollView + card list — no inner ScrollView conflict.
-         */
+        
+        /* MOBILE: outer ScrollView + card list — no inner ScrollView conflict.*/
         <ScrollView contentContainerStyle={{ flexGrow: 1, padding: tokens.spacing.md }}>
           {topSection}
           <TeamCardList teams={filteredTeams} onEdit={openEditModal} onDelete={handleDelete} />
