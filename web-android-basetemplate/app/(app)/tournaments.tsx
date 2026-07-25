@@ -1,5 +1,7 @@
+
+
 import React, { useState } from 'react';
-import { ScrollView, View, useWindowDimensions, ActivityIndicator, Text } from 'react-native';
+import { View, useWindowDimensions, ActivityIndicator, Text } from 'react-native';
 import { router } from 'expo-router';
 import AddTournamentModal from '../../components/elements/AddTournament';
 import ViewTournamentModal from '../../components/elements/ViewTournamentModal';
@@ -10,8 +12,6 @@ import TournamentCardList from '@/components/tournaments/TournamentCardList';
 import TournamentTable from '@/components/tournaments/TournamentTable';
 import TournamentHeader from '@/components/tournaments/TournamentHeader';
 import NotificationModal from '@/components/ui/NotificationModal';
-import FilterSearchBar, { FilterTab } from '@/components/ui/FilterSearchBar';
-import Pagination from '@/components/ui/Pagination';
 
 type NotifState = { visible: boolean; type: 'success' | 'error'; title: string; message: string };
 type ConfirmState = { visible: boolean; onConfirm: () => void };
@@ -21,12 +21,9 @@ export default function TournamentsScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const isMobile = screenWidth < 768;
 
-  const [filter, setFilter] = useState<FilterTab>('all');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const isActive = filter === 'all' ? undefined : filter === 'active';
-  const { tournaments, total, loading, error, reload } = useTournaments(isActive, search, page, rowsPerPage);
+  // Fetch the master tournament list (You can pass undefined/empty to fetch all if filtering locally)
+  const { tournaments, loading, error, reload } = useTournaments();
+  
   const [openModal, setOpenModal] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
   const [editingData, setEditingData] = useState<any>(null);
@@ -95,79 +92,32 @@ export default function TournamentsScreen() {
     setViewingData(null);
   };
 
-  const filteredTournaments = (tournaments || []).filter((t: any) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      t.tournament_name?.toLowerCase().includes(q) ||
-      t.city?.toLowerCase().includes(q) ||
-      t.state?.toLowerCase().includes(q) ||
-      t.section?.toLowerCase().includes(q) ||
-      t.gender?.toLowerCase().includes(q)
-    );
-  });
-
-  const topSection = (
-    <>
-      <TournamentHeader onEdit={setOpenModal} />
-      {loading && <ActivityIndicator size="large" color={theme.colors.primary} />}
-      {error ? (
-        <Text style={{ color: theme.colors.error, fontFamily: theme.typography.fontFamily, marginTop: 0 }}>
-          {error}
-        </Text>
-      ) : null}
-      <FilterSearchBar
-        filter={filter}
-        onFilterChange={(f: FilterTab) => { setFilter(f); setPage(0); }}
-        search={search}
-        onSearchChange={(s: string) => { setSearch(s); setPage(0); }}
-        searchPlaceholder="Search tournaments..."
-      />
-    </>
-  );
-
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>
+      <View style={{ paddingHorizontal: isMobile ? 15 : 25, paddingTop: 15, flexShrink: 0 }}>
+        <TournamentHeader onEdit={setOpenModal} />
+      </View>
+
       {isMobile ? (
-       
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: theme.spacing.md || 15 }}>
-          {topSection}
-          <TournamentCardList
-            tournaments={filteredTournaments}
-            onView={handleOpenViewModal}
-            onEdit={openEditModal}
-            onDelete={handleDelete}
-            onAttach={handleAttachTournament}
-          />
-        </ScrollView>
+        <TournamentCardList
+          tournaments={tournaments || []}
+          onView={handleOpenViewModal}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          onAttach={handleAttachTournament}
+        />
       ) : (
-        <View style={{ flex: 1, padding: theme.spacing.xl || 25 }}>
-          <View style={{ flexShrink: 0 }}>
-            {topSection}
-          </View>
-          <View style={{ height: 'calc(100vh - 360px)' as any, width: '100%' }}>
-            <TournamentTable
-              tournaments={filteredTournaments}
-              onView={handleOpenViewModal}
-              onEdit={openEditModal}
-              onDelete={handleDelete}
-              onAttach={handleAttachTournament}
-            />
-          </View>
-          <Pagination
-            total={total ?? 0}
-            page={page ?? 0}
-            rowsPerPage={rowsPerPage ?? 10}
-            onPageChange={setPage}
-            onRowsPerPageChange={(rpp: number) => { setRowsPerPage(rpp); setPage(0); }}
-          />
-        </View>
+        <TournamentTable
+          tournaments={tournaments || []}
+          onView={handleOpenViewModal}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          onAttach={handleAttachTournament}
+        />
       )}
 
       {openModal && (
-        <View>
-          <AddTournamentModal onSave={handleSave} onClose={closeModal} initialData={editingData} />
-        </View>
+        <AddTournamentModal onSave={handleSave} onClose={closeModal} initialData={editingData} />
       )}
 
       {openViewModal && (

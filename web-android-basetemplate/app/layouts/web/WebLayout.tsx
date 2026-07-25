@@ -12,8 +12,8 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  supervisor: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen', '/users'],
-  admin: ['/dashboard1', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'],
+  supervisor: ['/dashboard', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen', '/users'],
+  admin: ['/dashboard', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'],
   scorer: ['/matches', '/MatchScreen'],
 };
 
@@ -30,7 +30,7 @@ export default function WebLayout({ children }: any) {
 
   // Global static menu layout manifest master registration
   const masterMenu = [
-    { name: 'Dashboard', icon: 'home', path: '/dashboard1' },
+    { name: 'Dashboard', icon: 'home', path: '/dashboard' },
     { name: 'Tournaments', icon: 'trophy', path: '/tournaments' },
     { name: 'Teams', icon: 'people', path: '/teams' },
     { name: 'Officials', icon: 'shield', path: '/officials' },
@@ -78,7 +78,7 @@ export default function WebLayout({ children }: any) {
       if (currentRole === 'scorer') {
         router.replace('/matches');
       } else {
-        router.replace('/dashboard1');
+        router.replace('/dashboard');
       }
     }
   }, [path, currentRole, loading]);

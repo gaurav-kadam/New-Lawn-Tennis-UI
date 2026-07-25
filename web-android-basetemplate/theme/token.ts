@@ -39,12 +39,8 @@ export const tokens = {
       PlayerColumn: '#6892f5',
       sidePanel: '#9caacc',
       sidePanel1: '#b1b1b1',
-      courtColor: {
-        region1: '#6ce439',
-        region2: '#d9e854',
-        region3: '#e84837',
-         region4: '#66c7fe',
-      },
+      region4: '#66c7fe',
+     
      
       scoreboard: {
         border: '#f8fbff',
@@ -65,6 +61,7 @@ export const tokens = {
       h2: 22,
       h3: 18,
       body: 16,
+      
       scoreHUD: 26,         // Large scores in HUD center
       playerNumber: 15,
       small: 14,

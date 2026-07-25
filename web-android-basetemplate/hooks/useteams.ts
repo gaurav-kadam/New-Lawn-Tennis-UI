@@ -12,6 +12,7 @@ export const useTeams = (options?: {
   const [teams, setTeams] = useState<Team[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { isActive, search, page = 0, rowsPerPage = 10 } = options || {};
 

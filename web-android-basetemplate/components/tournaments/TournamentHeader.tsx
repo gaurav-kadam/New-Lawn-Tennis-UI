@@ -44,7 +44,7 @@ export default function TournamentHeader({
             fontSize: theme.typography.sizes.h2,
           }}
         >
-          Tournaments
+          Tournament Management
         </Text>
 
         <Text
@@ -57,7 +57,7 @@ export default function TournamentHeader({
               theme.typography.sizes.small,
           }}
         >
-          Manage tournaments
+          Search, create, update, and manage registered tournaments.
         </Text>
       </View>
 

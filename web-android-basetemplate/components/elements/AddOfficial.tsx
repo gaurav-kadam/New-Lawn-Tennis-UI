@@ -90,7 +90,7 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
       lastName: '',
       email: '',
       phoneNo: '',
-      gender: 'Men',
+      gender: '',
       state: '',
       city: '',
       dob: ''
@@ -107,22 +107,75 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
 
   const validate = () => {
     let newErrors: any = {};
+    const alphaOnlyRegex = /^[a-zA-Z]+$/;
+    const alphaSpaceRegex = /^[a-zA-Z\s]+$/;
+    const tenDigitsRegex = /^\d{10}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!formData.phoneNo.trim()) newErrors.phoneNo = "Phone number is required";
-    else if (formData.phoneNo.length < 10) newErrors.phoneNo = "Enter a valid phone number";
-    
+    // First Name
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    } else if (!alphaOnlyRegex.test(formData.firstName)) {
+      newErrors.firstName = "Letters only (no spaces)";
+    }
+
+    // Last Name
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    } else if (!alphaOnlyRegex.test(formData.lastName)) {
+      newErrors.lastName = "Letters only (no spaces)";
+    }
+
+    // Phone Number
+    if (!formData.phoneNo.trim()) {
+      newErrors.phoneNo = "Phone number is required";
+    } else if (!tenDigitsRegex.test(formData.phoneNo)) {
+      newErrors.phoneNo = "Must be exactly 10 digits";
+    }
+
+    // Email
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    // State
+    if (!formData.state.trim()) {
+      newErrors.state = "State is required";
+    } else if (!alphaSpaceRegex.test(formData.state)) {
+      newErrors.state = "Letters and spaces only";
+    }
+
+    // City
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required";
+    } else if (!alphaSpaceRegex.test(formData.city)) {
+      newErrors.city = "Letters and spaces only";
+    }
+
+    // Gender
     if (!formData.gender) newErrors.gender = "Gender is required";
-    if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    
+
+    // Date of Birth
     if (!formData.dob.trim()) {
       newErrors.dob = "Date of birth is required";
     } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.dob)) {
       newErrors.dob = "Use valid DD/MM/YYYY format";
+    } else {
+      // Parse DD/MM/YYYY to check if it's in the past
+      const [day, month, year] = formData.dob.split('/').map(Number);
+      const parsedDate = new Date(year, month - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (isNaN(parsedDate.getTime())) {
+        newErrors.dob = "Invalid date values";
+      } else if (parsedDate >= today) {
+        newErrors.dob = "Date of birth must be in the past";
+      }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -202,8 +255,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         placeholder="Enter First Name"
                         value={formData.firstName} 
                         onChangeText={(v: string) => update('firstName', v)} 
+                        error={errors.firstName}
                       />
-                      {errors.firstName && <Text style={errorTextStyle}>{errors.firstName}</Text>}
+          
                     </View>
                     <View style={{ flex: 1 }}>
                       <Input 
@@ -211,8 +265,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         placeholder="Enter Last Name"
                         value={formData.lastName} 
                         onChangeText={(v: string) => update('lastName', v)} 
+                        error={errors.lastName}
                       />
-                      {errors.lastName && <Text style={errorTextStyle}>{errors.lastName}</Text>}
+                      
                     </View>
                   </View>
 
@@ -224,8 +279,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         value={formData.phoneNo} 
                         keyboardType="numeric" 
                         onChangeText={(v: string) => update('phoneNo', v)} 
+                        error={errors.phoneNo}
                       />
-                      {errors.phoneNo && <Text style={errorTextStyle}>{errors.phoneNo}</Text>}
+                      
                     </View>
 
                     <View style={{ flex: 1 }}>
@@ -235,30 +291,13 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         placeholder="DD/MM/YYYY" 
                         keyboardType="numeric"
                         maxLength={10}
-                        onChangeText={(v: string) => {
-                          const cleaned = v.replace(/\D/g, '');
-                          let formatted = cleaned;
-
-                          if (cleaned.length > 2 && cleaned.length <= 4) {
-                            formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
-                          } else if (cleaned.length > 4) {
-                            formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
-                          }
-
-                          update('dob', formatted);
+                        onChangeText={(v: string) => {update('dob', v);
                         }}
+                        error={errors.dob}
                       />
-                      {errors.dob && <Text style={errorTextStyle}>{errors.dob}</Text>}
+                     
                     </View>
                   </View>
-                  
-                   
-
-              
-
-
-                  
-
                   <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                     <View style={{ flex: 1 }}>
                       <Input 
@@ -266,8 +305,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         placeholder="State" 
                         value={formData.state} 
                         onChangeText={(v: string) => update('state', v)} 
+                        error={errors.state}
                       />
-                      {errors.state && <Text style={errorTextStyle}>{errors.state}</Text>}
+                      
                     </View>
                     <View style={{ flex: 1 }}>
                       <Input 
@@ -275,8 +315,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         placeholder="City"
                         value={formData.city} 
                         onChangeText={(v: string) => update('city', v)} 
+                        error={errors.city}
                       />
-                      {errors.city && <Text style={errorTextStyle}>{errors.city}</Text>}
+                      
                     </View>
                   </View>
                   <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
@@ -286,6 +327,7 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                       placeholder="Enter Email ID"
                       value={formData.email} 
                       onChangeText={(v: string) => update('email', v)} 
+                      error={errors.email}
                     />
                   </View>
                   
@@ -298,8 +340,9 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                         { label: 'Men', value: 'Men' }, 
                         { label: 'Women', value: 'Women' }
                       ]}
+                      error={errors.gender}
                     />
-                    {errors.gender && <Text style={errorTextStyle}>{errors.gender}</Text>}
+                   
                   </View>
 
               
@@ -318,15 +361,15 @@ export default function AddOfficialModal({ visible, onClose, onSave, initialData
                 gap: 8, 
                 marginTop: 16 
               }}>
-                <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}>
-                  <Button title="Cancel" variant="ghost" onPress={handleClose} />
-                </View>
-                <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}>
+               
+                  <Button title="Cancel" variant="danger" onPress={handleClose} />
+                
+               
                   <Button 
-                    title={initialData ? "Update Official" : "Save Official"} 
+                    title={initialData ? "Update" : "Create"} 
                     onPress={handleSave} 
                   />
-                </View>
+                
               </View>
 
             </View>

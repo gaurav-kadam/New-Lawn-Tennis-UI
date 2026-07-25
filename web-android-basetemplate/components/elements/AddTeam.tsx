@@ -90,20 +90,70 @@ export default function CreateTeamModal({
 
   const validateStep = () => {
     const stepErrors: any = {};
+    const alphaSpaceRegex = /^[a-zA-Z\s]+$/;
+    const pureAlphaRegex = /^[a-zA-Z]+$/;
 
     if (currentStep === 1) {
-      if (!formData.teamName.trim()) stepErrors.teamName = 'Team full name is required';
-      if (!formData.shortName.trim()) stepErrors.shortName = 'Short name is required';
-      if (!formData.gender) stepErrors.gender = 'Gender is required';
-      if (!formData.state.trim()) stepErrors.state = 'State is required';
-      if (!formData.city.trim()) stepErrors.city = 'City is required';
-      if (!formData.section) stepErrors.section = 'Section is required';
+      // Team Name
+      if (!formData.teamName?.trim()) {
+        stepErrors.teamName = 'Team full name is required';
+      } else if (!alphaSpaceRegex.test(formData.teamName)) {
+        stepErrors.teamName = 'Letters and spaces only';
+      }
+
+      // Short Name (Code)
+      if (!formData.shortName?.trim()) {
+        stepErrors.shortName = 'Short name is required';
+      } else if (!pureAlphaRegex.test(formData.shortName)) {
+        stepErrors.shortName = 'Letters only (no spaces or symbols)';
+      }
+
+      // Gender selection validation
+      if (!formData.gender) {
+        stepErrors.gender = 'Gender is required';
+      }
+
+      // State
+      if (!formData.state?.trim()) {
+        stepErrors.state = 'State is required';
+      } else if (!alphaSpaceRegex.test(formData.state)) {
+        stepErrors.state = 'Letters and spaces only';
+      }
+
+      // City
+      if (!formData.city?.trim()) {
+        stepErrors.city = 'City is required';
+      } else if (!alphaSpaceRegex.test(formData.city)) {
+        stepErrors.city = 'Letters and spaces only';
+      }
+
+      // Section selection validation
+      if (!formData.section) {
+        stepErrors.section = 'Section is required';
+      }
     }
 
     if (currentStep === 2) {
-      if (!formData.headCoach.trim()) stepErrors.headCoach = 'Head coach name is required';
-      if (!formData.coach.trim()) stepErrors.coach = 'Assistant coach name is required';
-      if (!formData.manager.trim()) stepErrors.manager = 'Team manager name is required';
+      // Head Coach
+      if (!formData.headCoach?.trim()) {
+        stepErrors.headCoach = 'Head coach name is required';
+      } else if (!alphaSpaceRegex.test(formData.headCoach)) {
+        stepErrors.headCoach = 'Letters and spaces only';
+      }
+
+      // Assistant Coach
+      if (!formData.coach?.trim()) {
+        stepErrors.coach = 'Assistant coach name is required';
+      } else if (!alphaSpaceRegex.test(formData.coach)) {
+        stepErrors.coach = 'Letters and spaces only';
+      }
+
+      // Team Manager
+      if (!formData.manager?.trim()) {
+        stepErrors.manager = 'Team manager name is required';
+      } else if (!alphaSpaceRegex.test(formData.manager)) {
+        stepErrors.manager = 'Letters and spaces only';
+      }
     }
 
     setErrors(stepErrors);
@@ -242,8 +292,9 @@ export default function CreateTeamModal({
                           placeholder="e.g. Maharashtra Warriors"
                           value={formData.teamName}
                           onChangeText={(value: any) => update('teamName', value)}
+                          error={errors.teamName}
                         />
-                        {errors.teamName && <Text style={errorTextStyle}>{errors.teamName}</Text>}
+                        
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
@@ -253,8 +304,9 @@ export default function CreateTeamModal({
                             placeholder="e.g. MAH"
                             value={formData.shortName}
                             onChangeText={(value: any) => update('shortName', value)}
+                            error={errors.shortName}
                           />
-                          {errors.shortName && <Text style={errorTextStyle}>{errors.shortName}</Text>}
+                         
                         </View>
                         <View style={{ flex: 1 }}>
                           <RadioGroup
@@ -265,8 +317,9 @@ export default function CreateTeamModal({
                               { label: 'Men', value: 'Men' },
                               { label: 'Women', value: 'Women' },
                             ]}
+                            error={errors.gender}
                           />
-                          {errors.gender && <Text style={{ ...errorTextStyle, marginTop: -4 }}>{errors.gender}</Text>}
+                          
                         </View>
                       </View>
 
@@ -277,8 +330,9 @@ export default function CreateTeamModal({
                             placeholder="State"
                             value={formData.state}
                             onChangeText={(value: any) => update('state', value)}
+                            error={errors.state}
                           />
-                          {errors.state && <Text style={errorTextStyle}>{errors.state}</Text>}
+                        
                         </View>
                         <View style={{ flex: 1 }}>
                           <Input
@@ -286,8 +340,9 @@ export default function CreateTeamModal({
                             placeholder="City"
                             value={formData.city}
                             onChangeText={(value: any) => update('city', value)}
+                            error={errors.city}
                           />
-                          {errors.city && <Text style={errorTextStyle}>{errors.city}</Text>}
+                          
                         </View>
                       </View>
 
@@ -301,8 +356,9 @@ export default function CreateTeamModal({
                             { label: 'Under-19', value: 'U19' },
                             { label: 'Open', value: 'Open' },
                           ]}
+                          error={errors.section}
                         />
-                        {errors.section && <Text style={{ ...errorTextStyle, marginTop: -4 }}>{errors.section}</Text>}
+  
                       </View>
                     </>
                   )}
@@ -316,8 +372,9 @@ export default function CreateTeamModal({
                           placeholder="Enter head coach name"
                           value={formData.headCoach}
                           onChangeText={(value: any) => update('headCoach', value)}
+                          error={errors.headCoach}
                         />
-                        {errors.headCoach && <Text style={errorTextStyle}>{errors.headCoach}</Text>}
+                        
                       </View>
                       <View>
                         <Input
@@ -325,8 +382,9 @@ export default function CreateTeamModal({
                           placeholder="Enter coach name"
                           value={formData.coach}
                           onChangeText={(value: any) => update('coach', value)}
+                          error={errors.coach}
                         />
-                        {errors.coach && <Text style={errorTextStyle}>{errors.coach}</Text>}
+                       
                       </View>
                       <View>
                         <Input
@@ -334,8 +392,9 @@ export default function CreateTeamModal({
                           placeholder="Enter manager name"
                           value={formData.manager}
                           onChangeText={(value: any) => update('manager', value)}
+                          error={errors.manager}
                         />
-                        {errors.manager && <Text style={errorTextStyle}>{errors.manager}</Text>}
+                       
                       </View>
                     </>
                   )}
@@ -399,19 +458,19 @@ export default function CreateTeamModal({
 
               {/* Footer Buttons */}
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 16 }}>
-                <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}>
+                {/* <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}> */}
                   <Button
                     title={currentStep === 1 ? 'Cancel' : 'Back'}
-                    variant="ghost"
+                    variant="danger"
                     onPress={currentStep === 1 ? handleClose : prevStep}
                   />
-                </View>
-                <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}>
+                {/* </View> */}
+                {/* <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}> */}
                   <Button
-                    title={currentStep === STEP_COUNT ? (initialData ? 'Update Team' : 'Register Team') : 'Next Step'}
+                    title={currentStep === STEP_COUNT ? (initialData ? 'Update' : 'Create') : 'Next Step'}
                     onPress={handleSave}
                   />
-                </View>
+                {/* </View> */}
               </View>
 
             </View>

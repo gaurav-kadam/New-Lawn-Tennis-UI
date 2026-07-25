@@ -81,6 +81,10 @@ export default function PenaltyShootoutOverlay({ side }: { side: 'left' | 'right
       return;
     }
 
+    if (selectedResult === 'goal' && !isGoalArea(cellIndex)) {
+    return; 
+  }
+
     // Lock the result into local state array immediately to display dark colors
     const updatedAttempts = [...attempts];
     updatedAttempts[activeRound] = { result: selectedResult, targetCell: cellIndex };

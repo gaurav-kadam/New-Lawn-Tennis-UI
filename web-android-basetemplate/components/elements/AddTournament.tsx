@@ -54,7 +54,7 @@ export default function AddTournamentModal({ visible, onClose, onSave, initialDa
     start_date: '', // Keeps format DD/MM/YYYY
     end_date: '',   // Keeps format DD/MM/YYYY
     section: '',
-    gender: 'Men',
+    gender: '',
     state: '',
     city: '',
     venue: ''
@@ -83,12 +83,44 @@ export default function AddTournamentModal({ visible, onClose, onSave, initialDa
 
   const validate = () => {
     let newErrors: any = {};
-    if (!formData.tournament_name.trim()) newErrors.tournament_name = "Required";
+    const alphaSpaceRegex = /^[a-zA-Z\s]+$/;
+
+    // Tournament Name validation
+    if (!formData.tournament_name.trim()) {
+      newErrors.tournament_name = "Required";
+    } else if (!alphaSpaceRegex.test(formData.tournament_name)) {
+      newErrors.tournament_name = "Tournament name can contain only letters and spaces.";
+    }
+
+    // Date validations
     if (!formData.start_date) newErrors.start_date = "Required";
     if (!formData.end_date) newErrors.end_date = "Required";
-    
-    if (formData.start_date && formData.end_date) {
-      if (formData.end_date < formData.start_date) newErrors.end_date = "End date cannot be earlier than start";
+    if (formData.start_date && formData.end_date && formData.end_date < formData.start_date) {
+      newErrors.end_date = "End date cannot be earlier than start";
+    }
+
+    // Section/Age Category validation
+    if (!formData.section) newErrors.section = "Required";
+
+    // State validation
+    if (!formData.state.trim()) {
+      newErrors.state = "Required";
+    } else if (!alphaSpaceRegex.test(formData.state)) {
+      newErrors.state = "State can contain only letters and spaces.";
+    }
+
+    // City validation
+    if (!formData.city.trim()) {
+      newErrors.city = "Required";
+    } else if (!alphaSpaceRegex.test(formData.city)) {
+      newErrors.city = "City can contain only letters and spaces.";
+    }
+
+    // Venue validation
+    if (!formData.venue.trim()) {
+      newErrors.venue = "Required";
+    } else if (!alphaSpaceRegex.test(formData.venue)) {
+      newErrors.venue = "Venue can contain only letters and spaces.";
     }
     
     setErrors(newErrors);
@@ -124,6 +156,7 @@ export default function AddTournamentModal({ visible, onClose, onSave, initialDa
     placeholder="e.g. Summer Cup 2026"
     value={formData.tournament_name} 
     onChangeText={(v: string) => update('tournament_name', v)} 
+    error={errors.tournament_name}
   />
   
   {/* Row: DatePickers */}
@@ -157,6 +190,7 @@ export default function AddTournamentModal({ visible, onClose, onSave, initialDa
         value={formData.section} 
         onChange={(v: any) => update('section', v)} 
         options={[{label: 'Under-15', value: 'Under-15'}, {label: 'Under-19', value: 'U19'}, {label: 'Open', value: 'Open'}]} 
+        error={errors.section}
       />
     </View>
     <View style={{ flex: 1 }}>
@@ -172,21 +206,30 @@ export default function AddTournamentModal({ visible, onClose, onSave, initialDa
   {/* Row: State & City */}
   <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
     <View style={{ flex: 1 }}>
-      <Input label="State" placeholder="e.g. Maharashtra" value={formData.state} onChangeText={(v: string) => update('state', v)} />
+      <Input label="State" placeholder="e.g. Maharashtra" value={formData.state} onChangeText={(v: string) => update('state', v)} error={errors.state}/>
     </View>
     <View style={{ flex: 1 }}>
-      <Input label="City" placeholder="e.g. Pune" value={formData.city} onChangeText={(v: string) => update('city', v)} />
+      <Input label="City" placeholder="e.g. Pune" value={formData.city} onChangeText={(v: string) => update('city', v)} error={errors.city}/>
     </View>
   </View>
 
-  <Input label="Venue" placeholder="e.g. City Sports Complex" value={formData.venue} onChangeText={(v: string) => update('venue', v)} />
+  <Input label="Venue" placeholder="e.g. City Sports Complex" value={formData.venue} onChangeText={(v: string) => update('venue', v)} error={errors.venue}/>
   
 </View>
               </ScrollView>
 
               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 8 }}>
-                <Button title="Cancel" variant="ghost" onPress={onClose} />
-                <Button title={initialData ? "Update" : "Create"} onPress={handleCreate} />
+                <Button 
+                title="Cancel"
+                variant="danger"
+                onPress={onClose} 
+                />
+                
+                <Button 
+                title={initialData ? "Update" : "Create"} 
+                onPress={handleCreate} 
+                />
+
               </View>
             </View>
           </Card>

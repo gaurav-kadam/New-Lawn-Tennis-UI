@@ -1,6 +1,7 @@
+
+
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, View, useWindowDimensions } from 'react-native';
-import FilterSearchBar, { FilterTab } from '@/components/ui/FilterSearchBar';
+import { View, useWindowDimensions } from 'react-native';
 
 import TeamCardList from '@/components/Teams/TeamCardList';
 import TeamHeader from '@/components/Teams/TeamHeader';
@@ -12,7 +13,6 @@ import { useTeams } from '../../hooks/useteams';
 import teamService from '../../services/team/team.service';
 import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
-import Pagination from '@/components/ui/Pagination';
 
 const TABLET_BREAKPOINT = 768;
 
@@ -24,12 +24,9 @@ export default function TeamsScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const isMobile = screenWidth < TABLET_BREAKPOINT;
 
-  const [filter, setFilter] = useState<FilterTab>('all');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const isActive = filter === 'all' ? undefined : filter === 'active';
-  const { teams, total, loading, reload } = useTeams({ isActive, search, page, rowsPerPage });
+  // ✅ Cleaned up: Removed 'error' from destructuring
+  const { teams,reload } = useTeams({});
+  
   const [openModal, setOpenModal] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const [notif, setNotif] = useState<NotifState>({ visible: false, type: 'success', title: '', message: '' });
@@ -93,60 +90,25 @@ export default function TeamsScreen() {
     setEditingTeam(null);
   };
 
-  const filteredTeams = (teams || []).filter((t: any) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      t.team_name?.toLowerCase().includes(q) ||
-      t.city?.toLowerCase().includes(q) ||
-      t.state?.toLowerCase().includes(q) ||
-      t.section?.toLowerCase().includes(q)
-    );
-  });
-
-  const topSection = (
-    <>
-      <TeamHeader onEdit={openCreateModal} />
-      {loading && <ActivityIndicator size="large" color={theme.colors.primary || tokens.colors.primary} />}
-      <FilterSearchBar
-        filter={filter}
-        onFilterChange={(f: FilterTab) => { setFilter(f); setPage(0); }}
-        search={search}
-        onSearchChange={(s: string) => { setSearch(s); setPage(0); }}
-        searchPlaceholder="Search teams..."
-      />
-    </>
-  );
-
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background || tokens.colors.background }}>
-      {isMobile ? (
+      <View style={{ paddingHorizontal: isMobile ? tokens.spacing.md : tokens.spacing.xl, paddingTop: 15, flexShrink: 0 }}>
+        <TeamHeader onEdit={openCreateModal} />
         
-        /* MOBILE: outer ScrollView + card list — no inner ScrollView conflict.*/
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: tokens.spacing.md }}>
-          {topSection}
-          <TeamCardList teams={filteredTeams} onEdit={openEditModal} onDelete={handleDelete} />
-        </ScrollView>
+      </View>
+
+      {isMobile ? (
+        <TeamCardList 
+          teams={teams || []} 
+          onEdit={openEditModal} 
+          onDelete={handleDelete} 
+        />
       ) : (
-        <View style={{ flex: 1, padding: tokens.spacing.xl }}>
-          <View style={{ flexShrink: 0 }}>
-            {topSection}
-          </View>
-          <View style={{ height: 'calc(100vh - 360px)' as any, width: '100%' }}>
-            <TeamTable
-              tournaments={filteredTeams}
-              onEdit={openEditModal}
-              onDelete={handleDelete}
-            />
-          </View>
-          <Pagination
-            total={total ?? 0}
-            page={page ?? 0}
-            rowsPerPage={rowsPerPage ?? 10}
-            onPageChange={setPage}
-            onRowsPerPageChange={(rpp: number) => { setRowsPerPage(rpp); setPage(0); }}
-          />
-        </View>
+        <TeamTable
+          teams={teams || []}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
       )}
 
       {openModal ? (

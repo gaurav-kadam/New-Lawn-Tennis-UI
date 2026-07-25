@@ -44,7 +44,7 @@ export default function OfficialsHeader({
             fontSize: theme.typography.sizes.h2,
           }}
         >
-          Officials
+          Official Management
         </Text>
 
         <Text
@@ -57,7 +57,7 @@ export default function OfficialsHeader({
               theme.typography.sizes.small,
           }}
         >
-          Manage officials
+          Search, create, update, and manage registered officials.
         </Text>
       </View>
 

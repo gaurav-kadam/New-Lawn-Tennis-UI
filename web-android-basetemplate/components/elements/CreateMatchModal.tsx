@@ -80,8 +80,8 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
     matchTime: '',
     courtNo: '',
     matchNo: '',
-    ageCategory: 'OPEN',
-    gender: 'Men',
+    ageCategory: '',
+    gender: '',
     quarterDuration: '',
     whiteTeamCode: '',
     whiteTeam: '',
@@ -253,13 +253,27 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
 
   const validateStep = () => {
     const stepErrors: any = {};
+    
+    // --- STEP 1: SCHEDULE DETAILS ---
     if (currentStep === 1) {
       if (!formData.tournamentCode) stepErrors.tournamentCode = 'Select Tournament';
       if (!formData.matchDate) stepErrors.matchDate = 'Required';
       if (!formData.matchTime) stepErrors.matchTime = 'Required';
-      if (!formData.courtNo) stepErrors.courtNo = 'Required';
-      if (!formData.matchNo) stepErrors.matchNo = 'Required';
+      
+      if (!formData.courtNo) {
+        stepErrors.courtNo = 'Required';
+      } else if (!/^\d+$/.test(String(formData.courtNo)) || Number(formData.courtNo) <= 0) {
+        stepErrors.courtNo = 'Enter a valid court number';
+      }
+
+      if (!formData.matchNo) {
+        stepErrors.matchNo = 'Required';
+      } else if (!/^\d+$/.test(String(formData.matchNo)) || Number(formData.matchNo) <= 0) {
+        stepErrors.matchNo = 'Enter a valid match number';
+      }
+
       if (!formData.ageCategory) stepErrors.ageCategory = 'Select Age Category';
+      
       if (!formData.quarterDuration) {
         stepErrors.quarterDuration = 'Required';
       } else if (
@@ -270,21 +284,28 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
         stepErrors.quarterDuration = 'Enter a whole number between 1 and 15';
       }
     }
+
+    // --- STEP 2: TEAM SELECTION ---
     if (currentStep === 2) {
       if (!formData.whiteTeamCode) stepErrors.whiteTeam = 'Select White Team';
       if (!formData.blueTeamCode) stepErrors.blueTeam = 'Select Blue Team';
+      
       if (formData.whiteTeamCode && formData.blueTeamCode && formData.whiteTeamCode === formData.blueTeamCode) {
-        stepErrors.blueTeam = 'Teams must be different';
+        stepErrors.blueTeam = 'White Team and Blue Team must be different';
       }
     }
+
+    // --- STEP 3: OFFICIALS SELECTION ---
     if (currentStep === 3) {
       if (!formData.digitalScorerCode) stepErrors.digitalScorerCode = 'Required';
       if (!formData.referee1Code) stepErrors.referee1Code = 'Required';
       if (!formData.referee2Code) stepErrors.referee2Code = 'Required';
+      
       if (formData.referee1Code && formData.referee2Code && formData.referee1Code === formData.referee2Code) {
-        stepErrors.referee2Code = 'Referees must be different';
+        stepErrors.referee2Code = 'Referee 1 and Referee 2 must be different';
       }
     }
+
     setErrors(stepErrors);
     return Object.keys(stepErrors).length === 0;
   };
@@ -309,8 +330,8 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
           tournament_code: formData.tournamentCode,
           match_date: formData.matchDate,
           match_time: formData.matchTime,
-          court_no: String(formData.courtNo),
-          match_no: String(formData.matchNo),
+          court_no: Number(formData.courtNo), // Enforced as int matching Pydantic schema
+          match_no: Number(formData.matchNo),   // Enforced as int matching Pydantic schema
           age_category: formData.ageCategory,
           gender: formData.gender,
           quarter_duration: Number(formData.quarterDuration),
@@ -325,6 +346,8 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
           goaljudge_2_code: formData.goaljudge2Code || null,
           timekeeper_1_code: formData.timekeeper1Code || null,
           timekeeper_2_code: formData.timekeeper2Code || null,
+          is_active: initialData ? initialData.is_active : true,
+          is_complete: initialData ? initialData.is_complete : false,
         };
         onSave(payload);
       }
@@ -422,38 +445,47 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
                           value={formData.tournamentCode}
                           onChange={(value: any) => update('tournamentCode', value)}
                           options={tournamentOptions}
+                          error={errors.tournamentCode}
                         />
-                        {errors.tournamentCode && <Text style={errorTextStyle}>{errors.tournamentCode}</Text>}
+                      
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-  <DatePicker
-    label="Date"
-    value={toDateObj(formData.matchDate)}
-    onChange={(d) => update('matchDate', toDateStr(d))}
-    error={errors.matchDate}
-  />
-</View>
+                          <DatePicker
+                            label="Date"
+                            value={toDateObj(formData.matchDate)}
+                            onChange={(d) => update('matchDate', toDateStr(d))}
+                            error={errors.matchDate}
+                          />
+                        </View>
 
                         <View style={{ flex: 1 }}>
-  <TimePicker
-    label="Time"
-    value={formData.matchTime}
-    onChange={(t) => update('matchTime', t)}
-    error={errors.matchTime}
-  />
-</View>
+                          <TimePicker
+                            label="Time"
+                            value={formData.matchTime}
+                            onChange={(t) => update('matchTime', t)}
+                            error={errors.matchTime}
+                          />
+                        </View>
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
                         <View style={{ flex: 1 }}>
-                          <Input label="Court No." placeholder="e.g. 1" value={formData.courtNo} onChangeText={(value: any) => update('courtNo', value)} />
-                          {errors.courtNo && <Text style={errorTextStyle}>{errors.courtNo}</Text>}
+                          <Input label="Court No." 
+                          placeholder="e.g. 1" 
+                          value={formData.courtNo} 
+                          onChangeText={(value: any) => update('courtNo', value)}
+                          error={errors.courtNo} />
+                          
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Input label="Match No." placeholder="e.g. M01" value={formData.matchNo} onChangeText={(value: any) => update('matchNo', value)} />
-                          {errors.matchNo && <Text style={errorTextStyle}>{errors.matchNo}</Text>}
+                          <Input label="Match No." 
+                          placeholder="e.g. M01" 
+                          value={formData.matchNo} 
+                          onChangeText={(value: any) => update('matchNo', value)}
+                          error={errors.matchNo} />
+                          
                         </View>
                       </View>
 
@@ -464,8 +496,9 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
                           type="number"
                           value={formData.quarterDuration}
                           onChangeText={(value: any) => update('quarterDuration', value.replace(/[^0-9]/g, ''))}
+                          error={errors.quarterDuration}
                         />
-                        {errors.quarterDuration && <Text style={errorTextStyle}>{errors.quarterDuration}</Text>}
+                        
                       </View>
 
                       <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
@@ -478,6 +511,7 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
                           { label: 'Men', value: 'Men' },
                           { label: 'Women', value: 'Women' },
                         ]}
+                        
                       />
                         
                       </View>
@@ -486,14 +520,17 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
                       <Select
                           label="Age Category"
                           value={formData.ageCategory}
+                          placeholder="e.g open"
                           onChange={(value: any) => update('ageCategory', value)}
                           options={[
                             { label: 'Under 15', value: 'UNDER_15' },
                             { label: 'Under 19', value: 'UNDER_19' },
                             { label: 'Open', value: 'OPEN' },
+                            
                           ]}
+                          error={errors.ageCategory}
                         />
-                        {errors.ageCategory && <Text style={errorTextStyle}>{errors.ageCategory}</Text>}
+                       
                       </View>
                       </View>
                     </>
@@ -595,17 +632,17 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
               </ScrollView>
 
               {/* Footer Buttons */}
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 16 }}>
-                <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}>
-                  <Button title={currentStep === 1 ? 'Cancel' : 'Back'} variant="ghost" onPress={currentStep === 1 ? handleClose : prevStep} />
-                </View>
+               <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 16 }}>
+                {/* <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}>  */}
+                  <Button title={currentStep === 1 ? 'Cancel' : 'Back'} variant="danger" onPress={currentStep === 1 ? handleClose : prevStep} />
+                {/* </View> */}
 
-                <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}>
+                {/* <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}> */}
                   <Button
-                    title={currentStep === STEP_COUNT ? (initialData ? 'Update Match' : 'Schedule Match') : 'Next Step'}
+                    title={currentStep === STEP_COUNT ? (initialData ? 'Update' : 'Create') : 'Next Step'}
                     onPress={handleSave}
                   />
-                </View>
+                {/* </View> */}
               </View>
             </View>
           </Card>

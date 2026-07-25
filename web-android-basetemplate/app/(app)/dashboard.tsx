@@ -1,249 +1,150 @@
-import Checkbox from '@/components/ui/Checkbox';
-import RadioGroup from '@/components/ui/RadioGroup';
-import Select from '@/components/ui/Select';
-import { useAuth } from '@/hooks/fake_auth';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import Button from '../../components/ui/Button';
+import React from 'react';
+import { ActivityIndicator, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
+import { useDashboard } from '../../hooks/usedashboard';
 import { useTheme } from '../../theme/themeContext';
-import DatePicker from '@/components/ui/DatePicker';
 
 export default function Dashboard() {
   const theme = useTheme();
+  const router = useRouter(); 
+  const { width: screenWidth } = useWindowDimensions();
+  const isMobile = screenWidth < 768; 
 
-  const [name, setName] = useState('');
-  const [error, setError] = useState('');
-  const [gender, setGender] = useState('');
-  const [country, setCountry] = useState('');
-  const [isChecked, setIsChecked] = useState(false);
-  const [dob, setDob] = useState<Date>();
+  // Clean data delivery straight from our custom hook!
+  const { stats, loading, error } = useDashboard();
 
-  const { logout } = useAuth();
-  const router = useRouter();
+  const modules = [
+    { id: 'tournament', title: 'Tournament', ...stats.tournament, path: '/tournaments' },
+    { id: 'team', title: 'Team', ...stats.team, path: '/teams' },
+    { id: 'official', title: 'Official', ...stats.official, path: '/officials' },
+    { id: 'match', title: 'Match', ...stats.match, path: '/matches' },
+  ];
+
+  const handleCardPress = (path: string) => {
+    if (router) {
+      router.push(path as any);
+    } else {
+      console.warn(`Expo Router context is not ready yet.`);
+    }
+  };
 
   return (
     <ScrollView
-  contentContainerStyle={{
-    padding: theme.spacing.md,
-    gap: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-  }}
-  showsVerticalScrollIndicator={false}
->
-
-  <Button
-    title="Logout"
-     style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-        padding: theme.spacing.md,
-        gap: theme.spacing.lg,
-      }}
-    onPress={() => {
-      logout(); // ❌ remove access
-          router.replace('/login'); // 🔁 redirect
-        
-    }}
-  />
-  {/* All your sections here */}
-
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-        padding: theme.spacing.md,
-        gap: theme.spacing.lg,
-      }}
+      contentContainerStyle={{ flexGrow: 1, padding: 24, backgroundColor: theme.colors.background }}
     >
+       <View style={{marginBottom: 24}}>
+              
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                  }}
+                >
+              
+                  <Text
+                    style={
+                      {
+                        fontWeight: 'bold',
+                        color: theme.colors.textPrimary,
+                        fontSize: theme.typography.sizes.h2,
+                    }}
+                  >
+                    Dashboard
+                  </Text>
+              
+                  <Text
+                    style={{
+                      color: theme.colors.textSecondary,
+              
+                      marginTop: 4,
+              
+                      fontSize: theme.typography.sizes.small,
+                    }}
+                  >
+                    View Overall Stats
+                  </Text>
+              
+                </View>
+              
+              
+              
+              </View>
 
-      {/* ================= CARD SECTION ================= */}
-      <View style={{ gap: theme.spacing.sm }}>
-        <Text style={{ color: theme.colors.textPrimary }}>
-          Cards
-        </Text>
+      {loading && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      )}
 
-        <Card>
-          <Text style={{ color: theme.colors.textPrimary }}>
-            Default Card
-          </Text>
-        </Card>
+      {error ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+          <Text style={{ color: 'theme.colors.textprimary', fontWeight: '500' }}>{error}</Text>
+        </View>
+      ) : null}
 
-        <Card variant="outlined">
-          <Text style={{ color: theme.colors.textPrimary }}>
-            Outlined Card
-          </Text>
-        </Card>
+      {!loading && !error && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -8 }}>
+          {modules.map((item) => (
+            <View
+              key={item.id}
+              style={{ padding: 8, width: isMobile ? '100%' : '50%' }}
+            >
+              <Card variant="elevated" onPress={() => handleCardPress(item.path)}>
+                <View style={{ minHeight: 110, justifyContent: 'space-between' }}>
 
-        <Card onPress={() => console.log('Card Clicked')}>
-          <Text style={{ color: theme.colors.textPrimary }}>
-            Clickable Card
-          </Text>
-        </Card>
-      </View>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={{
+                      fontWeight: '700',
+                      letterSpacing: -0.3,
+                      color: theme.colors.textPrimary,
+                      fontSize: theme.typography.sizes.h2,
+                      fontFamily: theme.typography.fontFamily
+                    }}
+                  >
+                    {item.title}
+                  </Text>
 
-      {/* ================= INPUT SECTION ================= */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 12 }}>
+                    {/* Active Column */}
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        Active
+                      </Text>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        {item.active ?? 0}
+                      </Text>
+                    </View>
 
-       <View>
- <Text style={{ color: theme.colors.textPrimary }}>
-          Datepicker
-        </Text>
-      <DatePicker
-        label="Date of Birth"
-        value={dob}
-        onChange={setDob}
-      />
+                    {/* Inactive Column */}
+                    <View style={{ flex: 1, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: theme.colors.border }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        Inactive
+                      </Text>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        {item.inactive ?? 0}
+                      </Text>
+                    </View>
 
-    </View>
+                    {/* All Column */}
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontWeight: '500', marginBottom: 2, color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        All
+                      </Text>
+                      <Text style={{ fontWeight: '700', color: theme.colors.primary, fontSize: theme.typography.sizes.small, fontFamily: theme.typography.fontFamily }}>
+                        {item.total ?? 0}
+                      </Text>
+                    </View>
+                  </View>
 
-      {/* ================= INPUT SECTION ================= */}
-      <View style={{ gap: theme.spacing.sm }}>
-        <Text style={{ color: theme.colors.textPrimary }}>
-          Inputs
-        </Text>
-
-        <Input
-          label="Name"
-          placeholder="Enter your name"
-          value={name}
-          onChangeText={(text: string) => {
-            setName(text);
-            if (text) setError('');
-          }}
-        />
-
-        <Input
-          label="With Error"
-          placeholder="Try submit empty"
-          value={name}
-          onChangeText={setName}
-          error={error}
-        />
-
-        <Button
-          title="Validate Input"
-          onPress={() => {
-            if (!name) {
-              setError('Name is required');
-            } else {
-              console.log('Valid:', name);
-            }
-          }}
-        />
-      </View>
-
-        {/* ================= Radio Group SECTION ================= */}
-      <View style={{ gap: theme.spacing.sm }}>
-        <Text style={{ color: theme.colors.textPrimary }}>
-          Radio Group
-        </Text>
-
-        <RadioGroup
-  label="Gender"
-  value={gender}
-  onChange={setGender}
-  options={[
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
-  ]}
-/>
-
-        <Input
-          label="With Error"
-          placeholder="Try submit empty"
-          value={name}
-          onChangeText={setName}
-          error={error}
-        />
-
-        <Button
-          title="Validate Input"
-          onPress={() => {
-            if (!name) {
-              setError('Name is required');
-            } else {
-              console.log('Valid:', name);
-            }
-          }}
-        />
-      </View>
-
-      {/* ================= SELECT SECTION ================= */}
-<View style={{ gap: theme.spacing.sm }}>
-  <Text style={{ color: theme.colors.textPrimary }}>
-    Select Dropdown
-  </Text>
-
-  <Select
-    label="Country"
-    value={country}
-    onChange={setCountry}
-    options={[
-      { label: 'India', value: 'india' },
-      { label: 'USA', value: 'usa' },
-      { label: 'UK', value: 'uk' },
-    ]}
-  />
-
-  <Button
-    title="Show Selected"
-    onPress={() => {
-      console.log('Selected Country:', country);
-    }}
-  />
-</View>
-
-
-{/* ================= CHECKBOX SECTION ================= */}
-<View style={{ gap: theme.spacing.sm }}>
-  <Text style={{ color: theme.colors.textPrimary }}>
-    Checkbox
-  </Text>
-
-  <Checkbox
-    label="Accept Terms & Conditions"
-    value={isChecked}
-    onChange={setIsChecked}
-  />
-
-  <Button
-    title="Check Status"
-    onPress={() => {
-      console.log('Checked:', isChecked);
-    }}
-  />
-</View>
-
-      {/* ================= BUTTON SECTION ================= */}
-      <View style={{ gap: theme.spacing.sm }}>
-        <Text style={{ color: theme.colors.textPrimary }}>
-          Buttons
-        </Text>
-
-        {/* Primary */}
-        <Button title="Primary Button" />
-
-        {/* Variants */}
-        <Button title="Outline Button" variant="outline" />
-        <Button title="Ghost Button" variant="ghost" />
-        <Button title="Danger Button" variant="danger" />
-
-        {/* Sizes */}
-        <Button title="Small Button" size="sm" />
-        <Button title="Large Button" size="lg" />
-
-        {/* With Icons */}
-        <Button title="Add Item" icon="add" />
-        <Button title="Next Step" icon="arrow-forward" iconPosition="right" />
-
-        {/* States */}
-        <Button title="Loading Button" loading />
-        <Button title="Disabled Button" disabled />
-      </View>
-
-    </View>
+                </View>
+              </Card>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }

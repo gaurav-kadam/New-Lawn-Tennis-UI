@@ -95,7 +95,7 @@ export default function Login() {
   );
 }
 
-      router.replace('/dashboard1');
+      router.replace('/dashboard');
 
     } catch (err: any) {
 

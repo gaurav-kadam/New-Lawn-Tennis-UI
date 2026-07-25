@@ -44,7 +44,7 @@ export default function TeamHeader({
             fontSize: theme.typography.sizes.h2,
           }}
         >
-          Teams
+          Team Management
         </Text>
 
         <Text
@@ -57,7 +57,7 @@ export default function TeamHeader({
               theme.typography.sizes.small,
           }}
         >
-          Manage teams
+          Search, create, update, and manage registered teams.
         </Text>
       </View>
 

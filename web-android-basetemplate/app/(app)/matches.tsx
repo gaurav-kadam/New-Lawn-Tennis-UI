@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from 'react-native';
 
+
+
+import React, { useState } from 'react';
+import { ActivityIndicator, Text, View, useWindowDimensions } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+
 import CreateMatchModal from '../../components/elements/CreateMatchModal';
 import MatchCardList from '@/components/Matches listing/MatchCardList';
 import MatchesHeader from '@/components/Matches listing/MatchesHeader';
 import MatchTable from '@/components/Matches listing/MatchTable';
 import NotificationModal from '@/components/ui/NotificationModal';
-import FilterSearchBar from '@/components/ui/FilterSearchBar';
 
 import { useOfficials } from '@/hooks/useofficials';
 import { useMatches } from '../../hooks/usematches';
@@ -24,7 +19,6 @@ import matchService from '../../services/match/match.service';
 import tournamentService from '../../services/tournament/tournamment.service';
 import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
-import Pagination from '@/components/ui/Pagination';
 
 const TABLET_BREAKPOINT = 768;
 
@@ -38,13 +32,8 @@ export default function MatchesScreen() {
 
   const { tournament_code } = useLocalSearchParams<{ tournament_code?: string }>();
 
-  type MatchFilter = 'all' | 'incomplete' | 'completed';
-  const [filter, setFilter] = useState<MatchFilter>('all');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const isComplete = filter === 'all' ? undefined : filter === 'completed';
-  const { matches = [], total, loading, error, reload } = useMatches(isComplete, search, page, rowsPerPage);
+  // Fetch complete datasets to enable high-performance client-side operations
+  const { matches = [], loading, error, reload } = useMatches();
   const { teams = [], reload: fetchTeams } = useTeams({ lazy: true });
   const { officials = [], reload: fetchOfficials } = useOfficials({ rowsPerPage: 500 });
 
@@ -57,8 +46,6 @@ export default function MatchesScreen() {
   const showNotif = (type: 'success' | 'error', title: string, message: string) =>
     setNotif({ visible: true, type, title, message });
 
-  useEffect(() => {}, []);
-
   const fetchTournaments = async () => {
     try {
       const response = await tournamentService.getTournaments();
@@ -67,16 +54,6 @@ export default function MatchesScreen() {
       console.log('Failed to fetch tournaments');
     }
   };
-
-  const getSelectedTournamentName = () => {
-    if (!tournament_code || tournaments.length === 0) return '';
-    const found = tournaments.find((t: any) => String(t.tournament_code) === String(tournament_code));
-    return found ? (found.name || found.tournament_name) : tournament_code;
-  };
-
-  // const handleClearFilter = () => {
-  //   router.replace('/matches');
-  // };
 
   const handleSave = async (formData: any) => {
     try {
@@ -172,110 +149,34 @@ export default function MatchesScreen() {
     setEditingData(null);
   };
 
-  const filteredMatches = (matches || []).filter((m: any) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      m.match_date?.toLowerCase().includes(q) ||
-      m.age_category?.toLowerCase().includes(q) ||
-      m.gender?.toLowerCase().includes(q) ||
-      String(m.match_no || '').toLowerCase().includes(q) ||
-      String(m.court_no || '').toLowerCase().includes(q)
-    );
-  });
-
-  const topSection = (
-    <>
-      <MatchesHeader onEdit={openCreateModal} />
-
-      {tournament_code ? (
-        <View
-          style={{
-            // flexDirection: 'row',
-            // justifyContent: 'space-between',
-            // alignItems: 'center',
-            // backgroundColor: theme.colors.secondary || '#e0f2fe',
-            // padding: tokens.spacing.md,
-            // borderRadius: tokens.radius.md,
-            // marginBottom: tokens.spacing.md,
-          }}
-        >
-          {/* <Text style={{ fontFamily: theme.typography.fontFamily, color: theme.colors.textPrimary, fontWeight: '600' }}>
-            Matches of Tournament: {getSelectedTournamentName()}
-          </Text>
-          <TouchableOpacity onPress={handleClearFilter}>
-            <Text style={{ color: theme.colors.primary || '#0284c7', fontWeight: '700', textDecorationLine: 'underline' }}>
-              Clear Filter
-            </Text>
-          </TouchableOpacity> */}
-        </View>
-      ) : null}
-
-      {loading ? <ActivityIndicator size="large" color={theme.colors.primary || tokens.colors.primary} /> : null}
-
-      {error ? (
-        <Text style={{ color: theme.colors.error || tokens.colors.error, fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily, marginBottom: tokens.spacing.sm }}>
-          {error}
-        </Text>
-      ) : null}
-
-      <FilterSearchBar
-        filter={filter}
-        onFilterChange={(f: MatchFilter) => { setFilter(f); setPage(0); }}
-        search={search}
-        onSearchChange={(s: string) => { setSearch(s); setPage(0); }}
-        searchPlaceholder="Search matches..."
-        tabs={[
-          { label: 'All', value: 'all' },
-          { label: 'Incomplete', value: 'incomplete' },
-          { label: 'Completed', value: 'completed' },
-        ]}
-      />
-    </>
-  );
-
   return (
-    <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background || tokens.colors.background }}>
+    <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>
+      <View style={{ paddingHorizontal: isMobile ? tokens.spacing.md : tokens.spacing.xl, paddingTop: 15, flexShrink: 0 }}>
+        <MatchesHeader onEdit={openCreateModal} />
+        
+        
+          
+      
+      </View>
+
       {isMobile ? (
-        /*
-         * MOBILE: outer ScrollView is correct here — MatchCardList renders
-         * cards with natural (auto) height so a single outer scroll handles
-         * the page. No inner ScrollView conflict.
-         */
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: tokens.spacing.md }}>
-          {topSection}
-          <MatchCardList
-            matches={filteredMatches}
-            teams={teams}
-            officials={officials}
-            onEdit={openEditModal}
-            onDelete={handleDelete}
-            onStartMatch={handleStartMatch}
-          />
-        </ScrollView>
+        <MatchCardList
+          matches={matches}
+          teams={teams}
+          officials={officials}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          onStartMatch={handleStartMatch}
+        />
       ) : (
-        <View style={{ flex: 1, padding: tokens.spacing.xl }}>
-          <View style={{ flexShrink: 0 }}>
-            {topSection}
-          </View>
-          <View style={{ height: 'calc(100vh - 360px)' as any, width: '100%' }}>
-            <MatchTable
-              matches={filteredMatches}
-              teams={teams}
-              officials={officials}
-              onEdit={openEditModal}
-              onDelete={handleDelete}
-              onStartMatch={handleStartMatch}
-            />
-          </View>
-          <Pagination
-            total={total ?? 0}
-            page={page ?? 0}
-            rowsPerPage={rowsPerPage ?? 10}
-            onPageChange={setPage}
-            onRowsPerPageChange={(rpp: number) => { setRowsPerPage(rpp); setPage(0); }}
-          />
-        </View>
+        <MatchTable
+          matches={matches}
+          teams={teams}
+          officials={officials}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+          onStartMatch={handleStartMatch}
+        />
       )}
 
       {openModal ? (

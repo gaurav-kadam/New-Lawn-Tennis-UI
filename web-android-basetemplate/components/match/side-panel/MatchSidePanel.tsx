@@ -55,53 +55,34 @@ export default function MatchSidePanel({ side }: MatchSidePanelProps) {
       overflow: 'visible', 
       zIndex: 10, 
       elevation: theme.shadow.medium.elevation * theme.layout.elevationMultiplier,
-      
     }}> 
+    
       <View style={{
-        flex: theme.layout.flexFull, 
+        flex: 1, 
         backgroundColor: theme.colors.matchScreen.sidePanel1, 
+        justifyContent: 'center', 
+        alignItems: 'center',  
+        gap: compositeGapValue, 
         overflow: 'visible',
       }}>
-
-        <View style={{
-          height: theme.layout.dividerHeight, 
-          backgroundColor: theme.colors.border, 
-          marginHorizontal: compositeGapValue,
-        }} />
-
-        <View style={{
-          flex: 9, 
-          justifyContent: 'center', 
-          alignItems: 'center',  
-          overflow: 'visible',
-          
-        }}>
-          <View style={{
-            width: '100%', 
-            alignItems: 'center', 
-            gap: compositeGapValue, 
-            overflow: 'visible',
-          }}>
-            {actions.map((action) => (
-              <Button
-                key={action.label}
-                title={action.label}
-                icon={action.icon}
-                variant="outline"
-                textColor={buttonTextColor}
-                borderColor={buttonBorderColor}
-                backgroundColor={buttonBgColor}
-                onPress={() => handleActionPress(action.label)}
-                style={{
-                  width: theme.layout.actionButtonWidth, 
-                  height: theme.layout.actionButtonHeight, 
-                  flexDirection: 'column', 
-                  gap: theme.spacing.xs,
-                }}
-              />
-            ))}
-          </View>
-        </View>
+        {actions.map((action) => (
+          <Button
+            key={action.label}
+            title={action.label}
+            icon={action.icon}
+            variant="outline"
+            textColor={buttonTextColor}
+            borderColor={buttonBorderColor}
+            backgroundColor={buttonBgColor}
+            onPress={() => handleActionPress(action.label)}
+            style={{
+              width: theme.layout.actionButtonWidth, 
+              height: theme.layout.actionButtonHeight, 
+              flexDirection: 'column', 
+              gap: theme.spacing.xs,
+            }}
+          />
+        ))}
       </View>
 
       <ActionPopupCard 

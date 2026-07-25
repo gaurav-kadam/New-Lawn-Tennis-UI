@@ -3,7 +3,7 @@ import ApiService from '../api/api.service';
 class DashboardService {
     
   async getDashboardSummary() {
-    return ApiService.get('/dashboard/summary');
+    return ApiService.get('/dashboard');
   }
 }
 

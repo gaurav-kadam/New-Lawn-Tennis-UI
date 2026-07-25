@@ -15,14 +15,14 @@ export default function MatchField({ side }: { side?: 'left' | 'right' }) {
   const regions =
     side === 'right'
       ? [
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#14d114', flex: 3 },
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#fffb00', flex: 2 },
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#FF0000', flex: 1 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#14d114', flex: 3 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#fffb00', flex: 2 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#FF0000', flex: 1 },
         ]
       : [
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#FF0000', flex: 1 },
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#fffb00', flex: 2 },
-          { color: theme.colors.matchScreen.courtColor.region4, borderColor: '#14d114', flex: 3 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#FF0000', flex: 1 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#fffb00', flex: 2 },
+          { color: theme.colors.matchScreen.region4, borderColor: '#14d114', flex: 3 },
         ];
 
   const handleTouch = (event: any) => {

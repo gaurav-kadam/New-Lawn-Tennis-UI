@@ -44,7 +44,7 @@ export default function MatchesHeader({
             fontSize: theme.typography.sizes.h2,
           }}
         >
-          Matches
+          Match Management
         </Text>
 
         <Text
@@ -57,7 +57,7 @@ export default function MatchesHeader({
               theme.typography.sizes.small,
           }}
         >
-          Manage matches
+          Search, create, update, and manage registered matches.
         </Text>
       </View>
 
