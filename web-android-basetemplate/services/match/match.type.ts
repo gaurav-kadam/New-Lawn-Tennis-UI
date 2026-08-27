@@ -7,10 +7,10 @@ export interface Match {
   age_category: string;
   gender: string;
   tournament_code: string | null;
-  white_team: string;
-  blue_team: string;
-  white_team_code: string | null; 
-  blue_team_code: string | null;  
+  team1: string;
+  team2: string;
+  team1_code: string | null; 
+  team2_code: string | null;  
   digital_scorer_code: string | null;
   referee_1_code: string | null;
   referee_2_code: string | null;

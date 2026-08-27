@@ -102,8 +102,8 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
       setCurrentStep(1);
       setErrors({});
 
-      const whiteCode = initialData?.white_team_code ?? initialData?.white_team_id ?? initialData?.whiteTeamId ?? '';
-      const blueCode = initialData?.blue_team_code ?? initialData?.blue_team_id ?? initialData?.blueTeamId ?? '';
+      const whiteCode = initialData?.team1_code ?? initialData?.team1_id ?? initialData?.whiteTeamId ?? '';
+      const blueCode = initialData?.team2_code ?? initialData?.team2_id ?? initialData?.blueTeamId ?? '';
 
       setFormData({
         tournamentCode: initialData?.tournament_code || initialData?.tournamentId || initialData?.tournament_id
@@ -120,10 +120,10 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
           : '',
 
         whiteTeamCode: whiteCode ? String(whiteCode) : '',
-        whiteTeam: initialData?.white_team || initialData?.whiteTeam || findTeamNameByCode(whiteCode), 
+        whiteTeam: initialData?.team1 || initialData?.whiteTeam || findTeamNameByCode(whiteCode), 
         
         blueTeamCode: blueCode ? String(blueCode) : '',
-        blueTeam: initialData?.blue_team || initialData?.blueTeam || findTeamNameByCode(blueCode), 
+        blueTeam: initialData?.team2 || initialData?.blueTeam || findTeamNameByCode(blueCode), 
         
         digitalScorerCode: initialData?.digital_scorer_code ?? initialData?.digital_scorer_id ?? initialData?.digitalScorer ? String(initialData.digital_scorer_code ?? initialData.digital_scorer_id ?? initialData.digitalScorer) : '',
         referee1Code: initialData?.referee_1_code ?? initialData?.referee_1_id ?? initialData?.referee1 ? String(initialData.referee_1_code ?? initialData.referee_1_id ?? initialData.referee1) : '',
@@ -335,10 +335,10 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
           age_category: formData.ageCategory,
           gender: formData.gender,
           quarter_duration: Number(formData.quarterDuration),
-          white_team: formData.whiteTeam,
-          blue_team: formData.blueTeam,
-          white_team_code: formData.whiteTeamCode || null,
-          blue_team_code: formData.blueTeamCode || null,
+          team1: formData.whiteTeam,
+          team2: formData.blueTeam,
+          team1_code: formData.whiteTeamCode || null,
+          team2_code: formData.blueTeamCode || null,
           digital_scorer_code: formData.digitalScorerCode || null,
           referee_1_code: formData.referee1Code || null,
           referee_2_code: formData.referee2Code || null,

@@ -109,10 +109,10 @@ export default function MatchCardList({
                   Age Category: {match.age_category || '—'}
                 </Text>
                 <Text style={styles.label(theme)}>
-                  Team A (White): {getTeamName(match.white_team_id || match.whiteTeamId || match.white_team || match.whiteTeam)}
+                  Team A (White): {getTeamName(match.team1_id || match.whiteTeamId || match.team1 || match.whiteTeam)}
                 </Text>
                 <Text style={styles.label(theme)}>
-                  Team B (Blue): {getTeamName(match.blue_team_id || match.blueTeamId || match.blue_team || match.blueTeam)}
+                  Team B (Blue): {getTeamName(match.team2_id || match.blueTeamId || match.team2 || match.blueTeam)}
                 </Text>
                 <Text style={styles.label(theme)}>
                   Gender: {match.gender || '—'}
@@ -132,7 +132,21 @@ export default function MatchCardList({
               </View>
 
               <TouchableOpacity
-                onPress={() => onStartMatch(match)}
+                onPress={() => {
+                            if (
+                              typeof document !== 'undefined' &&
+                              document.fullscreenEnabled &&
+                              !document.fullscreenElement
+                            ) {
+                              document.documentElement
+                                .requestFullscreen()
+                                .catch(() => undefined);
+                            }
+                          
+                            onStartMatch(
+                              match
+                            );
+                          }}
                 style={{
                   backgroundColor: theme.colors.primary,
                   paddingVertical: 12,

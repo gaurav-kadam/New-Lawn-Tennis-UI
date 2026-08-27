@@ -26,6 +26,10 @@ export default function TeamsScreen() {
 
   // ✅ Cleaned up: Removed 'error' from destructuring
   const { teams,reload } = useTeams({});
+
+  const teamList = Array.isArray(teams)
+  ? teams
+  : [];
   
   const [openModal, setOpenModal] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
@@ -99,13 +103,13 @@ export default function TeamsScreen() {
 
       {isMobile ? (
         <TeamCardList 
-          teams={teams || []} 
+          teams={teamList} 
           onEdit={openEditModal} 
           onDelete={handleDelete} 
         />
       ) : (
         <TeamTable
-          teams={teams || []}
+          teams={teamList}
           onEdit={openEditModal}
           onDelete={handleDelete}
         />

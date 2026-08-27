@@ -30,12 +30,12 @@ class MatchService {
 
   // 🌟 NEW METHOD: Hit the backend endpoint to change completion status
   async completeMatch(id: number | string) {
-    return ApiService.post(`/matches/${id}/complete`);
+    return ApiService.post(`/matches/${id}/complete`,{});
   }
 
   private mapToBackend(data: any) {
-    const whiteTeamCode = data.white_team_code ?? null;
-    const blueTeamCode = data.blue_team_code ?? null;
+    const whiteTeamCode = data.team1_code ?? null;
+    const blueTeamCode = data.team2_code ?? null;
 
     const digitalScorer = data.digital_scorer_code ?? null;
     const referee1 = data.referee_1_code ?? null;
@@ -50,11 +50,11 @@ class MatchService {
       age_category: data.age_category || '',
       gender: data.gender,
 
-      white_team: data.white_team || '',
-      blue_team: data.blue_team || '',
+      team1: data.team1 || '',
+      team2: data.team2 || '',
 
-      white_team_code: whiteTeamCode ? String(whiteTeamCode) : null,
-      blue_team_code: blueTeamCode ? String(blueTeamCode) : null,
+      team1_code: whiteTeamCode ? String(whiteTeamCode) : null,
+      team2_code: blueTeamCode ? String(blueTeamCode) : null,
 
       digital_scorer_code: digitalScorer ? String(digitalScorer) : null,
       referee_1_code: referee1 ? String(referee1) : null,

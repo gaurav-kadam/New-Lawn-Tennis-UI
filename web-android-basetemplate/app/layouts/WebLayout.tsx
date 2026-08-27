@@ -72,8 +72,8 @@ export default function WebLayout({ children }: any) {
         <Text
           style={{
             color: theme.colors.textPrimary,
-            fontSize: theme.typography.h3,
-          }}
+            fontSize: theme.typography.sizes.h3,
+         }}
         >
           My App
         </Text>

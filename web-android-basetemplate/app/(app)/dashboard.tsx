@@ -79,7 +79,14 @@ export default function Dashboard() {
 
       {error ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-          <Text style={{ color: 'theme.colors.textprimary', fontWeight: '500' }}>{error}</Text>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              fontWeight: '500',
+            }}
+          >
+  {error}
+</Text>
         </View>
       ) : null}
 

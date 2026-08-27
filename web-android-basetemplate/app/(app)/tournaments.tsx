@@ -23,6 +23,10 @@ export default function TournamentsScreen() {
 
   // Fetch the master tournament list (You can pass undefined/empty to fetch all if filtering locally)
   const { tournaments, loading, error, reload } = useTournaments();
+
+  const tournamentList = Array.isArray(tournaments)
+  ? tournaments
+  : [];
   
   const [openModal, setOpenModal] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
@@ -100,7 +104,7 @@ export default function TournamentsScreen() {
 
       {isMobile ? (
         <TournamentCardList
-          tournaments={tournaments || []}
+          tournaments={tournamentList}
           onView={handleOpenViewModal}
           onEdit={openEditModal}
           onDelete={handleDelete}
@@ -108,7 +112,7 @@ export default function TournamentsScreen() {
         />
       ) : (
         <TournamentTable
-          tournaments={tournaments || []}
+          tournaments={tournamentList}
           onView={handleOpenViewModal}
           onEdit={openEditModal}
           onDelete={handleDelete}

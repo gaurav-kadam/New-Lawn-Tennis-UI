@@ -168,7 +168,7 @@ export default function Button({
       paddingVertical: 8,
       paddingHorizontal: 12,
 
-      fontSize: theme.typography.small,
+      fontSize: theme.typography.sizes.small,
       iconSize: 16,
     },
 
@@ -176,7 +176,7 @@ export default function Button({
       paddingVertical: 12,
       paddingHorizontal: 18,
 
-      fontSize: theme.typography.body,
+      fontSize: theme.typography.sizes.body,
       iconSize: 18,
     },
 
@@ -184,7 +184,7 @@ export default function Button({
       paddingVertical: 16,
       paddingHorizontal: 22,
 
-      fontSize: theme.typography.h3,
+      fontSize: theme.typography.sizes.h3,
       iconSize: 22,
     },
   };

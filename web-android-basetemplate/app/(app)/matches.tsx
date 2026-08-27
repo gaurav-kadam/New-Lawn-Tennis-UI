@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import { ActivityIndicator, Text, View, useWindowDimensions } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -17,6 +14,7 @@ import { useTeams } from '../../hooks/useteams';
 
 import matchService from '../../services/match/match.service';
 import tournamentService from '../../services/tournament/tournamment.service';
+import teamService from '../../services/team/team.service';
 import { useTheme } from '../../theme/themeContext';
 import { tokens } from '../../theme/token';
 
@@ -45,13 +43,45 @@ export default function MatchesScreen() {
 
   const showNotif = (type: 'success' | 'error', title: string, message: string) =>
     setNotif({ visible: true, type, title, message });
-
   const fetchTournaments = async () => {
     try {
       const response = await tournamentService.getTournaments();
-      setTournaments(response?.data?.data || response?.data || []);
-    } catch {
-      console.log('Failed to fetch tournaments');
+    
+      let tournamentList: any[] = [];
+    
+      // Direct array response
+      if (Array.isArray(response)) {
+        tournamentList = response;
+      }
+    
+      // response.data is array
+      else if (Array.isArray(response?.data)) {
+        tournamentList = response.data;
+      }
+    
+      // response.data.data is array
+      else if (Array.isArray(response?.data?.data)) {
+        tournamentList = response.data.data;
+      }
+    
+      // response.data.items is array
+      else if (Array.isArray(response?.data?.items)) {
+        tournamentList = response.data.items;
+      }
+    
+      // response.items is array
+      else if (Array.isArray(response?.items)) {
+        tournamentList = response.items;
+      }
+      setTournaments(tournamentList);
+    
+    } catch (error) {
+      console.error(
+        'Failed to fetch tournaments:',
+        error
+      );
+    
+      setTournaments([]);
     }
   };
 
@@ -71,33 +101,322 @@ export default function MatchesScreen() {
     }
   };
 
-  const handleStartMatch = (match: any) => {
+const handleStartMatch = async (match: any) => {
+  try {
+    // ============================================================
+    // MATCH TYPE
+    // ============================================================
+
+    const matchType = String(
+      match.match_type ??
+      match.matchType ??
+      'SINGLES'
+    ).toUpperCase();
+
+    // ============================================================
+    // TEAM CODES
+    // ============================================================
+
+    const team1Code = String(
+      match.team1_code ??
+      match.team1 ??
+      ''
+    );
+
+    const team2Code = String(
+      match.team2_code ??
+      match.team2 ??
+      ''
+    );
+
+    // ============================================================
+    // LOAD PLAYERS FROM BOTH TEAMS
+    //
+    // Existing NEW-UI API:
+    // GET /teams/code/{teamCode}/players
+    // ============================================================
+
+    const [whiteResponse, blueResponse] =
+      await Promise.all([
+        team1Code
+          ? teamService.getPlayersByTeamCode(
+              team1Code
+            )
+          : Promise.resolve(null),
+
+        team2Code
+          ? teamService.getPlayersByTeamCode(
+              team2Code
+            )
+          : Promise.resolve(null),
+      ]);
+
+    // ============================================================
+    // NORMALIZE API RESPONSE
+    // ============================================================
+
+    const getPlayersFromResponse = (
+      response: any
+    ): any[] => {
+      const data =
+        response?.data?.data ??
+        response?.data ??
+        response;
+
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (Array.isArray(data?.players)) {
+        return data.players;
+      }
+
+      if (Array.isArray(data?.items)) {
+        return data.items;
+      }
+
+      return [];
+    };
+
+    const team1Players =
+      getPlayersFromResponse(
+        whiteResponse
+      );
+
+    const team2Players =
+      getPlayersFromResponse(
+        blueResponse
+      );
+
+    // ============================================================
+    // PLAYER NAME RESOLVER
+    // ============================================================
+
+    const getPlayerName = (
+      player: any
+    ): string => {
+      if (
+        player === undefined ||
+        player === null ||
+        player === ''
+      ) {
+        return '';
+      }
+
+      if (typeof player === 'string') {
+        return player;
+      }
+
+      if (
+        typeof player === 'number'
+      ) {
+        return String(player);
+      }
+
+      const fullName =
+        `${player?.first_name ?? ''} ${
+          player?.last_name ?? ''
+        }`.trim();
+
+      return (
+        player?.player_name ??
+        player?.name ??
+        player?.full_name ??
+        fullName ??
+        player?.player_code ??
+        ''
+      );
+    };
+
+    // ============================================================
+    // EXPLICIT PLAYER DATA FROM MATCH
+    //
+    // If backend already sends individual players,
+    // use them first.
+    // ============================================================
+
+    const explicitPlayer1 =
+      match.player1_name ??
+      match.player1Name ??
+      match.red_player_name ??
+      getPlayerName(
+        match.player1 ??
+        match.red_player
+      );
+
+    const explicitPlayer2 =
+      match.player2_name ??
+      match.player2Name ??
+      match.blue_player_name ??
+      getPlayerName(
+        match.player2 ??
+        match.blue_player
+      );
+
+    const explicitPlayer3 =
+      match.player3_name ??
+      match.player3Name ??
+      getPlayerName(
+        match.player3
+      );
+
+    const explicitPlayer4 =
+      match.player4_name ??
+      match.player4Name ??
+      getPlayerName(
+        match.player4
+      );
+
+    // ============================================================
+    // DOUBLES
+    //
+    // Team 1:
+    //   PLAYER1 + PLAYER2
+    //
+    // Team 2:
+    //   PLAYER3 + PLAYER4
+    // ============================================================
+
+    let player1Name = explicitPlayer1;
+    let player2Name = explicitPlayer2;
+    let player3Name = explicitPlayer3;
+    let player4Name = explicitPlayer4;
+
+    if (matchType === 'DOUBLES') {
+      player1Name =
+        player1Name ||
+        getPlayerName(
+          team1Players[0]
+        ) ||
+        'Player 1';
+
+      player2Name =
+        player2Name ||
+        getPlayerName(
+          team1Players[1]
+        ) ||
+        'Player 2';
+
+      player3Name =
+        player3Name ||
+        getPlayerName(
+          team2Players[0]
+        ) ||
+        'Player 3';
+
+      player4Name =
+        player4Name ||
+        getPlayerName(
+          team2Players[1]
+        ) ||
+        'Player 4';
+    } else {
+      // ==========================================================
+      // SINGLES
+      // ==========================================================
+
+      player1Name =
+        player1Name ||
+        getPlayerName(
+          team1Players[0]
+        ) ||
+        'Player 1';
+
+      player2Name =
+        player2Name ||
+        getPlayerName(
+          team2Players[0]
+        ) ||
+        'Player 2';
+
+      player3Name = '';
+      player4Name = '';
+    }
+    // ============================================================
+    // OPEN TENNIS MATCH SCREEN
+    // ============================================================
+
     router.push({
-      pathname: '/MatchScreen',
+      pathname: '/TennisMatchScreen',
+
       params: {
-        matchId: String(match.id),
-        whiteTeamCode: String(match.white_team_code || match.white_team),
-        blueTeamCode: String(match.blue_team_code || match.blue_team),
-        whiteTeamName: match.white_team_name || match.white_team || match.red_player,
-        blueTeamName: match.blue_team_name || match.blue_team || match.blue_player,
-        ageCategory: match.age_category,
-        gender: match.gender,
-        matchNo: match.match_no,
-        courtNo: match.court_no,
-        matchDate: match.match_date || '',
-        tournamentCode: match.tournament_code || '',
-        quarterDuration: String(match.quarter_duration || ''),
-        digitalScorerCode: match.digital_scorer_code || '',
-        referee1Code: match.referee_1_code || '',
-        referee2Code: match.referee_2_code || '',
-        timekeeper1Code: match.timekeeper_1_code || '',
-        timekeeper2Code: match.timekeeper_2_code || '',
-        goalJudge1Code: match.goaljudge_1_code || '',
-        goalJudge2Code: match.goaljudge_2_code || '',
-        autoFullscreen: 'true',
+        // --------------------------------------------------------
+        // MATCH IDENTIFICATION
+        // --------------------------------------------------------
+
+        matchId: String(
+          match.id ?? ''
+        ),
+
+        // --------------------------------------------------------
+        // ACTUAL PLAYER NAMES
+        // --------------------------------------------------------
+
+        player1Name: String(
+          player1Name
+        ),
+
+        player2Name: String(
+          player2Name
+        ),
+
+        player3Name: String(
+          player3Name
+        ),
+
+        player4Name: String(
+          player4Name
+        ),
+
+        // --------------------------------------------------------
+        // MATCH TYPE
+        // --------------------------------------------------------
+
+        matchType: matchType,
+
+        // --------------------------------------------------------
+        // MATCH FORMAT
+        // --------------------------------------------------------
+
+        matchFormat: String(
+          match.match_format ??
+          match.matchFormat ??
+          'BEST_OF_3'
+        ).toUpperCase(),
+
+        // --------------------------------------------------------
+        // MATCH INFORMATION
+        // --------------------------------------------------------
+
+        matchNo: String(
+          match.match_no ??
+          ''
+        ),
+
+        courtNo: String(
+          match.court_no ??
+          '1'
+        ),
+
+        // --------------------------------------------------------
+        // DOUBLES SERVICE ORDER
+        // --------------------------------------------------------
+
+        serviceOrder:
+          JSON.stringify(
+            match.service_order ??
+            match.doublesServeOrder ??
+            []
+          ),
       },
     });
-  };
+  } catch (error) {
+    console.error(
+      'Failed to load match players:',
+      error
+    );
+  }
+};
 
   const handleDelete = (id: any) => {
     const performDelete = async () => {
@@ -128,10 +447,10 @@ export default function MatchesScreen() {
       match_no: match.match_no,
       age_category: match.age_category,
       gender: match.gender,
-      white_team: match.white_team,
-      blue_team: match.blue_team,
-      white_team_code: match.white_team_code,
-      blue_team_code: match.blue_team_code,
+      team1: match.team1,
+      team2: match.team2,
+      team1_code: match.team1_code,
+      team2_code: match.team2_code,
       digital_scorer_code: match.digital_scorer_code,
       referee_1_code: match.referee_1_code,
       referee_2_code: match.referee_2_code,

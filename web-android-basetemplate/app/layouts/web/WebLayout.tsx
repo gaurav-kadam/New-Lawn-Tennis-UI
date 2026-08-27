@@ -12,9 +12,32 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  supervisor: ['/dashboard', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen', '/users'],
-  admin: ['/dashboard', '/tournaments', '/teams', '/officials', '/matches', '/MatchScreen'],
-  scorer: ['/matches', '/MatchScreen'],
+  supervisor: [
+    '/dashboard',
+    '/tournaments',
+    '/teams',
+    '/officials',
+    '/matches',
+    '/MatchScreen',
+    '/TennisMatchScreen',
+    '/users',
+  ],
+
+  admin: [
+    '/dashboard',
+    '/tournaments',
+    '/teams',
+    '/officials',
+    '/matches',
+    '/MatchScreen',
+    '/TennisMatchScreen',
+  ],
+
+  scorer: [
+    '/matches',
+    '/MatchScreen',
+    '/TennisMatchScreen',
+  ],
 };
 
 export default function WebLayout({ children }: any) {
@@ -49,26 +72,28 @@ export default function WebLayout({ children }: any) {
   const baseCleanPath = path.split('?')[0];
   
   // Guard condition to check if user is on the dedicated Match Tracking Interface
-  const isMatchScreen = baseCleanPath === '/MatchScreen';
+  const isMatchScreen =
+    baseCleanPath === '/MatchScreen' ||
+    baseCleanPath === '/TennisMatchScreen';
 
   // 2. Active URL Protection Guard & Action Interceptor Engine
   useEffect(() => {
     if (loading) return;
 
-    // 🌟 RETAINED INTERCEPTOR: If admin/supervisor attempts to enter the Match Tracking Screen, block and alert them
-    if (isMatchScreen && (currentRole === 'admin' || currentRole === 'supervisor')) {
+    // // 🌟 RETAINED INTERCEPTOR: If admin/supervisor attempts to enter the Match Tracking Screen, block and alert them
+    // if (isMatchScreen && (currentRole === 'admin' || currentRole === 'supervisor')) {
       
-      // Multi-platform safe clean alert invocation
-      if (Platform.OS === 'web') {
-        window.alert('Access Denied: Only a Scorer can start and track matches.');
-      } else {
-        Alert.alert('Access Denied', 'Only a Scorer can start and track matches.');
-      }
+    //   // Multi-platform safe clean alert invocation
+    //   if (Platform.OS === 'web') {
+    //     window.alert('Access Denied: Only a Scorer can start and track matches.');
+    //   } else {
+    //     Alert.alert('Access Denied', 'Only a Scorer can start and track matches.');
+    //   }
 
-      // Explicitly redirect them right back to the static matches panel view without flickering/blinking
-      router.replace('/matches');
-      return;
-    }
+    //   // Explicitly redirect them right back to the static matches panel view without flickering/blinking
+    //   router.replace('/matches');
+    //   return;
+    // }
 
     // Standard structural path fallback security mechanism
     const isPathAllowed = allowedPaths.includes(baseCleanPath);

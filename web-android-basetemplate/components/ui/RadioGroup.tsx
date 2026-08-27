@@ -19,7 +19,7 @@ export default function RadioGroup({
           style={{
             marginBottom: 6,
             color: theme.colors.textPrimary,
-            fontSize: theme.typography.small,
+            fontSize: theme.typography.sizes.small,
           }}
         >
           {label}
@@ -82,7 +82,7 @@ export default function RadioGroup({
           style={{
             marginTop: 4,
             color: theme.colors.error,
-            fontSize: theme.typography.small,
+            fontSize: theme.typography.sizes.small,
           }}
         >
           {error}
