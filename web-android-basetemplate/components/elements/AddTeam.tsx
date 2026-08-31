@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   DimensionValue,
   Modal,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -22,208 +21,226 @@ import { tokens } from '../../theme/token';
 const TABLET_BREAKPOINT = 768;
 const MODAL_DESKTOP_WIDTH = 520;
 const MODAL_MOBILE_WIDTH = '92%';
-const SCROLL_MOBILE_HEIGHT = 320;
-const SCROLL_DESKTOP_HEIGHT = 340;
+const SCROLL_MOBILE_HEIGHT = 500;
+const SCROLL_DESKTOP_HEIGHT = 520;
 const FIELD_ROW_GAP = 12;
-const STEP_COUNT = 3;
+
+type TeamFormData = {
+  teamName: string;
+  shortName: string;
+  state: string;
+  city: string;
+  gender: string;
+  section: string;
+  headCoach: string;
+  coach: string;
+  manager: string;
+};
+
+type Props = {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (data: TeamFormData) => void;
+  initialData?: Partial<TeamFormData> | null;
+};
+
+const EMPTY_FORM: TeamFormData = {
+  teamName: '',
+  shortName: '',
+  state: '',
+  city: '',
+  gender: '',
+  section: '',
+  headCoach: '',
+  coach: '',
+  manager: '',
+};
 
 export default function CreateTeamModal({
   visible,
   onClose,
   onSave,
   initialData,
-}: any) {
+}: Props) {
   const theme = useTheme();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width } = useWindowDimensions();
 
-  const isMobile = screenWidth < TABLET_BREAKPOINT;
-  const cardWidth: DimensionValue = isMobile ? MODAL_MOBILE_WIDTH : MODAL_DESKTOP_WIDTH;
-  const scrollMaxHeight = isMobile ? SCROLL_MOBILE_HEIGHT : SCROLL_DESKTOP_HEIGHT;
+  const isMobile = width < TABLET_BREAKPOINT;
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [errors, setErrors] = useState<any>({});
+  const cardWidth: DimensionValue = isMobile
+    ? MODAL_MOBILE_WIDTH
+    : MODAL_DESKTOP_WIDTH;
 
-  const [formData, setFormData] = useState<any>({
-    teamName: '',
-    shortName: '',
-    state: '',
-    city: '',
-    gender: '',
-    section: '',
-    headCoach: '',
-    coach: '',
-    manager: '',
-    playerFile: null,
-  });
+  const scrollMaxHeight = isMobile
+    ? SCROLL_MOBILE_HEIGHT
+    : SCROLL_DESKTOP_HEIGHT;
 
-  // Sync and reset internal state when modal visibility changes
+  const [formData, setFormData] =
+    useState<TeamFormData>(EMPTY_FORM);
+
+  const [errors, setErrors] =
+    useState<Record<string, string>>({});
+
+  /* ---------------------------------------------------------
+     LOAD / RESET FORM
+  --------------------------------------------------------- */
+
   useEffect(() => {
-    if (visible) {
-      setCurrentStep(1);
-      setErrors({});
+    if (!visible) return;
+
+    setErrors({});
+
+    if (initialData) {
       setFormData({
-        teamName: initialData?.teamName || '',
-        shortName: initialData?.shortName || '',
-        state: initialData?.state || '',
-        city: initialData?.city || '',
-        gender: initialData?.gender || '',
-        section: initialData?.section || '',
-        headCoach: initialData?.headCoach || '',
-        coach: initialData?.coach || '',
-        manager: initialData?.manager || '',
-        playerFile: null,
+        teamName: initialData.teamName ?? '',
+        shortName: initialData.shortName ?? '',
+        state: initialData.state ?? '',
+        city: initialData.city ?? '',
+        gender: initialData.gender ?? '',
+        section: initialData.section ?? '',
+        headCoach: initialData.headCoach ?? '',
+        coach: initialData.coach ?? '',
+        manager: initialData.manager ?? '',
       });
+    } else {
+      setFormData(EMPTY_FORM);
     }
   }, [visible, initialData]);
 
+  /* ---------------------------------------------------------
+     CLOSE
+  --------------------------------------------------------- */
+
   const handleClose = () => {
     setErrors({});
+    setFormData(EMPTY_FORM);
     onClose();
   };
 
-  const update = (field: string, value: any) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  /* ---------------------------------------------------------
+     UPDATE FIELD
+  --------------------------------------------------------- */
+
+  const update = (
+    field: keyof TeamFormData,
+    value: string
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+
     if (errors[field]) {
-      setErrors((prevErrors: any) => ({ ...prevErrors, [field]: null }));
+      setErrors(prev => ({
+        ...prev,
+        [field]: '',
+      }));
     }
   };
 
-  const validateStep = () => {
-    const stepErrors: any = {};
+  /* ---------------------------------------------------------
+     VALIDATION
+  --------------------------------------------------------- */
+
+  const validate = () => {
+    const nextErrors: Record<string, string> = {};
+
     const alphaSpaceRegex = /^[a-zA-Z\s]+$/;
     const pureAlphaRegex = /^[a-zA-Z]+$/;
 
-    if (currentStep === 1) {
-      // Team Name
-      if (!formData.teamName?.trim()) {
-        stepErrors.teamName = 'Team full name is required';
-      } else if (!alphaSpaceRegex.test(formData.teamName)) {
-        stepErrors.teamName = 'Letters and spaces only';
+    const validateName = (
+      field: keyof TeamFormData,
+      label: string
+    ) => {
+      const value = formData[field].trim();
+
+      if (!value) {
+        nextErrors[field] = `${label} is required`;
+      } else if (!alphaSpaceRegex.test(value)) {
+        nextErrors[field] =
+          'Letters and spaces only';
       }
-
-      // Short Name (Code)
-      if (!formData.shortName?.trim()) {
-        stepErrors.shortName = 'Short name is required';
-      } else if (!pureAlphaRegex.test(formData.shortName)) {
-        stepErrors.shortName = 'Letters only (no spaces or symbols)';
-      }
-
-      // Gender selection validation
-      if (!formData.gender) {
-        stepErrors.gender = 'Gender is required';
-      }
-
-      // State
-      if (!formData.state?.trim()) {
-        stepErrors.state = 'State is required';
-      } else if (!alphaSpaceRegex.test(formData.state)) {
-        stepErrors.state = 'Letters and spaces only';
-      }
-
-      // City
-      if (!formData.city?.trim()) {
-        stepErrors.city = 'City is required';
-      } else if (!alphaSpaceRegex.test(formData.city)) {
-        stepErrors.city = 'Letters and spaces only';
-      }
-
-      // Section selection validation
-      if (!formData.section) {
-        stepErrors.section = 'Section is required';
-      }
-    }
-
-    if (currentStep === 2) {
-      // Head Coach
-      if (!formData.headCoach?.trim()) {
-        stepErrors.headCoach = 'Head coach name is required';
-      } else if (!alphaSpaceRegex.test(formData.headCoach)) {
-        stepErrors.headCoach = 'Letters and spaces only';
-      }
-
-      // Assistant Coach
-      if (!formData.coach?.trim()) {
-        stepErrors.coach = 'Assistant coach name is required';
-      } else if (!alphaSpaceRegex.test(formData.coach)) {
-        stepErrors.coach = 'Letters and spaces only';
-      }
-
-      // Team Manager
-      if (!formData.manager?.trim()) {
-        stepErrors.manager = 'Team manager name is required';
-      } else if (!alphaSpaceRegex.test(formData.manager)) {
-        stepErrors.manager = 'Letters and spaces only';
-      }
-    }
-
-    setErrors(stepErrors);
-    return Object.keys(stepErrors).length === 0;
-  };
-
-  const nextStep = () => {
-    if (validateStep() && currentStep < STEP_COUNT) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const prevStep = () => {
-    setErrors({});
-    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
-  };
-
-  const handleFileUpload = () => {
-    if (Platform.OS !== 'web') {
-      alert('Excel upload currently supported on web only.');
-      return;
-    }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,.xls';
-    input.onchange = (event: any) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      update('playerFile', file);
     };
-    input.click();
+
+    /* Team information */
+
+    validateName(
+      'teamName',
+      'Team full name'
+    );
+
+    if (!formData.shortName.trim()) {
+      nextErrors.shortName =
+        'Short name is required';
+    } else if (
+      !pureAlphaRegex.test(
+        formData.shortName.trim()
+      )
+    ) {
+      nextErrors.shortName =
+        'Letters only (no spaces or symbols)';
+    }
+
+    if (!formData.gender) {
+      nextErrors.gender =
+        'Gender is required';
+    }
+
+    validateName('state', 'State');
+    validateName('city', 'City');
+
+    if (!formData.section) {
+      nextErrors.section =
+        'Section is required';
+    }
+
+    /* Staff */
+
+    validateName(
+      'headCoach',
+      'Head coach name'
+    );
+
+    validateName(
+      'coach',
+      'Assistant coach name'
+    );
+
+    validateName(
+      'manager',
+      'Team manager name'
+    );
+
+    setErrors(nextErrors);
+
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleDownloadTemplate = () => {
-    if (Platform.OS !== 'web') return;
-    const headers = ['jourcy no', 'player name', 'playing position', 'substitute player', 'dp', 'flex'];
-    const sampleRows = [
-      ['7', 'Rahul Patil', 'Pitcher', 'No', 'No', 'No'],
-      ['12', 'Amit Shinde', 'Catcher', 'No', 'Yes', 'No'],
-      ['21', 'Sagar Jadhav', 'First Base', 'Yes', 'No', 'Yes'],
-    ];
-    const csvContent = [headers.join(','), ...sampleRows.map((row) => row.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'players_template.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  /* ---------------------------------------------------------
+     SAVE TEAM
+  --------------------------------------------------------- */
 
   const handleSave = () => {
-    if (currentStep === STEP_COUNT) {
-      onSave(formData);
+    if (!validate()) {
       return;
     }
-    nextStep();
+
+    onSave({
+      teamName: formData.teamName.trim(),
+      shortName: formData.shortName.trim(),
+      state: formData.state.trim(),
+      city: formData.city.trim(),
+      gender: formData.gender,
+      section: formData.section,
+      headCoach: formData.headCoach.trim(),
+      coach: formData.coach.trim(),
+      manager: formData.manager.trim(),
+    });
   };
 
-  const errorTextStyle = {
-    color: '#ef4444',
-    fontSize: 11,
-    marginTop: -4,
-    marginLeft: 4,
-    marginBottom: 4,
-  };
-
-  const attachedFileName = formData.playerFile?.name || formData.playerFile || '';
+  /* ---------------------------------------------------------
+     RENDER
+  --------------------------------------------------------- */
 
   return (
     <Modal
@@ -237,242 +254,377 @@ export default function CreateTeamModal({
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          backgroundColor: 'rgba(0,0,0,0.45)',
           padding: 20,
         }}
       >
-        <View style={{ width: cardWidth, maxWidth: '100%' }}>
+        <View
+          style={{
+            width: cardWidth,
+            maxWidth: '100%',
+          }}
+        >
           <Card variant="elevated">
             <View
               style={{
-                paddingHorizontal: isMobile ? 16 : 24,
+                paddingHorizontal: isMobile
+                  ? 16
+                  : 24,
                 paddingVertical: 16,
               }}
             >
-              {/* Header Block */}
-              <View style={{ marginBottom: 6 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: isMobile ? 18 : 22, fontWeight: 'bold', color: theme.colors.textPrimary }}>
-                    {initialData ? 'Update Team' : 'Register New Team'}
+              {/* HEADER */}
+
+              <View
+                style={{
+                  marginBottom: 16,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent:
+                      'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: isMobile
+                        ? 18
+                        : 22,
+                      fontWeight: 'bold',
+                      color:
+                        theme.colors
+                          .textPrimary,
+                    }}
+                  >
+                    {initialData
+                      ? 'Update Team'
+                      : 'Register New Team'}
                   </Text>
-                  <TouchableOpacity onPress={handleClose} style={{ padding: 4 }}>
-                    <Text style={{ fontSize: 18, color: theme.colors.textSecondary }}>✕</Text>
+
+                  <TouchableOpacity
+                    onPress={handleClose}
+                    style={{
+                      padding: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        color:
+                          theme.colors
+                            .textSecondary,
+                      }}
+                    >
+                      ✕
+                    </Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 12 }}>
-                  Step {currentStep} of {STEP_COUNT}
+
+                <Text
+                  style={{
+                    marginTop: 4,
+                    color:
+                      theme.colors
+                        .textSecondary,
+                    fontSize: 12,
+                  }}
+                >
+                  Enter team details and staff information.
                 </Text>
               </View>
 
-              {/* Progress Bars */}
-              <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
-                {['Details', 'Staff', 'Players'].map((label, i) => (
-                  <View
-                    key={label}
-                    style={{
-                      flex: 1,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: currentStep >= i + 1 ? theme.colors.primary : '#e2e8f0',
-                    }}
+              {/* FORM */}
+
+              <ScrollView
+                showsVerticalScrollIndicator={
+                  false
+                }
+                style={{
+                  maxHeight:
+                    scrollMaxHeight,
+                }}
+              >
+                <View
+                  style={{
+                    gap: FIELD_ROW_GAP,
+                    paddingBottom: 4,
+                  }}
+                >
+                  {/* TEAM NAME */}
+
+                  <Input
+                    label="Team Full Name"
+                    placeholder="e.g. Maharashtra Warriors"
+                    value={
+                      formData.teamName
+                    }
+                   onChangeText={(value: string) =>
+                    update(
+                      'teamName',
+                      value
+                    )
+                  }
+                    error={
+                      errors.teamName
+                    }
                   />
-                ))}
-              </View>
 
-              {/* Scroll Form Content */}
-              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: scrollMaxHeight }}>
-                <View style={{ gap: FIELD_ROW_GAP, paddingBottom: 4 }}>
+                  {/* SHORT NAME + GENDER */}
 
-                  {/* STEP 1: TEAM DETAILS */}
-                  {currentStep === 1 && (
-                    <>
-                      <View>
-                        <Input
-                          label="Team Full Name"
-                          placeholder="e.g. Maharashtra Warriors"
-                          value={formData.teamName}
-                          onChangeText={(value: any) => update('teamName', value)}
-                          error={errors.teamName}
-                        />
-                        
-                      </View>
-
-                      <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
-                        <View style={{ flex: 1 }}>
-                          <Input
-                            label="Short Name (Code)"
-                            placeholder="e.g. MAH"
-                            value={formData.shortName}
-                            onChangeText={(value: any) => update('shortName', value)}
-                            error={errors.shortName}
-                          />
-                         
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <RadioGroup
-                            label="Gender"
-                            value={formData.gender}
-                            onChange={(value: any) => update('gender', value)}
-                            options={[
-                              { label: 'Men', value: 'Men' },
-                              { label: 'Women', value: 'Women' },
-                            ]}
-                            error={errors.gender}
-                          />
-                          
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: FIELD_ROW_GAP }}>
-                        <View style={{ flex: 1 }}>
-                          <Input
-                            label="State"
-                            placeholder="State"
-                            value={formData.state}
-                            onChangeText={(value: any) => update('state', value)}
-                            error={errors.state}
-                          />
-                        
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Input
-                            label="City"
-                            placeholder="City"
-                            value={formData.city}
-                            onChangeText={(value: any) => update('city', value)}
-                            error={errors.city}
-                          />
-                          
-                        </View>
-                      </View>
-
-                      <View>
-                        <Select
-                          label="Section"
-                          value={formData.section}
-                          onChange={(value: any) => update('section', value)}
-                          options={[
-                            { label: 'Under-15', value: 'Under-15' },
-                            { label: 'Under-19', value: 'U19' },
-                            { label: 'Open', value: 'Open' },
-                          ]}
-                          error={errors.section}
-                        />
-  
-                      </View>
-                    </>
-                  )}
-
-                  {/* STEP 2: STAFF DETAILS */}
-                  {currentStep === 2 && (
-                    <>
-                      <View>
-                        <Input
-                          label="Head Coach"
-                          placeholder="Enter head coach name"
-                          value={formData.headCoach}
-                          onChangeText={(value: any) => update('headCoach', value)}
-                          error={errors.headCoach}
-                        />
-                        
-                      </View>
-                      <View>
-                        <Input
-                          label="Assistant Coach"
-                          placeholder="Enter coach name"
-                          value={formData.coach}
-                          onChangeText={(value: any) => update('coach', value)}
-                          error={errors.coach}
-                        />
-                       
-                      </View>
-                      <View>
-                        <Input
-                          label="Team Manager"
-                          placeholder="Enter manager name"
-                          value={formData.manager}
-                          onChangeText={(value: any) => update('manager', value)}
-                          error={errors.manager}
-                        />
-                       
-                      </View>
-                    </>
-                  )}
-
-                  {/* STEP 3: PLAYER FILE */}
-                  {currentStep === 3 && (
-                    <View style={{ alignItems: 'center', paddingVertical: tokens.spacing.sm, gap: tokens.spacing.md }}>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.colors.textPrimary, alignSelf: 'flex-start' }}>
-                        Player Details
-                      </Text>
-                      <View
-                        style={{
-                          width: '100%',
-                          padding: 25,
-                          borderStyle: 'dashed',
-                          borderWidth: 2,
-                          borderColor: theme.colors.border || '#cbd5e1',
-                          borderRadius: tokens.radius.md,
-                          alignItems: 'center',
-                          backgroundColor: theme.colors.background,
-                        }}
-                      >
-                        <Text style={{ fontSize: 32, marginBottom: 10 }}>📊</Text>
-                        <Text style={{ fontWeight: 'bold', color: theme.colors.textPrimary, marginBottom: 5 }}>
-                          Upload Player List
-                        </Text>
-                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, textAlign: 'center', marginBottom: 15 }}>
-                          Upload an Excel file .xlsx or .xls with players.
-                        </Text>
-                        <TouchableOpacity
-                          onPress={handleFileUpload}
-                          style={{
-                            backgroundColor: theme.colors.surface || '#fff',
-                            borderWidth: tokens.layout.dividerHeight,
-                            borderColor: theme.colors.border || '#e2e8f0',
-                            paddingVertical: tokens.spacing.sm,
-                            paddingHorizontal: tokens.spacing.md,
-                            borderRadius: tokens.radius.sm,
-                          }}
-                        >
-                          <Text style={{ fontWeight: '600', color: theme.colors.textSecondary }}>
-                            Select Excel File
-                          </Text>
-                        </TouchableOpacity>
-                        {attachedFileName ? (
-                          <Text style={{ marginTop: 10, color: '#10b981', fontSize: 12 }}>
-                            ✓ {attachedFileName} attached
-                          </Text>
-                        ) : null}
-                      </View>
-                      <TouchableOpacity onPress={handleDownloadTemplate}>
-                        <Text style={{ color: theme.colors.primary, fontSize: 13, fontWeight: '600' }}>
-                          Download Template
-                        </Text>
-                      </TouchableOpacity>
+                  <View
+                    style={{
+                      flexDirection:
+                        isMobile
+                          ? 'column'
+                          : 'row',
+                      gap: FIELD_ROW_GAP,
+                    }}
+                  >
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <Input
+                        label="Short Name (Code)"
+                        placeholder="e.g. MAH"
+                        value={
+                          formData.shortName
+                        }
+                        onChangeText={(value: string) =>
+                          update(
+                            'shortName',
+                            value
+                          )
+                        }
+                        error={
+                          errors.shortName
+                        }
+                      />
                     </View>
-                  )}
 
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <RadioGroup
+                        label="Gender"
+                        value={
+                          formData.gender
+                        }
+                        onChange={(value: string) =>
+                          update(
+                            'gender',
+                            value
+                          )
+                        }
+                        options={[
+                          {
+                            label: 'Men',
+                            value: 'Men',
+                          },
+                          {
+                            label: 'Women',
+                            value: 'Women',
+                          },
+                        ]}
+                        error={
+                          errors.gender
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  {/* STATE + CITY */}
+
+                  <View
+                    style={{
+                      flexDirection:
+                        isMobile
+                          ? 'column'
+                          : 'row',
+                      gap: FIELD_ROW_GAP,
+                    }}
+                  >
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <Input
+                        label="State"
+                        placeholder="State"
+                        value={
+                          formData.state
+                        }
+                        onChangeText={(value: string) =>
+                          update(
+                            'state',
+                            value
+                          )
+                        }
+                        error={
+                          errors.state
+                        }
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      <Input
+                        label="City"
+                        placeholder="City"
+                        value={
+                          formData.city
+                        }
+                        onChangeText={(value: string) =>
+                          update(
+                            'city',
+                            value
+                          )
+                        }
+                        error={
+                          errors.city
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  {/* SECTION */}
+
+                  <Select
+                    label="Section"
+                    value={
+                      formData.section
+                    }
+                    onChange={(value: string) =>
+                      update(
+                        'section',
+                        value
+                      )
+                    }
+                    options={[
+                      {
+                        label: 'Under-15',
+                        value: 'Under-15',
+                      },
+                      {
+                        label: 'Under-19',
+                        value: 'U19',
+                      },
+                      {
+                        label: 'Open',
+                        value: 'Open',
+                      },
+                    ]}
+                    error={
+                      errors.section
+                    }
+                  />
+
+                  {/* STAFF */}
+
+                  <Text
+                    style={{
+                      marginTop: 8,
+                      marginBottom: 2,
+                      fontSize: 14,
+                      fontWeight: '700',
+                      color:
+                        theme.colors
+                          .textPrimary,
+                    }}
+                  >
+                    Staff Information
+                  </Text>
+
+                  <Input
+                    label="Head Coach"
+                    placeholder="Enter head coach name"
+                    value={
+                      formData.headCoach
+                    }
+                    onChangeText={(value: string) =>
+                      update(
+                        'headCoach',
+                        value
+                      )
+                    }
+                    error={
+                      errors.headCoach
+                    }
+                  />
+
+                  <Input
+                    label="Assistant Coach"
+                    placeholder="Enter assistant coach name"
+                    value={
+                      formData.coach
+                    }
+                   onChangeText={(value: string) =>
+                      update(
+                        'coach',
+                        value
+                      )
+                    }
+                    error={
+                      errors.coach
+                    }
+                  />
+
+                  <Input
+                    label="Team Manager"
+                    placeholder="Enter manager name"
+                    value={
+                      formData.manager
+                    }
+                    onChangeText={(value: string) =>
+                      update(
+                        'manager',
+                        value
+                      )
+                    }
+                    error={
+                      errors.manager
+                    }
+                  />
                 </View>
               </ScrollView>
 
-              {/* Footer Buttons */}
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 16 }}>
-                {/* <View style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? 0 : 100 }}> */}
-                  <Button
-                    title={currentStep === 1 ? 'Cancel' : 'Back'}
-                    variant="danger"
-                    onPress={currentStep === 1 ? handleClose : prevStep}
-                  />
-                {/* </View> */}
-                {/* <View style={{ flex: isMobile ? 1.5 : 0, minWidth: isMobile ? 0 : 180 }}> */}
-                  <Button
-                    title={currentStep === STEP_COUNT ? (initialData ? 'Update' : 'Create') : 'Next Step'}
-                    onPress={handleSave}
-                  />
-                {/* </View> */}
-              </View>
+              {/* FOOTER */}
 
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent:
+                    'flex-end',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginTop: 16,
+                }}
+              >
+                <Button
+                  title="Cancel"
+                  variant="danger"
+                  onPress={handleClose}
+                />
+
+                <Button
+                  title={
+                    initialData
+                      ? 'Update'
+                      : 'Create'
+                  }
+                  onPress={handleSave}
+                />
+              </View>
             </View>
           </Card>
         </View>

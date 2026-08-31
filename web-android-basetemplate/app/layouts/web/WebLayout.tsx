@@ -16,7 +16,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     '/dashboard',
     '/tournaments',
     '/teams',
-    '/officials',
+    '/players',
+    '/officials', 
     '/matches',
     '/MatchScreen',
     '/TennisMatchScreen',
@@ -27,6 +28,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     '/dashboard',
     '/tournaments',
     '/teams',
+    '/players',
     '/officials',
     '/matches',
     '/MatchScreen',
@@ -39,7 +41,6 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     '/TennisMatchScreen',
   ],
 };
-
 export default function WebLayout({ children }: any) {
   const router = useRouter();
   const path = usePathname();
@@ -56,6 +57,7 @@ export default function WebLayout({ children }: any) {
     { name: 'Dashboard', icon: 'home', path: '/dashboard' },
     { name: 'Tournaments', icon: 'trophy', path: '/tournaments' },
     { name: 'Teams', icon: 'people', path: '/teams' },
+    { name: 'Players', icon: 'people', path: '/players' },
     { name: 'Officials', icon: 'shield', path: '/officials' },
     { name: 'Matches', icon: 'list', path: '/matches' },
     { name: 'User Management', icon: 'person', path: '/users' },

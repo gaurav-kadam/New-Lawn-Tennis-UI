@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   DimensionValue,
   Modal,
   Platform,
@@ -12,6 +13,8 @@ import {
 
 import { useTheme } from '@/theme/themeContext';
 import { tokens } from '@/theme/token';
+
+import { usePlayers } from '@/hooks/useplayers';
 
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -50,6 +53,13 @@ export default function CreateMatchModal({
   tournaments = [],
 }: CreateMatchModalProps) {
   const theme = useTheme();
+
+  const {
+  players = [],
+  loading: playersLoading,
+  error: playersError,
+} = usePlayers();
+
   const { width: screenWidth } = useWindowDimensions();
 
   const isMobile = screenWidth < TABLET_BREAKPOINT;
@@ -74,27 +84,38 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
     return found ? (found.team_name || found.teamName || '') : '';
   };
 
-  const [formData, setFormData] = useState({
-    tournamentCode: '',
-    matchDate: '',
-    matchTime: '',
-    courtNo: '',
-    matchNo: '',
-    ageCategory: '',
-    gender: '',
-    quarterDuration: '',
-    whiteTeamCode: '',
-    whiteTeam: '',
-    blueTeamCode: '',
-    blueTeam: '',
-    digitalScorerCode: '',
-    referee1Code: '',
-    referee2Code: '',
-    goaljudge1Code: '',
-    goaljudge2Code: '',
-    timekeeper1Code: '',
-    timekeeper2Code: '',
-  });
+ const [formData, setFormData] = useState({
+  tournamentCode: '',
+  matchDate: '',
+  matchTime: '',
+  courtNo: '',
+  matchNo: '',
+  ageCategory: '',
+  gender: '',
+  quarterDuration: '',
+
+  // MATCH
+  matchType: 'SINGLES',
+
+  // PLAYERS
+  player1: '',
+  player2: '',
+  player3: '',
+  player4: '',
+
+  team1Code: '',
+  team1: '',
+  team2Code: '',
+  team2: '',
+
+  digitalScorerCode: '',
+  referee1Code: '',
+  referee2Code: '',
+  goaljudge1Code: '',
+  goaljudge2Code: '',
+  timekeeper1Code: '',
+  timekeeper2Code: '',
+});
 
   // 🌟 Sync and reset internal states securely when modal visibility changes (Matching Team Modal)
   useEffect(() => {
@@ -102,38 +123,208 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
       setCurrentStep(1);
       setErrors({});
 
-      const whiteCode = initialData?.team1_code ?? initialData?.team1_id ?? initialData?.whiteTeamId ?? '';
-      const blueCode = initialData?.team2_code ?? initialData?.team2_id ?? initialData?.blueTeamId ?? '';
+      const team1CodeValue =
+        initialData?.team1_code ??
+        initialData?.team1_id ??
+        '';
+
+      const team2CodeValue =
+        initialData?.team2_code ??
+        initialData?.team2_id ??
+        '';
+
+      const player1Value =
+      initialData?.player1_name ??
+      initialData?.player1Name ??
+      initialData?.player1 ??
+      '';
+
+    const player2Value =
+      initialData?.player2_name ??
+      initialData?.player2Name ??
+      initialData?.player2 ??
+      '';
+
+    const player3Value =
+      initialData?.player3_name ??
+      initialData?.player3Name ??
+      initialData?.player3 ??
+      '';
+
+    const player4Value =
+      initialData?.player4_name ??
+      initialData?.player4Name ??
+      initialData?.player4 ??
+      '';
+
+    const matchTypeValue = String(
+      initialData?.match_type ??
+      initialData?.matchType ??
+      'SINGLES'
+    ).toUpperCase();
 
       setFormData({
-        tournamentCode: initialData?.tournament_code || initialData?.tournamentId || initialData?.tournament_id
-          ? String(initialData.tournament_code || initialData.tournamentId || initialData.tournament_id) 
-          : '',
-        matchDate: initialData?.matchDate || initialData?.match_date || '',
-        matchTime: initialData?.matchTime || initialData?.match_time || '',
-        courtNo: initialData?.courtNo || initialData?.court_no || '',
-        matchNo: initialData?.matchNo || initialData?.match_no || '',
-        ageCategory: initialData?.ageCategory || initialData?.age_category || 'OPEN',
-        gender: initialData?.gender || 'Men',
-        quarterDuration: initialData?.quarterDuration || initialData?.quarter_duration
-          ? String(initialData.quarterDuration || initialData.quarter_duration)
-          : '',
+      // =========================
+      // MATCH TYPE
+      // =========================
+      matchType: matchTypeValue,    
 
-        whiteTeamCode: whiteCode ? String(whiteCode) : '',
-        whiteTeam: initialData?.team1 || initialData?.whiteTeam || findTeamNameByCode(whiteCode), 
-        
-        blueTeamCode: blueCode ? String(blueCode) : '',
-        blueTeam: initialData?.team2 || initialData?.blueTeam || findTeamNameByCode(blueCode), 
-        
-        digitalScorerCode: initialData?.digital_scorer_code ?? initialData?.digital_scorer_id ?? initialData?.digitalScorer ? String(initialData.digital_scorer_code ?? initialData.digital_scorer_id ?? initialData.digitalScorer) : '',
-        referee1Code: initialData?.referee_1_code ?? initialData?.referee_1_id ?? initialData?.referee1 ? String(initialData.referee_1_code ?? initialData.referee_1_id ?? initialData.referee1) : '',
-        referee2Code: initialData?.referee_2_code ?? initialData?.referee_2_id ?? initialData?.referee2 ? String(initialData.referee_2_code ?? initialData.referee_2_id ?? initialData.referee2) : '',
-        
-        goaljudge1Code: initialData?.goaljudge_1_code ?? initialData?.goaljudge_1_id ?? initialData?.goaljudge1 ? String(initialData.goaljudge_1_code ?? initialData.goaljudge_1_id ?? initialData.goaljudge1) : '',
-        goaljudge2Code: initialData?.goaljudge_2_code ?? initialData?.goaljudge_2_id ?? initialData?.goaljudge2 ? String(initialData.goaljudge_2_code ?? initialData.goaljudge_2_id ?? initialData.goaljudge2) : '',
-        timekeeper1Code: initialData?.timekeeper_1_code ?? initialData?.timekeeper_1_id ?? initialData?.timekeeper1 ? String(initialData.timekeeper_1_code ?? initialData.timekeeper_1_id ?? initialData.timekeeper1) : '',
-        timekeeper2Code: initialData?.timekeeper_2_code ?? initialData?.timekeeper_2_id ?? initialData?.timekeeper2 ? String(initialData.timekeeper_2_code ?? initialData.timekeeper_2_id ?? initialData.timekeeper2) : '',
-      });
+      // =========================
+      // PLAYERS
+      // =========================
+      player1: player1Value ? String(player1Value) : '',
+      player2: player2Value ? String(player2Value) : '',
+      player3: player3Value ? String(player3Value) : '',
+      player4: player4Value ? String(player4Value) : '',    
+
+      // =========================
+      // SCHEDULE DETAILS
+      // =========================
+      tournamentCode:
+        initialData?.tournament_code ??
+        initialData?.tournamentId ??
+        initialData?.tournament_id
+          ? String(
+              initialData?.tournament_code ??
+              initialData?.tournamentId ??
+              initialData?.tournament_id
+            )
+          : '',   
+
+      matchDate:
+        initialData?.matchDate ??
+        initialData?.match_date ??
+        '',   
+
+      matchTime:
+        initialData?.matchTime ??
+        initialData?.match_time ??
+        '',   
+
+      courtNo:
+        initialData?.courtNo ??
+        initialData?.court_no ??
+        '',   
+
+      matchNo:
+        initialData?.matchNo ??
+        initialData?.match_no ??
+        '',   
+
+      ageCategory:
+        initialData?.ageCategory ??
+        initialData?.age_category ??
+        'OPEN',   
+
+      gender:
+        initialData?.gender ??
+        'Men',    
+
+      quarterDuration:
+        initialData?.quarterDuration ??
+        initialData?.quarter_duration
+          ? String(
+              initialData?.quarterDuration ??
+              initialData?.quarter_duration
+            )
+          : '',   
+
+       team1Code: team1CodeValue
+        ? String(team1CodeValue)
+        : '',   
+
+      team1:
+        initialData?.team1 ??
+        findTeamNameByCode(team1CodeValue),   
+
+      team2Code: team2CodeValue
+        ? String(team2CodeValue)
+        : '',   
+
+      team2:
+        initialData?.team2 ??
+        findTeamNameByCode(team2CodeValue),   
+
+      // =========================
+      // OFFICIALS
+      // =========================
+      digitalScorerCode:
+        initialData?.digital_scorer_code ??
+        initialData?.digital_scorer_id ??
+        initialData?.digitalScorer
+          ? String(
+              initialData?.digital_scorer_code ??
+              initialData?.digital_scorer_id ??
+              initialData?.digitalScorer
+            )
+          : '',   
+
+      referee1Code:
+        initialData?.referee_1_code ??
+        initialData?.referee_1_id ??
+        initialData?.referee1
+          ? String(
+              initialData?.referee_1_code ??
+              initialData?.referee_1_id ??
+              initialData?.referee1
+            )
+          : '',   
+
+      referee2Code:
+        initialData?.referee_2_code ??
+        initialData?.referee_2_id ??
+        initialData?.referee2
+          ? String(
+              initialData?.referee_2_code ??
+              initialData?.referee_2_id ??
+              initialData?.referee2
+            )
+          : '',   
+
+      goaljudge1Code:
+        initialData?.goaljudge_1_code ??
+        initialData?.goaljudge_1_id ??
+        initialData?.goaljudge1
+          ? String(
+              initialData?.goaljudge_1_code ??
+              initialData?.goaljudge_1_id ??
+              initialData?.goaljudge1
+            )
+          : '',   
+
+      goaljudge2Code:
+        initialData?.goaljudge_2_code ??
+        initialData?.goaljudge_2_id ??
+        initialData?.goaljudge2
+          ? String(
+              initialData?.goaljudge_2_code ??
+              initialData?.goaljudge_2_id ??
+              initialData?.goaljudge2
+            )
+          : '',   
+
+      timekeeper1Code:  
+        initialData?.timekeeper_1_code ??
+        initialData?.timekeeper_1_id ??
+        initialData?.timekeeper1
+          ? String(
+              initialData?.timekeeper_1_code ??
+              initialData?.timekeeper_1_id ??
+              initialData?.timekeeper1
+            )
+          : '',   
+
+      timekeeper2Code:
+        initialData?.timekeeper_2_code ??
+        initialData?.timekeeper_2_id ??
+        initialData?.timekeeper2
+          ? String(
+              initialData?.timekeeper_2_code ??
+              initialData?.timekeeper_2_id ??
+              initialData?.timekeeper2
+            )
+          : '',
+    });
     }
   }, [visible, initialData]);
 
@@ -163,8 +354,60 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
       };
     });
 
-  const whiteTeamOptionsFiltered = teamOptions.filter(o => o.value !== formData.blueTeamCode);
-  const blueTeamOptionsFiltered = teamOptions.filter(o => o.value !== formData.whiteTeamCode);
+    const playerOptions = players
+  .filter((player: any) => {
+    const code =
+      player?.player_code ??
+      player?.playerCode ??
+      player?.id;
+
+    return Boolean(code);
+  })
+  .map((player: any) => {
+    const code = String(
+      player.player_code ??
+      player.playerCode ??
+      player.id
+    );
+
+    const name =
+      player.player_name ??
+      player.playerName ??
+      player.full_name ??
+      player.fullName ??
+      player.name ??
+      `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim() ??
+      'Unnamed Player';
+
+    return {
+      label: name,
+      value: code,
+      teamCode: String(
+        player?.team_code ??
+        player?.teamCode ??
+        ''
+      ),
+    };
+  });
+
+  const team1PlayerOptions =
+  playerOptions.filter(
+    (player) =>
+      !formData.team1Code ||
+      player.teamCode ===
+        String(formData.team1Code)
+  );
+
+const team2PlayerOptions =
+  playerOptions.filter(
+    (player) =>
+      !formData.team2Code ||
+      player.teamCode ===
+        String(formData.team2Code)
+  );
+
+  const whiteTeamOptionsFiltered = teamOptions.filter(o => o.value !== formData.team1Code);
+  const blueTeamOptionsFiltered = teamOptions.filter(o => o.value !== formData.team2Code);
 
   const officialOptions = officials
     .filter((official: any) => official?.official_code || official?.id)
@@ -235,19 +478,51 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
     }
   };
 
-  const handleTeamChange = (teamType: 'white' | 'blue', selectedCode: string) => {
-    const selectedOption = teamOptions.find(o => o.value === selectedCode);
-    const teamNameValue = selectedOption ? selectedOption.teamName : '';
+  const handleTeamChange = (
+  teamType: 'team1' | 'team2',
+  selectedCode: string
+  ) => {
+    const selectedOption = teamOptions.find(
+      o => o.value === selectedCode
+    );
 
-    setFormData((prev) => ({
+    const teamNameValue = selectedOption
+      ? selectedOption.teamName
+      : '';
+
+    setFormData(prev => ({
       ...prev,
-      [`${teamType}TeamCode`]: selectedCode,
-      [`${teamType}Team`]: teamNameValue,
+      [`${teamType}Code`]: selectedCode,
+      [teamType]: teamNameValue,
     }));
 
-    const errorKey = teamType === 'white' ? 'whiteTeam' : 'blueTeam';
+    const errorKey =
+      teamType === 'team1'
+        ? 'team1'
+        : 'team2';
+
     if (errors[errorKey]) {
-      setErrors((prev: any) => ({ ...prev, [errorKey]: null }));
+      setErrors((prev: any) => ({
+        ...prev,
+        [errorKey]: null,
+      }));
+    }
+  };
+
+  const handlePlayerChange = (
+  playerField: 'player1' | 'player2' | 'player3' | 'player4',
+  selectedValue: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [playerField]: selectedValue,
+    }));
+
+    if (errors[playerField]) {
+      setErrors((prev: any) => ({
+        ...prev,
+        [playerField]: null,
+      }));
     }
   };
 
@@ -285,16 +560,53 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
       }
     }
 
-    // --- STEP 2: TEAM SELECTION ---
-    if (currentStep === 2) {
-      if (!formData.whiteTeamCode) stepErrors.whiteTeam = 'Select White Team';
-      if (!formData.blueTeamCode) stepErrors.blueTeam = 'Select Blue Team';
-      
-      if (formData.whiteTeamCode && formData.blueTeamCode && formData.whiteTeamCode === formData.blueTeamCode) {
-        stepErrors.blueTeam = 'White Team and Blue Team must be different';
-      }
+   // --- STEP 2: PLAYER SELECTION ---
+if (currentStep === 2) {
+  if (!formData.player1) {
+    stepErrors.player1 = 'Enter Player 1';
+  }
+
+  if (!formData.player2) {
+    stepErrors.player2 = 'Enter Player 2';
+  }
+
+  if (
+    formData.player1 &&
+    formData.player2 &&
+    String(formData.player1).trim() ===
+      String(formData.player2).trim()
+  ) {
+    stepErrors.player2 =
+      'Player 1 and Player 2 must be different';
+  }
+
+  if (formData.matchType === 'DOUBLES') {
+    if (!formData.player3) {
+      stepErrors.player3 = 'Enter Player 3';
     }
 
+    if (!formData.player4) {
+      stepErrors.player4 = 'Enter Player 4';
+    }
+
+    const selectedPlayers = [
+      formData.player1,
+      formData.player2,
+      formData.player3,
+      formData.player4,
+    ]
+      .filter(Boolean)
+      .map((player) => String(player).trim());
+
+    if (
+      new Set(selectedPlayers).size !==
+      selectedPlayers.length
+    ) {
+      stepErrors.player4 =
+        'All four players must be different';
+    }
+  }
+}
     // --- STEP 3: OFFICIALS SELECTION ---
     if (currentStep === 3) {
       if (!formData.digitalScorerCode) stepErrors.digitalScorerCode = 'Required';
@@ -325,51 +637,97 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
 
   const handleSave = () => {
     if (currentStep === STEP_COUNT) {
-      if (validateStep()) {
-        const payload = {
-          tournament_code: formData.tournamentCode,
-          match_date: formData.matchDate,
-          match_time: formData.matchTime,
-          court_no: Number(formData.courtNo), // Enforced as int matching Pydantic schema
-          match_no: Number(formData.matchNo),   // Enforced as int matching Pydantic schema
-          age_category: formData.ageCategory,
-          gender: formData.gender,
-          quarter_duration: Number(formData.quarterDuration),
-          team1: formData.whiteTeam,
-          team2: formData.blueTeam,
-          team1_code: formData.whiteTeamCode || null,
-          team2_code: formData.blueTeamCode || null,
-          digital_scorer_code: formData.digitalScorerCode || null,
-          referee_1_code: formData.referee1Code || null,
-          referee_2_code: formData.referee2Code || null,
-          goaljudge_1_code: formData.goaljudge1Code || null,
-          goaljudge_2_code: formData.goaljudge2Code || null,
-          timekeeper_1_code: formData.timekeeper1Code || null,
-          timekeeper_2_code: formData.timekeeper2Code || null,
-          is_active: initialData ? initialData.is_active : true,
-          is_complete: initialData ? initialData.is_complete : false,
-        };
+        if (validateStep()) {
+          const payload = {
+              tournament_code: formData.tournamentCode,
+              match_date: formData.matchDate,
+              match_time: formData.matchTime,
+                    
+              court_no: Number(formData.courtNo),
+              match_no: Number(formData.matchNo),
+                    
+              age_category: formData.ageCategory,
+              gender: formData.gender,
+              quarter_duration: Number(
+                formData.quarterDuration
+              ),
+            
+              match_type: formData.matchType,
+            
+              team1_code:
+                formData.team1Code || null,
+            
+              team2_code:
+                formData.team2Code || null,
+            
+              team1:
+                formData.team1 || null,
+            
+              team2:
+                formData.team2 || null,
+            
+              // =========================
+              // PLAYERS
+              // =========================
+            
+              player1:
+                formData.player1 || null,
+            
+              player2:
+                formData.player2 || null,
+            
+              player3:
+                formData.matchType === 'DOUBLES'
+                  ? formData.player3 || null
+                  : null,
+            
+              player4:
+                formData.matchType === 'DOUBLES'
+                  ? formData.player4 || null
+                  : null,
+            
+              // =========================
+              // OFFICIALS
+              // =========================
+            
+              digital_scorer_code:
+                formData.digitalScorerCode || null,
+            
+              referee_1_code:
+                formData.referee1Code || null,
+            
+              referee_2_code:
+                formData.referee2Code || null,
+            
+              goaljudge_1_code:
+                formData.goaljudge1Code || null,
+            
+              goaljudge_2_code:
+                formData.goaljudge2Code || null,
+            
+              timekeeper_1_code:
+                formData.timekeeper1Code || null,
+            
+              timekeeper_2_code:
+                formData.timekeeper2Code || null,
+            
+              is_active:
+                initialData
+                  ? initialData.is_active
+                  : true,
+            
+              is_complete:
+                initialData
+                  ? initialData.is_complete
+                  : false,
+            };
         onSave(payload);
       }
       return;
     }
     nextStep();
   };
-
-  const webInputStyle = {
-    width: '100%',
-    boxSizing: 'border-box' as const,
-    paddingTop: tokens.spacing.sm,
-    paddingBottom: tokens.spacing.sm,
-    paddingLeft: tokens.spacing.sm,
-    paddingRight: tokens.spacing.md + tokens.spacing.xs,
-    borderRadius: tokens.radius.sm,
-    borderWidth: tokens.layout.dividerHeight,
-    borderStyle: 'solid' as const,
-    borderColor: theme.colors.border || tokens.colors.border,
-    fontSize: tokens.typography.sizes.small,
-  };
-
+  
   const errorTextStyle = {
     color: '#ef4444',
     fontSize: 11,
@@ -536,27 +894,252 @@ const toDateStr = (date: Date) => date.toLocaleDateString('en-GB');
                     </>
                   )}
 
-                  {/* STEP 2: TEAM SELECTION */}
-                  {currentStep === 2 && (
-                    <>
-                      <View>
-                        <Select label="White Team" value={formData.whiteTeamCode} onChange={(value: any) => handleTeamChange('white', value)} options={whiteTeamOptionsFiltered} />
-                        {errors.whiteTeam && <Text style={errorTextStyle}>{errors.whiteTeam}</Text>}
-                      </View>
+                 
+                     {/* STEP 2: PLAYERS */}
+                    {currentStep === 2 && (
+                      <>
+                        {/* PLAYER LOADING */}
+                    
+                        {playersLoading && (
+                          <View
+                            style={{
+                              paddingVertical: 12,
+                              alignItems: 'center',
+                            }}
+                          >
+                            <ActivityIndicator />
+                          
+                            <Text
+                              style={{
+                                marginTop: 6,
+                                fontSize: 12,
+                                color:
+                                  theme.colors.textSecondary,
+                              }}
+                            >
+                              Loading players...
+                            </Text>
+                          </View>
+                        )}
+                    
+                        {/* PLAYER ERROR */}
+                      
+                        {playersError && (
+                          <Text
+                            style={{
+                              color: '#ef4444',
+                              fontSize: 12,
+                              marginBottom: 8,
+                            }}
+                          >
+                            {playersError}
+                          </Text>
+                        )}
+                    
+                        {/* =========================
+                            TEAM 1
+                        ========================= */}
+                    
+                        <View
+                          style={{
+                            padding: 12,
+                            borderWidth: 1,
+                            borderColor:
+                              theme.colors.border,
+                            borderRadius: 10,
+                            backgroundColor:
+                              theme.colors.surface,
+                            gap: FIELD_ROW_GAP,
+                          }}
+                        >
+                        
+                          <Text
+                            style={{
+                              fontSize: 15,
+                              fontWeight: '700',
+                              color:
+                                theme.colors.textPrimary,
+                            }}
+                          >
+                            Team 1
+                          </Text>
+                          
+                          <Select
+                            label="Team 1"
+                            value={formData.team1Code}
+                            onChange={(value: any) =>
+                              update(
+                                'team1Code',
+                                value
+                              )
+                            }
+                            options={teamOptions}
+                          />
+                    
+                          <Select
+                            label={
+                              formData.matchType ===
+                              'DOUBLES'
+                                ? 'Player 1'
+                                : 'Player'
+                            }
+                            value={formData.player1}
+                            onChange={(value: any) =>
+                              update(
+                                'player1',
+                                value
+                              )
+                            }
+                            options={team1PlayerOptions}
+                            placeholder={
+                              playersLoading
+                                ? 'Loading players...'
+                                : 'Select Player'
+                            }
+                          />
+                    
+                          {formData.matchType ===
+                            'DOUBLES' && (
+                            <Select
+                              label="Player 2"
+                              value={formData.player2}
+                              onChange={(value: any) =>
+                                update(
+                                  'player2',
+                                  value
+                                )
+                              }
+                              options={team1PlayerOptions.filter(
+                                (player) =>
+                                  player.value !==
+                                  formData.player1
+                              )}
+                              placeholder="Select Player 2"
+                            />
+                          )}
+                    
+                        </View>
+                        
+                        {/* =========================
+                            VS
+                        ========================= */}
+                    
+                        <View
+                          style={{
+                            alignItems: 'center',
+                            marginVertical:
+                              tokens.spacing.xs,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontWeight: '700',
+                              color:
+                                theme.colors.textSecondary,
+                            }}
+                          >
+                            VS
+                          </Text>
+                        </View>
+                          
+                        {/* =========================
+                            TEAM 2
+                        ========================= */}
+                    
+                        <View
+                          style={{
+                            padding: 12,
+                            borderWidth: 1,
+                            borderColor:
+                              theme.colors.border,
+                            borderRadius: 10,
+                            backgroundColor:
+                              theme.colors.surface,
+                            gap: FIELD_ROW_GAP,
+                          }}
+                        >
+                        
+                          <Text
+                            style={{
+                              fontSize: 15,
+                              fontWeight: '700',
+                              color:
+                                theme.colors.textPrimary,
+                            }}
+                          >
+                            Team 2
+                          </Text>
+                          
+                          <Select
+                            label="Team 2"
+                            value={formData.team2Code}
+                            onChange={(value: any) =>
+                              update(
+                                'team2Code',
+                                value
+                              )
+                            }
+                            options={teamOptions.filter(
+                              (team) =>
+                                team.value !==
+                                formData.team1Code
+                            )}
+                          />
+                    
+                          <Select
+                            label={
+                              formData.matchType ===
+                              'DOUBLES'
+                                ? 'Player 3'
+                                : 'Player'
+                            }
+                            value={formData.player3}
+                            onChange={(value: any) =>
+                              update(
+                                'player3',
+                                value
+                              )
+                            }
+                            options={team2PlayerOptions.filter(
+                              (player) =>
+                                player.value !==
+                                  formData.player1 &&
+                                player.value !==
+                                  formData.player2
+                            )}
+                            placeholder="Select Player"
+                          />
+                    
+                          {formData.matchType ===
+                            'DOUBLES' && (
+                            <Select
+                              label="Player 4"
+                              value={formData.player4}
+                              onChange={(value: any) =>
+                                update(
+                                  'player4',
+                                  value
+                                )
+                              }
+                              options={team2PlayerOptions.filter(
+                                (player) =>
+                                  player.value !==
+                                    formData.player1 &&
+                                  player.value !==
+                                    formData.player2 &&
+                                  player.value !==
+                                    formData.player3
+                              )}
+                              placeholder="Select Player 4"
+                            />
+                          )}
+                    
+                        </View>
+                      </>
+                    )}
 
-                      <View style={{ alignItems: 'center', marginVertical: tokens.spacing.xs }}>
-                        <Text style={{ fontWeight: 'bold', color: theme.colors.textSecondary }}>WHITE VS BLUE</Text>
-                      </View>
-
-                      <View>
-                        <Select label="Blue Team" value={formData.blueTeamCode} onChange={(value: any) => handleTeamChange('blue', value)} options={blueTeamOptionsFiltered} />
-                        {errors.blueTeam && <Text style={errorTextStyle}>{errors.blueTeam}</Text>}
-                      </View>
-                    </>
-                  )}
-
-                  {/* STEP 3: OFFICIALS SELECTION */}
-                  {currentStep === 3 && (
+                   {/* STEP 3: OFFICIALS SELECTION */}
+                   {currentStep === 3 && (
                     <>
                       <View>
                         <Select

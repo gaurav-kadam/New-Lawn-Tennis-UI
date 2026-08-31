@@ -24,6 +24,7 @@ type NotifState = { visible: boolean; type: 'success' | 'error'; title: string; 
 type ConfirmState = { visible: boolean; onConfirm: () => void };
 
 export default function MatchesScreen() {
+
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const isMobile = screenWidth < TABLET_BREAKPOINT;
