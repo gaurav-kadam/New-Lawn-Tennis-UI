@@ -1,5 +1,7 @@
 import React from 'react';
+
 import {
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -9,10 +11,14 @@ import { useTheme } from '@/theme/themeContext';
 
 type Props = {
   winnerName?: string | null | undefined;
+  onFinalize?: () => void;
+  isFinalizing?: boolean;
 };
 
 export default function MatchWinnerBanner({
   winnerName,
+  onFinalize,
+  isFinalizing = false,
 }: Props) {
   const theme = useTheme();
 
@@ -62,6 +68,34 @@ export default function MatchWinnerBanner({
       >
         Winner
       </Text>
+
+      {onFinalize && (
+        <Pressable
+          disabled={isFinalizing}
+          onPress={onFinalize}
+          style={[
+            styles.finishButton,
+            {
+              backgroundColor:
+                theme.colors.surface,
+              opacity: isFinalizing ? 0.65 : 1,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.finishButtonText,
+              {
+                color: theme.colors.primary,
+              },
+            ]}
+          >
+            {isFinalizing
+              ? 'Saving Match...'
+              : 'Finish Match'}
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -94,5 +128,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     opacity: 0.85,
+  },
+
+  finishButton: {
+    marginTop: 12,
+    minWidth: 170,
+    minHeight: 40,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+
+  finishButtonText: {
+    fontSize: 14,
+    fontWeight: '800',
   },
 });

@@ -1,7 +1,16 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import matchDraftService from '@/services/match/match-draft.service';
+import matchFinalizationService from '@/services/match/match-finalization.service';
 
 import {
+  Alert,
   Platform,
   View,
   useWindowDimensions,
@@ -23,6 +32,7 @@ export default function TennisMatchScreenView() {
   const router = useRouter();
 
   const {
+    matchId,
     player1Name,
     player2Name,
     player3Name,
@@ -48,6 +58,7 @@ export default function TennisMatchScreenView() {
     pause: pauseTimer,
     stop: stopTimer,
     reset: resetTimer,
+    restoreTimer,
 
   } = useMatchTimer();
 
@@ -57,6 +68,7 @@ export default function TennisMatchScreenView() {
     recordMatchAction,
     events,
     undo,
+    restoreMatch,
     resetMatch,
     canUndo,
 
@@ -78,7 +90,251 @@ export default function TennisMatchScreenView() {
     setSelectedPlayer,
   ] = useState<PlayerId>('PLAYER1');
 
-  // FULLSCREEN STORE
+  const hasLoadedDraftRef = useRef(false);
+
+  const [
+    isDraftReady,
+    setIsDraftReady,
+  ] = useState(false);
+
+  const [
+  isFinalizing,
+  setIsFinalizing,
+] = useState(false);
+
+const isFinalizationInProgressRef =
+  useRef(false);
+
+  useEffect(() => {
+  if (hasLoadedDraftRef.current) {
+    return;
+  }
+
+  hasLoadedDraftRef.current = true;
+
+  const loadMatchDraft = async () => {
+    try {
+      if (!matchId) {
+        return;
+      }
+
+      const draft =
+        await matchDraftService.loadDraft(matchId);
+
+      if (!draft) {
+        return;
+      }
+
+      restoreMatch(
+        draft.state,
+        draft.events
+      );
+
+      restoreTimer(
+        draft.elapsedSeconds,
+        draft.timerStatus,
+        draft.updatedAt
+      );
+    } catch (error) {
+      console.error(
+        'Failed to restore local match draft:',
+        error
+      );
+    } finally {
+      setIsDraftReady(true);
+    }
+  };
+
+  void loadMatchDraft();
+}, [
+  matchId,
+  restoreMatch,
+  restoreTimer,
+]);
+
+useEffect(() => {
+  if (!matchId || !isDraftReady) {
+    return;
+  }
+
+  const saveTimeout = setTimeout(() => {
+    void matchDraftService
+      .saveDraft({
+        matchId,
+        state,
+        events,
+        elapsedSeconds,
+        timerStatus,
+      })
+      .catch(error => {
+        console.error(
+          'Failed to save local match draft:',
+          error
+        );
+      });
+  }, 300);
+
+  return () => {
+    clearTimeout(saveTimeout);
+  };
+}, [
+  matchId,
+  isDraftReady,
+  state,
+  events,
+  elapsedSeconds,
+  timerStatus,
+]);
+const finalizeMatch = useCallback(async () => {
+  if (!matchId) {
+    Alert.alert(
+      'Cannot Save Match',
+      'Match ID is missing.'
+    );
+    return;
+  }
+
+  if (!state.matchWinner) {
+    Alert.alert(
+      'Cannot Save Match',
+      'Declare a match winner first.'
+    );
+    return;
+  }
+
+  if (events.length === 0) {
+    Alert.alert(
+      'Cannot Save Match',
+      'No match events were recorded.'
+    );
+    return;
+  }
+
+  if (isFinalizationInProgressRef.current) {
+    return;
+  }
+
+  isFinalizationInProgressRef.current = true;
+
+  setIsFinalizing(true);
+
+  try {
+    // Events are shown newest first in the UI.
+    // Backend requires oldest event first.
+    const chronologicalEvents =
+      [...events].reverse();
+
+    await matchFinalizationService.finalize(
+      matchId,
+      {
+        final_state: {
+          player1_points: state.player1Points,
+          player2_points: state.player2Points,
+
+          player1_games: state.player1Games,
+          player2_games: state.player2Games,
+
+          player1_sets: state.player1Sets,
+          player2_sets: state.player2Sets,
+
+          is_tiebreak: state.isTiebreak,
+
+          tiebreak_player1_points:
+            state.tiebreakPlayer1Points,
+
+          tiebreak_player2_points:
+            state.tiebreakPlayer2Points,
+
+          match_winner:
+            state.matchWinner === 'PLAYER1'
+              ? 'PLAYER1'
+              : 'PLAYER2',
+
+          completed_sets:
+            state.completedSets.map(set => ({
+              player1_games:
+                set.player1Games,
+
+              player2_games:
+                set.player2Games,
+
+              was_tiebreak:
+                set.wasTiebreak,
+
+              tiebreak_player1_points:
+                set.tiebreakPlayer1Points,
+
+              tiebreak_player2_points:
+                set.tiebreakPlayer2Points,
+            })),
+        },
+
+        events: chronologicalEvents.map(
+          (event, index) => ({
+            event_number: index + 1,
+
+            event_type: event.type,
+
+            player: event.player,
+
+            elapsed_seconds:
+              event.elapsedSeconds,
+
+            recorded_at: new Date(
+              event.recordedAt
+            ).toISOString(),
+          })
+        ),
+      }
+    );
+
+    // Remove local copies only after the backend
+    // confirms that the full match was saved.
+    await matchDraftService.deleteDraft(matchId);
+
+    stopTimer();
+
+    Alert.alert(
+      'Match Saved',
+      'The completed match was saved successfully.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            router.replace('/matches');
+          },
+        },
+      ]
+    );
+  } catch (error: any) {
+    console.error(
+      'Failed to finalize match:',
+      error
+    );
+
+    const message =
+      error?.response?.data?.message ??
+      error?.response?.data?.detail ??
+      'Match was not saved. Your local draft is safe; please try again.';
+
+    Alert.alert(
+      'Unable to Save Match',
+      typeof message === 'string'
+        ? message
+        : 'Match was not saved. Your local draft is safe; please try again.'
+    );
+  } finally {
+    isFinalizationInProgressRef.current = false;
+    setIsFinalizing(false);
+  }
+}, [
+  matchId,
+  state,
+  events,
+  stopTimer,
+  router,
+]);
+    // FULLSCREEN STORE
  
   const {
     setFullscreen,
@@ -430,11 +686,20 @@ export default function TennisMatchScreenView() {
             canUndo
           }
           scoringEnabled={
-            scoringEnabled
-          }
-          recentEvents={
-            events
-          }
+              scoringEnabled
+            }
+
+            onFinalizeMatch={
+              finalizeMatch
+            }
+
+            isFinalizing={
+              isFinalizing
+            }
+
+            recentEvents={
+              events
+            }
         />
       </View>
     </View>

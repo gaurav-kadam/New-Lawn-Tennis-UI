@@ -160,7 +160,7 @@ console.log('hey working');
               color: '#FFFFFF',
             }}
           >
-            WATERPOLO
+            LAWN TENNIS 
           </Text>
 
           <Text
@@ -227,7 +227,7 @@ console.log('hey working');
                   color: theme.colors.primary,
                 }}
               >
-                WATERPOLO
+                LAWN TENNIS 
               </Text>
 
             </View>

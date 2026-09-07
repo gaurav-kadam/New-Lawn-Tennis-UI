@@ -86,21 +86,72 @@ export default function MatchesScreen() {
     }
   };
 
-  const handleSave = async (formData: any) => {
-    try {
-      if (editingData) {
-        await matchService.updateMatch(editingData.id, formData);
-        showNotif('success', 'Success', 'Match updated successfully.');
-      } else {
-        await matchService.createMatch(formData);
-        showNotif('success', 'Success', 'Match created successfully.');
-      }
-      await reload();
-      closeModal();
-    } catch {
-      showNotif('error', 'Error', 'Failed to save match data.');
+  const handleSave = async (
+  formData: any
+) => {
+  try {
+    if (editingData) {
+      await matchService.updateMatch(
+        editingData.id,
+        formData
+      );
+
+      showNotif(
+        'success',
+        'Success',
+        'Match updated successfully.'
+      );
+    } else {
+      await matchService.createMatch(
+        formData
+      );
+
+      showNotif(
+        'success',
+        'Success',
+        'Match created successfully.'
+      );
     }
-  };
+
+    await reload();
+
+    closeModal();
+  } catch (error: any) {
+    console.error(
+      'Match save error:',
+      error
+    );
+
+    const detail =
+      error?.response?.data?.detail;
+
+    let message =
+      'Failed to save match.';
+
+    if (
+      typeof detail === 'string'
+    ) {
+      message = detail;
+    } else if (
+      Array.isArray(detail)
+    ) {
+      message = detail
+        .map(
+          (item: any) =>
+            item?.msg ??
+            item?.message ??
+            String(item)
+        )
+        .join('\n');
+    }
+
+    showNotif(
+      'error',
+      'Error',
+      message
+    );
+  }
+};
 
 const handleStartMatch = async (match: any) => {
   try {
@@ -438,31 +489,96 @@ const handleStartMatch = async (match: any) => {
     await Promise.all([fetchTournaments(), fetchTeams(), fetchOfficials()]);
   };
 
-  const openEditModal = async (match: any) => {
-    setEditingData({
-      id: match.id,
-      tournament_code: match.tournament_code,
-      match_date: match.match_date,
-      match_time: match.match_time,
-      court_no: match.court_no,
-      match_no: match.match_no,
-      age_category: match.age_category,
-      gender: match.gender,
-      team1: match.team1,
-      team2: match.team2,
-      team1_code: match.team1_code,
-      team2_code: match.team2_code,
-      digital_scorer_code: match.digital_scorer_code,
-      referee_1_code: match.referee_1_code,
-      referee_2_code: match.referee_2_code,
-      goaljudge_1_code: match.goaljudge_1_code,
-      goaljudge_2_code: match.goaljudge_2_code,
-      timekeeper_1_code: match.timekeeper_1_code,
-      timekeeper_2_code: match.timekeeper_2_code,
-    });
-    setOpenModal(true);
-    await Promise.all([fetchTournaments(), fetchTeams(), fetchOfficials()]);
-  };
+  const openEditModal = async (
+  match: any
+) => {
+  setEditingData({
+    id: match.id,
+
+    tournament_code:
+      match.tournament_code ?? '',
+
+    match_date:
+      match.match_date ?? '',
+
+    match_time:
+      match.match_time ?? '',
+
+    court_no:
+      match.court_no ?? '',
+
+    match_no:
+      match.match_no ?? '',
+
+    age_category:
+      match.age_category ?? 'OPEN',
+
+    gender:
+      match.gender ?? 'Men',
+
+    match_type:
+      match.match_type ??
+      match.matchType ??
+      'SINGLES',
+
+    match_format:
+      match.match_format ??
+      match.matchFormat ??
+      'BEST_OF_3',
+
+    team1:
+      match.team1 ?? '',
+
+    team2:
+      match.team2 ?? '',
+
+    team1_code:
+      match.team1_code ?? '',
+
+    team2_code:
+      match.team2_code ?? '',
+
+    player1:
+      match.player1 ?? '',
+
+    player2:
+      match.player2 ?? '',
+
+    player3:
+      match.player3 ?? '',
+
+    player4:
+      match.player4 ?? '',
+
+    digital_scorer_code:
+      match.digital_scorer_code ??
+      '',
+
+    referee_1_code:
+      match.referee_1_code ??
+      '',
+
+    referee_2_code:
+      match.referee_2_code ??
+      '',
+
+    is_active:
+      match.is_active ??
+      true,
+
+    is_complete:
+      match.is_complete ??
+      false,
+  });
+
+  setOpenModal(true);
+
+  await Promise.all([
+    fetchTournaments(),
+    fetchTeams(),
+    fetchOfficials(),
+  ]);
+};
 
   const closeModal = () => {
     setOpenModal(false);

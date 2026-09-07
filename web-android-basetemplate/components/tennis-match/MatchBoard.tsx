@@ -59,6 +59,10 @@ type Props = {
 
   canUndo: boolean;
   scoringEnabled: boolean;
+
+  onFinalizeMatch?: () => void;
+  isFinalizing?: boolean;
+
 };
 
 export default function MatchBoard({
@@ -89,6 +93,9 @@ export default function MatchBoard({
   canUndo,
   scoringEnabled,
 
+  onFinalizeMatch,
+  isFinalizing,
+  
   recentEvents
 }: Props) {
   const { width } =
@@ -111,6 +118,8 @@ export default function MatchBoard({
 
       <MatchWinnerBanner
         winnerName={winnerName}
+        onFinalize={onFinalizeMatch}
+        isFinalizing={isFinalizing}
       />
 
           {/* SCOREBOARD */}
