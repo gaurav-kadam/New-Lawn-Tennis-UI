@@ -1,5 +1,6 @@
 import AsyncStorage
 from '@react-native-async-storage/async-storage';
+import { invalidateSession } from '../auth/auth-session';
 
 import LoaderService
 from '../loader/loader.service';
@@ -75,13 +76,9 @@ export const setupInterceptors = (
         error.response?.status === 401
       ) {
 
-        await AsyncStorage.removeItem(
-          'access_token'
-        );
-
-        await AsyncStorage.removeItem(
-          'user'
-        );
+        await invalidateSession().catch(() => {
+          console.error('Unable to clear stored session');
+        });
       }
 
       return Promise.reject(error);

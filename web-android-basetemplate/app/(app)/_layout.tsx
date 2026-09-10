@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Stack, Tabs } from 'expo-router';
-import { useWindowDimensions } from 'react-native';
+import { ActivityIndicator, View, useWindowDimensions } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import '../global.css';
 
@@ -9,11 +9,17 @@ import WebLayout from '../layouts/web/WebLayout';
 import { useTheme } from '@/theme/themeContext';
 
 export default function AppLayout() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading } = useAuth();
   const { width } = useWindowDimensions();
   const theme = useTheme();
 
   const isMobile = width < 768;
+
+  if (loading) {
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator color={theme.colors.primary} />
+    </View>;
+  }
 
   // 🔒 AUTH GUARD
   if (!isLoggedIn) {
@@ -75,7 +81,7 @@ tabBarStyle: {
           tabBarIcon: ({ color, size }) => {
             let iconName: any;
 
-            if (route.name === 'dashboard1') iconName = 'home';
+            if (route.name === 'dashboard') iconName = 'home';
             else if (route.name === 'tournaments') iconName = 'trophy';
             else if (route.name === 'teams') iconName = 'people';
             else if (route.name === 'officials') iconName = 'shield';
@@ -87,7 +93,7 @@ tabBarStyle: {
           },
         })}
       >
-        <Tabs.Screen name="dashboard1" />
+        <Tabs.Screen name="dashboard" />
         <Tabs.Screen name="tournaments" />
         <Tabs.Screen name="teams" />
         <Tabs.Screen name="officials" />
@@ -101,13 +107,7 @@ tabBarStyle: {
     }}
   />
   <Tabs.Screen
-    name="MatchScreen"
-    options={{
-      href: null,
-    }}
-  />
-  <Tabs.Screen
-    name="dashboard"
+    name="TennisMatchScreen"
     options={{
       href: null,
     }}

@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ApiService from '../api/api.service';
+import { toByteArray } from 'base64-js';
+import { invalidateSession } from './auth-session';
 
 class AuthService {
 
@@ -38,10 +40,7 @@ class AuthService {
   }
 
   async logout() {
-
-    await AsyncStorage.removeItem('access_token');
-
-    await AsyncStorage.removeItem('user');
+    await invalidateSession();
   }
 
   async getToken() {
@@ -60,7 +59,19 @@ class AuthService {
 
     const token = await this.getToken();
 
-    return !!token;
+    if (!token) return false;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const payload: unknown = JSON.parse(String.fromCharCode(...toByteArray(padded)));
+      return typeof payload === 'object' && payload !== null &&
+        'exp' in payload && typeof payload.exp === 'number' &&
+        payload.exp * 1000 > Date.now();
+    } catch {
+      return false;
+    }
   }
 }
 
