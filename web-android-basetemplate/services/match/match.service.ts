@@ -26,6 +26,11 @@ export type MatchPayload = {
   player3?: string | null;
   player4?: string | null;
 
+  player1_id?: number | null;
+  player2_id?: number | null;
+  player3_id?: number | null;
+  player4_id?: number | null;
+
   // IMPORTANT:
   // Backend requires player names
   player1_name: string;
@@ -43,6 +48,7 @@ export type MatchPayload = {
   // Optional fields used by tennis
   round?: string | null;
   service_order?: string[];
+  serving_state?: Record<string, unknown> | null;
 };
 
 class MatchService {
@@ -169,43 +175,23 @@ class MatchService {
         data.round || null,
 
       // =====================================================
-      // TEAMS
-      // =====================================================
-
-      team1:
-        data.team1,
-
-      team2:
-        data.team2,
-
-      team1_code:
-        data.team1_code,
-
-      team2_code:
-        data.team2_code,
-
-      // =====================================================
       // PLAYERS
       // =====================================================
 
-      // Player 1 is required for both singles and doubles
-      player1:
-        data.player1 || null,
+      player1_id:
+        data.player1_id ?? null,
 
-      // IMPORTANT:
-      // Player 2 is required for singles AND doubles
-      player2:
-        data.player2 || null,
+      player2_id:
+        data.player2_id ?? null,
 
-      // Player 3 and 4 are only used for doubles
-      player3:
+      player3_id:
         isDoubles
-          ? data.player3 || null
+          ? data.player3_id ?? null
           : null,
 
-      player4:
+      player4_id:
         isDoubles
-          ? data.player4 || null
+          ? data.player4_id ?? null
           : null,
 
       // =====================================================
@@ -229,14 +215,8 @@ class MatchService {
           ? data.player4_name || null
           : null,
 
-      // =====================================================
-      // DOUBLES SERVICE ORDER
-      // =====================================================
-
-      service_order:
-        isDoubles
-          ? data.service_order || []
-          : [],
+      serving_state:
+        data.serving_state ?? null,
 
       // =====================================================
       // OFFICIALS

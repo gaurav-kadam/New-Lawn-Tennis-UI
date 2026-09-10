@@ -83,6 +83,9 @@ interface MatchFormData {
   player3: string;
   player4: string;
 
+  firstServer: string;
+  opposingFirstServer: string;
+
   digitalScorerCode: string;
 
   referee1Code: string;
@@ -137,6 +140,9 @@ const EMPTY_FORM: MatchFormData = {
 
   player3: '',
   player4: '',
+
+  firstServer: '',
+  opposingFirstServer: '',
 
   digitalScorerCode: '',
 
@@ -408,6 +414,35 @@ const convertToDateString = (date: Date) => {
             ''
         ),
 
+      firstServer:
+        (() => {
+          const slot =
+            initialData?.serving_state?.first_server ??
+            initialData?.serving_state?.current_set_first_server;
+          const selected = [
+            initialData?.player1 ?? initialData?.player1_id ?? '',
+            initialData?.player2 ?? initialData?.player2_id ?? '',
+            initialData?.player3 ?? initialData?.player3_id ?? '',
+            initialData?.player4 ?? initialData?.player4_id ?? '',
+          ];
+          const index = ['PLAYER1', 'PLAYER2', 'PLAYER3', 'PLAYER4'].indexOf(slot);
+          return index >= 0 ? String(selected[index] ?? '') : '';
+        })(),
+
+      opposingFirstServer:
+        (() => {
+          const slot =
+            initialData?.serving_state?.opposing_first_server;
+          const selected = [
+            initialData?.player1 ?? initialData?.player1_id ?? '',
+            initialData?.player2 ?? initialData?.player2_id ?? '',
+            initialData?.player3 ?? initialData?.player3_id ?? '',
+            initialData?.player4 ?? initialData?.player4_id ?? '',
+          ];
+          const index = ['PLAYER1', 'PLAYER2', 'PLAYER3', 'PLAYER4'].indexOf(slot);
+          return index >= 0 ? String(selected[index] ?? '') : '';
+        })(),
+
       digitalScorerCode:
         String(
           initialData?.digital_scorer_code ??
@@ -447,11 +482,26 @@ const convertToDateString = (date: Date) => {
     value: string
   ) => {
     setFormData(
-      previous => ({
-        ...previous,
+      previous => {
+        const next = {
+          ...previous,
+          [field]: value,
+        };
 
-        [field]: value,
-      })
+        // Player changes invalidate both opening-server selections. The
+        // choices are re-made from the newly selected player names.
+        if (
+          field === 'player1' ||
+          field === 'player2' ||
+          field === 'player3' ||
+          field === 'player4'
+        ) {
+          next.firstServer = '';
+          next.opposingFirstServer = '';
+        }
+
+        return next;
+      }
     );
 
     if (errors[field]) {
@@ -596,7 +646,7 @@ const convertToDateString = (date: Date) => {
       [players]
     );
 
-    const getPlayerName = (
+  const getPlayerName = (
   playerCode: string
 ): string => {
   if (!playerCode) {
@@ -616,7 +666,23 @@ const convertToDateString = (date: Date) => {
     }
   );
 
-  return player?.player_name ?? '';
+  const rawPlayer = player as any;
+  return (
+    rawPlayer?.player_name ??
+    rawPlayer?.playerName ??
+    rawPlayer?.full_name ??
+    rawPlayer?.fullName ??
+    rawPlayer?.name ??
+    `${rawPlayer?.first_name ?? ''} ${rawPlayer?.last_name ?? ''}`.trim()
+  );
+};
+
+const getPlayerSlot = (
+  playerCode: string,
+  slots: string[]
+): string => {
+  const index = slots.indexOf(playerCode);
+  return index >= 0 ? `PLAYER${index + 1}` : '';
 };
 
 const getAvailablePlayers = (
@@ -843,6 +909,10 @@ const getAvailablePlayers = (
           player1: '',
 
           player2: '',
+
+          firstServer: '',
+
+          opposingFirstServer: '',
         })
       );
 
@@ -868,6 +938,10 @@ const getAvailablePlayers = (
         player3: '',
 
         player4: '',
+
+        firstServer: '',
+
+        opposingFirstServer: '',
       })
     );
 
@@ -1069,6 +1143,42 @@ const getAvailablePlayers = (
               'Players must be different';
           }
         }
+
+        if (!formData.firstServer) {
+          nextErrors.firstServer =
+            'Select the first server';
+        }
+
+        if (
+          formData.matchType === 'SINGLES' &&
+          formData.firstServer &&
+          ![formData.player1, formData.player3].includes(
+            formData.firstServer
+          )
+        ) {
+          nextErrors.firstServer =
+            'Select one of the singles players';
+        }
+
+        if (
+          formData.matchType === 'DOUBLES'
+        ) {
+          if (!formData.opposingFirstServer) {
+            nextErrors.opposingFirstServer =
+              'Select the opposing team first server';
+          } else if (
+            formData.firstServer &&
+            (
+              [formData.player1, formData.player2].includes(formData.firstServer) &&
+              [formData.player1, formData.player2].includes(formData.opposingFirstServer) ||
+              [formData.player3, formData.player4].includes(formData.firstServer) &&
+              [formData.player3, formData.player4].includes(formData.opposingFirstServer)
+            )
+          ) {
+            nextErrors.opposingFirstServer =
+              'Choose a player from the opposing team';
+          }
+        }
       }
 
       /* -----------------------------
@@ -1180,8 +1290,43 @@ const player1Name =
 
 const player2Name =
   getPlayerName(
-    formData.player3
+    formData.matchType === 'DOUBLES'
+      ? formData.player2
+      : formData.player3
   );
+
+const player3Name =
+  formData.matchType === 'DOUBLES'
+    ? getPlayerName(formData.player3)
+    : '';
+
+const player4Name =
+  formData.matchType === 'DOUBLES'
+    ? getPlayerName(formData.player4)
+    : '';
+
+const playerSlots =
+  formData.matchType === 'DOUBLES'
+    ? [
+        formData.player1,
+        formData.player2,
+        formData.player3,
+        formData.player4,
+      ]
+    : [formData.player1, formData.player3];
+
+const firstServerSlot = getPlayerSlot(
+  formData.firstServer,
+  playerSlots
+);
+
+const opposingFirstServerSlot =
+  formData.matchType === 'DOUBLES'
+    ? getPlayerSlot(
+        formData.opposingFirstServer,
+        playerSlots
+      )
+    : '';
 
 if (!player1Name) {
   setErrors({
@@ -1196,6 +1341,18 @@ if (!player2Name) {
   setErrors({
     player3:
       'Selected Player 2 was not found',
+  });
+
+  return;
+}
+
+if (
+  formData.matchType === 'DOUBLES' &&
+  (!player3Name || !player4Name)
+) {
+  setErrors({
+    player2:
+      'All four doubles players are required',
   });
 
   return;
@@ -1256,36 +1413,52 @@ if (!player2Name) {
     team2:
       formData.team2,
 
-    /*
-     * IMPORTANT
-     * Backend requires these two fields.
-     */
     player1_name:
       player1Name,
 
     player2_name:
       player2Name,
 
-    /*
-     * Keep player codes as well.
-     */
-    player1:
-      formData.player1,
-
-    player2:
-      formData.matchType ===
-      'DOUBLES'
-        ? formData.player2
+    player3_name:
+      formData.matchType === 'DOUBLES'
+        ? player3Name
         : null,
 
-    player3:
-      formData.player3,
-
-    player4:
-      formData.matchType ===
-      'DOUBLES'
-        ? formData.player4
+    player4_name:
+      formData.matchType === 'DOUBLES'
+        ? player4Name
         : null,
+
+    player1_id: Number(formData.player1) || null,
+
+    player2_id:
+      Number(
+        formData.matchType === 'DOUBLES'
+          ? formData.player2
+          : formData.player3
+      ) || null,
+
+    player3_id:
+      formData.matchType === 'DOUBLES'
+        ? Number(formData.player3) || null
+        : null,
+
+    player4_id:
+      formData.matchType === 'DOUBLES'
+        ? Number(formData.player4) || null
+        : null,
+
+    serving_state: {
+      version: 1,
+      match_type: formData.matchType,
+      first_server: firstServerSlot,
+      ...(formData.matchType === 'DOUBLES'
+        ? {
+            opposing_first_server:
+              opposingFirstServerSlot,
+          }
+        : {}),
+    },
 
     digital_scorer_id:
       Number(formData.digitalScorerCode),
@@ -1613,6 +1786,7 @@ if (!player2Name) {
             }
           />
         </View>
+
       </>
     );
 
@@ -1671,7 +1845,7 @@ if (!player2Name) {
               formData.matchType ===
               'DOUBLES'
                 ? 'Player 1'
-                : 'Player'
+                : 'Player 1'
             }
             value={
               formData.player1
@@ -1777,7 +1951,7 @@ if (!player2Name) {
               formData.matchType ===
               'DOUBLES'
                 ? 'Player 1'
-                : 'Player'
+                : 'Player 2'
             }
             value={
               formData.player3
@@ -1830,6 +2004,68 @@ if (!player2Name) {
             />
           )}
         </View>
+
+        {((formData.matchType === 'SINGLES' &&
+          formData.player1 &&
+          formData.player3) ||
+          (formData.matchType === 'DOUBLES' &&
+            formData.player1 &&
+            formData.player2 &&
+            formData.player3 &&
+            formData.player4)) &&
+          (formData.matchType === 'SINGLES' ? (
+          <View style={styles.serverSelection}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: theme.colors.textPrimary },
+              ]}
+            >
+              First Server
+            </Text>
+
+            <Select
+              label="Opening game server"
+              value={formData.firstServer}
+              onChange={(value: string) => update('firstServer', value)}
+              options={playerOptions.filter(player =>
+                [formData.player1, formData.player3].includes(player.value)
+              )}
+              error={errors.firstServer}
+            />
+          </View>
+        ) : (
+          <View style={styles.serverSelection}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: theme.colors.textPrimary },
+              ]}
+            >
+              Opening Servers
+            </Text>
+
+            <Select
+              label="Team 1 Opening Server"
+              value={formData.firstServer}
+              onChange={(value: string) => update('firstServer', value)}
+              options={playerOptions.filter(player =>
+                [formData.player1, formData.player2].includes(player.value)
+              )}
+              error={errors.firstServer}
+            />
+
+            <Select
+              label="Team 2 Opening Server"
+              value={formData.opposingFirstServer}
+              onChange={(value: string) => update('opposingFirstServer', value)}
+              options={playerOptions.filter(player =>
+                [formData.player3, formData.player4].includes(player.value)
+              )}
+              error={errors.opposingFirstServer}
+            />
+          </View>
+          ))}
       </>
     );
 
@@ -2331,6 +2567,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
 
     marginBottom: 4,
+  },
+
+  serverSelection: {
+    marginTop: 8,
+
+    padding: 12,
+
+    borderWidth: 1,
+
+    borderColor: '#dbe3ef',
+
+    borderRadius: 10,
   },
 
   footer: {
