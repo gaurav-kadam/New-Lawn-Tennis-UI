@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import {
   MatchFormat,
@@ -7,10 +7,12 @@ import {
   TennisEventRecord,
   TennisEventType,
   TennisMatchState,
+  ServingStateSnapshot,
 } from '../types/tennis.types';
 
 import {
   recordAction,
+  configureNextDoublesSet,
 } from '../logic/tennisLogic';
 
 function createInitialState(
@@ -21,18 +23,25 @@ function createInitialState(
   matchType: MatchType = 'SINGLES',
   player3Name = '',
   player4Name = '',
-  doublesServeOrder: PlayerId[] = []
+  doublesServeOrder: PlayerId[] = [],
+  servingState?: ServingStateSnapshot | null
 ): TennisMatchState {
   const normalizedServeOrder =
-    matchType === 'DOUBLES'
+    servingState?.current_set_service_order ??
+    (matchType === 'DOUBLES'
       ? doublesServeOrder
-      : [];
+      : [
+          firstServer,
+          firstServer === 'PLAYER1'
+            ? 'PLAYER2'
+            : 'PLAYER1',
+        ]);
 
   const initialServer =
-    matchType === 'DOUBLES' &&
-    normalizedServeOrder.length > 0
+    servingState?.current_server ??
+    (matchType === 'DOUBLES' && normalizedServeOrder.length > 0
       ? normalizedServeOrder[0]
-      : firstServer;
+      : firstServer);
 
   return {
     matchType,
@@ -47,7 +56,8 @@ function createInitialState(
     serveNumber: 1,
 
     doublesServeOrder: normalizedServeOrder,
-    doublesServeIndex: 0,
+    doublesServeIndex:
+      servingState?.doubles_serve_index ?? 0,
 
     player1Points: 0,
     player2Points: 0,
@@ -56,7 +66,13 @@ function createInitialState(
     tiebreakPlayer1Points: 0,
     tiebreakPlayer2Points: 0,
     tiebreakServeCount: 0,
-    tiebreakFirstServer: null,
+    tiebreakFirstServer:
+      servingState?.tiebreak_first_server ?? null,
+
+    currentSetFirstServer:
+      servingState?.current_set_first_server ?? initialServer,
+
+    pendingDoublesServerSelection: null,
 
     player1Games: 0,
     player2Games: 0,
@@ -81,167 +97,119 @@ export function useTennisMatch(
   matchType: MatchType = 'SINGLES',
   player3Name = '',
   player4Name = '',
-  doublesServeOrder: PlayerId[] = []
+  doublesServeOrder: PlayerId[] = [],
+  servingState?: ServingStateSnapshot | null
 ) {
-  const [state, setState] =
-    useState<TennisMatchState>(() =>
-      createInitialState(
-        player1Name,
-        player2Name,
-        matchFormat,
-        firstServer,
-        matchType,
-        player3Name,
-        player4Name,
-        doublesServeOrder
-      )
-    );
-
-  const [events, setEvents] =
-    useState<TennisEventRecord[]>([]);
-
+  const [session, setSession] = useState(() => ({
+    state: createInitialState(
+      player1Name, player2Name, matchFormat, firstServer, matchType,
+      player3Name, player4Name, doublesServeOrder, servingState
+    ),
+    events: [] as TennisEventRecord[],
+  }));
   const eventSequenceRef = useRef(0);
 
-  const createEvent = (
-    type: TennisEventType,
-    player: PlayerId,
-    elapsedSeconds: number
-  ): TennisEventRecord => ({
-    id: `${Date.now()}-${eventSequenceRef.current++}`,
-    type,
-    player,
-    elapsedSeconds: Math.max(
-      0,
-      Math.floor(elapsedSeconds)
-    ),
-    recordedAt: Date.now(),
-  });
-
-  const addPoint = (
-    winner: PlayerId,
-    elapsedSeconds: number
+  const recordMatchAction = useCallback((
+    action: TennisEventType, player: PlayerId, elapsedSeconds: number
   ) => {
-    if (state.matchWinner) {
-      return;
-    }
-
-    const next = recordAction(
-      state,
-      'POINT',
-      winner
-    );
-
-    setState(next);
-
-    setEvents(previous => [
-      createEvent(
-        next.lastAction?.type ?? 'POINT',
-        winner,
-        elapsedSeconds
-      ),
-      ...previous,
-    ]);
-  };
-
-  const recordMatchAction = (
-    action: TennisEventType,
-    player: PlayerId,
-    elapsedSeconds: number
-  ) => {
-    if (state.matchWinner) {
-      return;
-    }
-
-    const next = recordAction(
-      state,
-      action,
-      player
-    );
-
-    setState(next);
-
-    setEvents(previous => [
-      createEvent(
-        next.lastAction?.type ?? action,
-        player,
-        elapsedSeconds
-      ),
-      ...previous,
-    ]);
-  };
-
-  const undo = () => {
-    if (state.history.length === 0) {
-      return;
-    }
-
-    const [
-      previous,
-      ...remainingHistory
-    ] = state.history;
-
-    setState({
-      ...previous,
-      history: remainingHistory,
+    // Metadata is created once, outside React's replayable transition.
+    const recordedAt = Date.now();
+    const id = `${recordedAt}-${eventSequenceRef.current++}`;
+    const seconds = Math.max(0, Math.floor(elapsedSeconds));
+    setSession(previous => {
+      if (previous.state.matchWinner || previous.state.pendingDoublesServerSelection) return previous;
+      const actor = action === 'ACE' || action === 'FAULT' ||
+        action === 'DOUBLE_FAULT' || action === 'SERVE'
+        ? previous.state.server : player;
+      const next = recordAction(previous.state, action, actor);
+      return {
+        state: next,
+        events: [{
+          id, recordedAt, elapsedSeconds: seconds,
+          type: next.lastAction?.type ?? action,
+          player: actor,
+          server: previous.state.server,
+        }, ...previous.events],
+      };
     });
+  }, []);
 
-    setEvents(previousEvents =>
-      previousEvents.slice(1)
-    );
-  };
+  const addPoint = useCallback((winner: PlayerId, elapsedSeconds: number) => {
+    recordMatchAction('POINT', winner, elapsedSeconds);
+  }, [recordMatchAction]);
+
+  const undo = useCallback(() => {
+    setSession(previous => {
+      const [state, ...history] = previous.state.history;
+      if (!state) return previous;
+      return { state: { ...state, history }, events: previous.events.slice(1) };
+    });
+  }, []);
+
+  const selectNextSetServer = useCallback((player: PlayerId) => {
+    setSession(previous => {
+      if (previous.state.matchWinner || !previous.state.pendingDoublesServerSelection) {
+        return previous;
+      }
+      return {
+        ...previous,
+        state: configureNextDoublesSet(previous.state, player),
+      };
+    });
+  }, []);
+
+  const applyServingState = useCallback((snapshot: ServingStateSnapshot) => {
+    setSession(previous => {
+      if (previous.events.length > 0 || previous.state.player1Points || previous.state.player2Points ||
+        previous.state.player1Games || previous.state.player2Games || previous.state.player1Sets || previous.state.player2Sets) {
+        return previous;
+      }
+      return {
+        ...previous,
+        state: {
+          ...previous.state,
+          server: snapshot.current_server,
+          currentSetFirstServer: snapshot.current_set_first_server,
+          doublesServeOrder: snapshot.current_set_service_order,
+          doublesServeIndex: snapshot.doubles_serve_index,
+          tiebreakFirstServer: snapshot.tiebreak_first_server,
+          isTiebreak: snapshot.is_tiebreak,
+          pendingDoublesServerSelection: null,
+        },
+      };
+    });
+  }, []);
 
   const resetMatch = () => {
-    setState(
-      createInitialState(
-        player1Name,
-        player2Name,
-        matchFormat,
-        firstServer,
-        matchType,
-        player3Name,
-        player4Name,
-        doublesServeOrder
-      )
-    );
-
-    setEvents([]);
+    setSession({
+      state: createInitialState(
+        player1Name, player2Name, matchFormat, firstServer, matchType,
+        player3Name, player4Name, doublesServeOrder, servingState
+      ),
+      events: [],
+    });
     eventSequenceRef.current = 0;
   };
 
-  const restoreMatch = (
-    savedState: TennisMatchState,
-    savedEvents: TennisEventRecord[]
+  const restoreMatch = useCallback((
+    savedState: TennisMatchState, savedEvents: TennisEventRecord[]
   ) => {
-    setState({
-      ...savedState,
-      history: Array.isArray(savedState.history)
-        ? savedState.history
-        : [],
+    setSession({
+      state: {
+        ...savedState,
+        history: savedState.history ?? [],
+        currentSetFirstServer: savedState.currentSetFirstServer ?? savedState.server,
+        pendingDoublesServerSelection: savedState.pendingDoublesServerSelection ?? null,
+      },
+      events: savedEvents,
     });
-
-    setEvents(
-      Array.isArray(savedEvents)
-        ? savedEvents
-        : []
-    );
-
-    eventSequenceRef.current =
-      Array.isArray(savedEvents)
-        ? savedEvents.length
-        : 0;
-  };
+    eventSequenceRef.current = savedEvents.length;
+  }, []);
 
   return {
-    state,
-    events,
-
-    addPoint,
-    recordMatchAction,
-    undo,
-    resetMatch,
-    restoreMatch,
-
-    canUndo:
-      state.history.length > 0,
+    state: session.state,
+    events: session.events,
+    addPoint, recordMatchAction, undo, resetMatch, restoreMatch, selectNextSetServer, applyServingState,
+    canUndo: session.state.history.length > 0,
   };
 }

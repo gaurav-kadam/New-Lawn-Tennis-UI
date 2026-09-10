@@ -249,6 +249,15 @@ export default function PlayerScorer({
           </Text>
         </View>
 
+        <Text
+          style={[
+            styles.columnLabel,
+            { color: theme.colors.success, marginVertical: 6 },
+          ]}
+        >
+          Serving: {servingPlayerName}
+        </Text>
+
         <View style={styles.scoreHeaderRow}>
           {Array.from({
             length: totalSets,

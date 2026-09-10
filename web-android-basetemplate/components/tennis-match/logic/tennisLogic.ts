@@ -16,7 +16,7 @@ const otherPlayer = (
 
     //    TEAM HELPERS
 
-const getTeamForPlayer = (
+export const getTeamForPlayer = (
   state: TennisMatchState,
   player: PlayerId
 ): TeamId => {
@@ -47,6 +47,52 @@ const getOpposingTeam = (
     ? 'TEAM2'
     : 'TEAM1';
 };
+
+export function getDoublesServiceOrder(
+  firstServer: PlayerId,
+  opposingFirstServer: PlayerId
+): PlayerId[] {
+  const team = (player: PlayerId): TeamId =>
+    player === 'PLAYER1' || player === 'PLAYER2'
+      ? 'TEAM1'
+      : 'TEAM2';
+  if (team(firstServer) === team(opposingFirstServer)) {
+    throw new Error('Doubles first servers must be on opposing teams');
+  }
+  const teammate = (player: PlayerId): PlayerId => {
+    if (player === 'PLAYER1') return 'PLAYER2';
+    if (player === 'PLAYER2') return 'PLAYER1';
+    if (player === 'PLAYER3') return 'PLAYER4';
+    return 'PLAYER3';
+  };
+  return [firstServer, opposingFirstServer, teammate(firstServer), teammate(opposingFirstServer)];
+}
+
+export function configureNextDoublesSet(
+  state: TennisMatchState,
+  firstServer: PlayerId
+): TennisMatchState {
+  const pending = state.pendingDoublesServerSelection;
+  if (!pending || !pending.players.includes(firstServer)) {
+    throw new Error('Selected server is not eligible for the next set');
+  }
+  const opposingFirstServer = state.doublesServeOrder.find(
+    player => getTeamForPlayer(state, player) !== pending.team
+  );
+  if (!opposingFirstServer) {
+    throw new Error('Existing doubles service order is incomplete');
+  }
+  return {
+    ...state,
+    server: firstServer,
+    currentSetFirstServer: firstServer,
+    doublesServeOrder: getDoublesServiceOrder(firstServer, opposingFirstServer),
+    doublesServeIndex: 0,
+    pendingDoublesServerSelection: null,
+    tiebreakFirstServer: null,
+    tiebreakServeCount: 0,
+  };
+}
 
 
 const teamToPlayer = (
@@ -457,6 +503,10 @@ function finishSet(
   wasTiebreak: boolean
 ): TennisMatchState {
  const next = state;
+  const setFirstServer = next.currentSetFirstServer;
+  const setServiceOrder = [...next.doublesServeOrder];
+  const setServeIndex = next.doublesServeIndex;
+  const tiebreakFirstServer = next.tiebreakFirstServer;
 
   next.completedSets = [
     ...next.completedSets,
@@ -478,6 +528,20 @@ function finishSet(
         wasTiebreak
           ? next.tiebreakPlayer2Points
           : undefined,
+
+      servingState: {
+        version: 1,
+        match_type: next.matchType,
+        first_server: setFirstServer,
+        // Completed-set metadata records the set-opening serving context.
+        // The live state continues to track the post-game server below.
+        current_server: setFirstServer,
+        current_set_first_server: setFirstServer,
+        current_set_service_order: setServiceOrder,
+        doubles_serve_index: next.matchType === 'DOUBLES' ? 0 : setServeIndex,
+        tiebreak_first_server: wasTiebreak ? tiebreakFirstServer : null,
+        is_tiebreak: wasTiebreak,
+      },
     },
   ];
 
@@ -499,6 +563,12 @@ function finishSet(
       matchWinner;
   }
 
+  const nextSetServer = wasTiebreak &&
+    next.matchType === 'SINGLES' &&
+    tiebreakFirstServer
+      ? otherPlayer(tiebreakFirstServer)
+      : next.server;
+
   next.player1Games = 0;
   next.player2Games = 0;
 
@@ -507,20 +577,35 @@ function finishSet(
 
   resetTiebreakState(next);
 
-  /*
-   * DOUBLES:
-   * Start the next set from the configured
-   * doubles service order.
-   */
-
-  if (
-    next.matchType === 'DOUBLES' &&
-    next.doublesServeOrder.length === 4
-  ) {
+  // Keep the authoritative post-tiebreak serving state even when this set
+  // decides the match. The final point event already captured the pre-point
+  // server; only the in-memory state advances to the next-set receiver.
+  if (next.matchType === 'SINGLES') {
+    next.server = nextSetServer;
+    next.currentSetFirstServer = nextSetServer;
+    next.doublesServeOrder = [
+      nextSetServer,
+      otherPlayer(nextSetServer),
+    ];
     next.doublesServeIndex = 0;
+  }
 
-    next.server =
-      next.doublesServeOrder[0];
+  if (next.matchWinner) return next;
+
+  if (next.matchType === 'DOUBLES') {
+    const servingTeam = wasTiebreak && tiebreakFirstServer
+      ? getOpposingTeam(next, tiebreakFirstServer)
+      : getTeamForPlayer(next, nextSetServer);
+    next.pendingDoublesServerSelection = {
+      team: servingTeam,
+      players: servingTeam === 'TEAM1'
+        ? ['PLAYER1', 'PLAYER2']
+        : ['PLAYER3', 'PLAYER4'],
+    };
+    next.currentSetFirstServer = nextSetServer;
+  } else {
+    next.server = nextSetServer;
+    next.currentSetFirstServer = nextSetServer;
   }
 
   return next;

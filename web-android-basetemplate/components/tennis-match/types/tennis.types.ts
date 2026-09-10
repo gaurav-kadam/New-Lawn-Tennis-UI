@@ -38,8 +38,28 @@ export type SetScore = {
 
   tiebreakPlayer1Points?: number;
   tiebreakPlayer2Points?: number;
+
+  /** Boundary record captured immediately after this set ends. */
+  servingState?: ServingStateSnapshot;
 };
 
+
+export type ServingStateSnapshot = {
+  version?: number;
+  match_type?: MatchType;
+  first_server: PlayerId;
+  current_server: PlayerId;
+  current_set_first_server: PlayerId;
+  current_set_service_order: PlayerId[];
+  doubles_serve_index: number;
+  tiebreak_first_server: PlayerId | null;
+  is_tiebreak: boolean;
+};
+
+export type PendingDoublesServerSelection = {
+  team: TeamId;
+  players: PlayerId[];
+};
 
 export type TennisEventType =
   | 'ACE'
@@ -62,6 +82,7 @@ export type TennisEventRecord = {
   id: string;
   type: TennisEventType;
   player: PlayerId;
+  server?: PlayerId;
   elapsedSeconds: number;
   recordedAt: number;
 };
@@ -100,6 +121,10 @@ doublesServeIndex: number;
   tiebreakServeCount: number;
 
   tiebreakFirstServer: PlayerId | null;
+
+  currentSetFirstServer: PlayerId;
+
+  pendingDoublesServerSelection: PendingDoublesServerSelection | null;
 
 
   player1Games: number;
