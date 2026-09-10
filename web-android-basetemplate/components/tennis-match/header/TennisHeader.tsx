@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+import { IconButton } from 'react-native-paper';
 
 import { useTheme } from '@/theme/themeContext';
 import TennisSettingsModal from './TennisSettingsModal';
@@ -89,6 +90,8 @@ const isLive =
 const [settingsVisible, setSettingsVisible] =
   React.useState(false);
 
+  const [settingsPressed, setSettingsPressed] = React.useState(false);
+
   return (
     <View
       style={[
@@ -105,24 +108,22 @@ const [settingsVisible, setSettingsVisible] =
       {/* LEFT */}
 
       <View style={styles.left}>
-        <Pressable
+        <IconButton
           onPress={onBack}
+          size={18}
+          iconColor={theme.colors.textPrimary}
+          icon={({ size, color }) => (
+            <Ionicons name="arrow-back" size={size} color={color} />
+          )}
+          rippleColor="transparent"
+          hitSlop={1}
+          contentStyle={styles.paperIconContent}
           style={[
             styles.iconButton,
-            {
-              borderColor:
-                theme.colors.border,
-            },
+            styles.paperIconButton,
+            { borderColor: theme.colors.border },
           ]}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={18}
-            color={
-              theme.colors.textPrimary
-            }
-          />
-        </Pressable>
+        />
 
         <View>
           <Text
@@ -383,30 +384,31 @@ const [settingsVisible, setSettingsVisible] =
         >
           {courtName}
         </Text>
-        <Pressable
+        <IconButton
           onPress={() =>
             setSettingsVisible(true)
           }
-          style={({ pressed }) => [
+          onPressIn={() => setSettingsPressed(true)}
+          onPressOut={() => setSettingsPressed(false)}
+          size={18}
+          iconColor={theme.colors.textPrimary}
+          icon={({ size, color }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
+          )}
+          rippleColor="transparent"
+          hitSlop={1}
+          contentStyle={styles.paperIconContent}
+          style={[
             styles.iconButton,
+            styles.paperIconButton,
             {
-              borderColor:
-                theme.colors.border,
-            
-              backgroundColor: pressed
+              borderColor: theme.colors.border,
+              backgroundColor: settingsPressed
                 ? `${theme.colors.primary}10`
                 : 'transparent',
             },
           ]}
-        >
-          <Ionicons
-            name="settings-outline"
-            size={18}
-            color={
-              theme.colors.textPrimary
-            }
-          />
-        </Pressable>
+        />
           
         <TennisSettingsModal
           actionsDisabled={controlsDisabled}
@@ -527,6 +529,18 @@ const styles = StyleSheet.create({
 
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  paperIconButton: {
+    margin: 0,
+    padding: 0,
+    backgroundColor: 'transparent',
+  },
+  paperIconContent: {
+    // Fill the original 32px inner area; hitSlop covers only the 1px border.
+    alignSelf: 'stretch',
+    padding: 0,
+    borderRadius: 7,
   },
 
   liveBadge: {

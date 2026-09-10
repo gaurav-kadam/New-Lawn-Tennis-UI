@@ -1,5 +1,10 @@
 import TennisMatchScreenView from '@/components/tennis-match/TennisMatchScreenView';
+import TennisPaperProvider from '@/components/tennis-match/ui/TennisPaperProvider';
 
 export default function TennisMatchScreen() {
-  return <TennisMatchScreenView />;
+  return (
+    <TennisPaperProvider>
+      <TennisMatchScreenView />
+    </TennisPaperProvider>
+  );
 }

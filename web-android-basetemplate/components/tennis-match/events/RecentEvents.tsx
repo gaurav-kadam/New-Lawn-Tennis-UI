@@ -1,11 +1,12 @@
 import React from 'react';
 
 import { Ionicons } from '@expo/vector-icons';
+import { Text } from 'react-native-paper';
 
 import { styles } from './RecentEvent.style';
 import {
   ScrollView,
-  Text,
+  type TextStyle,
   View,
 } from 'react-native';
 
@@ -20,6 +21,17 @@ import {
   TennisEventRecord,
   TennisEventType,
 } from '../types/tennis.types';
+
+// Keep RN's platform defaults instead of Paper's font, spacing and direction.
+// Existing per-label styles remain last, including the empty message line height.
+const nativeTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  letterSpacing: undefined,
+  lineHeight: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type Props = {
   events: TennisEventRecord[];
@@ -167,13 +179,13 @@ export default function RecentEvents({
         ]}
       >
         <Text
-          style={styles.headerTitle}
+          style={[nativeTextDefaults, styles.headerTitle]}
         >
           RECENT EVENTS
         </Text>
 
         <Text
-          style={styles.headerCount}
+          style={[nativeTextDefaults, styles.headerCount]}
         >
           {events.length}
         </Text>
@@ -188,13 +200,13 @@ export default function RecentEvents({
           />
 
           <Text
-            style={styles.emptyTitle}
+            style={[nativeTextDefaults, styles.emptyTitle]}
           >
             No events yet
           </Text>
 
           <Text
-            style={styles.emptyText}
+            style={[nativeTextDefaults, styles.emptyText]}
           >
             Recorded match actions
             will appear here.
@@ -254,9 +266,7 @@ export default function RecentEvents({
                   >
                     <Text
                       numberOfLines={1}
-                      style={
-                        styles.eventTitle
-                      }
+                      style={[nativeTextDefaults, styles.eventTitle]}
                     >
                       {
                         EVENT_LABELS[
@@ -267,9 +277,7 @@ export default function RecentEvents({
 
                     <Text
                       numberOfLines={1}
-                      style={
-                        styles.eventPlayer
-                      }
+                      style={[nativeTextDefaults, styles.eventPlayer]}
                     >
                       {getDisplayName(
                         event,
@@ -289,9 +297,7 @@ export default function RecentEvents({
                   </View>
 
                   <Text
-                    style={
-                      styles.eventTime
-                    }
+                    style={[nativeTextDefaults, styles.eventTime]}
                   >
                     {formatMatchTime(
                       event.elapsedSeconds

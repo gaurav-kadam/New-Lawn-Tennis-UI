@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button } from 'react-native-paper';
 import { useTheme } from '@/theme/themeContext';
 
 type Props = {
@@ -47,29 +48,32 @@ export default function TennisToolbar({
       {actions.map((action) => {
         const isDisabled = disabled || action.disabled;
         return (
-          <Pressable
+          <Button
             key={action.label}
+            mode="outlined"
             onPress={action.onPress}
             disabled={isDisabled}
+            uppercase={false}
+            rippleColor="transparent"
+            hitSlop={{ top: 1, bottom: 1, left: 7, right: 7 }}
             style={[
               styles.button,
+              styles.paperButton,
               {
                 backgroundColor: action.primary ? theme.colors.primary : theme.colors.surface,
                 borderColor: action.primary ? theme.colors.primary : theme.colors.border,
                 opacity: isDisabled ? 0.45 : 1,
               },
             ]}
+            contentStyle={styles.paperContent}
+            labelStyle={[
+              styles.paperLabel,
+              styles.buttonText,
+              { color: action.primary ? theme.colors.textLight : theme.colors.textPrimary },
+            ]}
           >
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.buttonText,
-                { color: action.primary ? theme.colors.textLight : theme.colors.textPrimary },
-              ]}
-            >
-              {action.label}
-            </Text>
-          </Pressable>
+            {action.label}
+          </Button>
         );
       })}
     </View>
@@ -97,5 +101,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',
+  },
+  paperButton: {
+    // Keep the original outer padding so flex width allocation stays identical.
+    // The hit slop above covers that padding and border for Paper's inner target.
+    alignItems: 'stretch',
+  },
+  paperContent: {
+    height: 40, // Preserve the 42px outer height, including both 1px borders.
+    paddingHorizontal: 0,
+  },
+  paperLabel: {
+    // Remove Paper's label margins and typography; retain RN platform defaults.
+    marginHorizontal: 0,
+    marginVertical: 0,
+    fontFamily: undefined,
+    lineHeight: undefined,
+    letterSpacing: undefined,
+    writingDirection: undefined,
+    flexShrink: 1,
   },
 });
