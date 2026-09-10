@@ -1,6 +1,7 @@
 
 
 import React, { useState, useMemo } from 'react';
+import { isCompletedMatch } from '@/services/match/match-result.service';
 import { Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useTheme } from '@/theme/themeContext';
 import Card from '../ui/Card';
@@ -44,8 +45,8 @@ export default function MatchCardList({
 
   const filteredMatches = useMemo(() => {
     return matches.filter((m: any) => {
-      if (filter === 'completed' && m.is_complete !== true) return false;
-      if (filter === 'incomplete' && m.is_complete === true) return false;
+      if (filter === 'completed' && !isCompletedMatch(m)) return false;
+      if (filter === 'incomplete' && isCompletedMatch(m)) return false;
 
       if (!search) return true;
       const q = search.toLowerCase();
@@ -127,7 +128,7 @@ export default function MatchCardList({
                   Referee 2: {match.referee_2_id || match.referee2Id ? getOfficialName(match.referee_2_id || match.referee2Id) : '—'}
                 </Text>
                 <Text style={styles.label(theme)}>
-                  Status: {match.is_complete ? 'Completed' : 'Incomplete'}
+                  Status: {isCompletedMatch(match) ? 'Completed' : 'Incomplete'}
                 </Text>
               </View>
 
@@ -162,7 +163,7 @@ export default function MatchCardList({
                     fontFamily: theme.typography.fontFamily,
                   }}
                 >
-                  Start Match
+                  {isCompletedMatch(match) ? 'View Match' : 'Start Match'}
                 </Text>
               </TouchableOpacity>
 

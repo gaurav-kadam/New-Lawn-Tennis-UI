@@ -1,10 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import { Pencil, Trash2 } from 'lucide-react-native';
 
@@ -15,10 +10,7 @@ import Pagination from '@/components/ui/Pagination';
 
 const ACTION_WIDTH = 110;
 
-type MatchFilter =
-  | 'all'
-  | 'incomplete'
-  | 'completed';
+type MatchFilter = 'all' | 'incomplete' | 'completed';
 
 const HoverView = View as any;
 
@@ -32,45 +24,31 @@ export default function MatchesTable({
 }: any) {
   const theme = useTheme();
 
-  const [hoveredRow, setHoveredRow] =
-    useState<number | null>(null);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
-  const [filter, setFilter] =
-    useState<MatchFilter>('all');
+  const [filter, setFilter] = useState<MatchFilter>('all');
 
-  const [search, setSearch] =
-    useState('');
+  const [search, setSearch] = useState('');
 
-  const [page, setPage] =
-    useState(0);
+  const [page, setPage] = useState(0);
 
-  const [rowsPerPage, setRowsPerPage] =
-    useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // ============================================================
   // DATE
   // ============================================================
 
-  const formatDateToDisplay = (
-    rawDate: any
-  ) => {
+  const formatDateToDisplay = (rawDate: any) => {
     if (!rawDate) {
       return '—';
     }
 
     const value = String(rawDate);
 
-    if (
-      /^\d{4}-\d{2}-\d{2}/.test(value)
-    ) {
-      const datePart =
-        value.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const datePart = value.split('T')[0];
 
-      const [
-        year,
-        month,
-        day,
-      ] = datePart.split('-');
+      const [year, month, day] = datePart.split('-');
 
       return `${day}/${month}/${year}`;
     }
@@ -82,36 +60,23 @@ export default function MatchesTable({
   // PLAYER NAME
   // ============================================================
 
-  const getPlayerName = (
-    playerCode: any
-  ) => {
-    if (
-      playerCode === undefined ||
-      playerCode === null ||
-      playerCode === ''
-    ) {
+  const getPlayerName = (playerCode: any) => {
+    if (playerCode === undefined || playerCode === null || playerCode === '') {
       return '—';
     }
 
-    const player =
-      Array.isArray(teams)
-        ? teams.find(
-            (item: any) => {
-              const ids = [
-                item?.player_code,
-                item?.player_id,
-                item?.id,
-                item?.code,
-              ];
+    const player = Array.isArray(teams)
+      ? teams.find((item: any) => {
+          const ids = [
+            item?.player_code,
+            item?.player_id,
+            item?.id,
+            item?.code,
+          ];
 
-              return ids.some(
-                (id) =>
-                  String(id) ===
-                  String(playerCode)
-              );
-            }
-          )
-        : undefined;
+          return ids.some((id) => String(id) === String(playerCode));
+        })
+      : undefined;
 
     if (!player) {
       return String(playerCode);
@@ -120,9 +85,7 @@ export default function MatchesTable({
     return (
       player?.player_name ||
       player?.name ||
-      `${player?.first_name || ''} ${
-        player?.last_name || ''
-      }`.trim() ||
+      `${player?.first_name || ''} ${player?.last_name || ''}`.trim() ||
       String(playerCode)
     );
   };
@@ -131,36 +94,18 @@ export default function MatchesTable({
   // TEAM NAME FALLBACK
   // ============================================================
 
-  const getTeamName = (
-    value: any
-  ) => {
-    if (
-      value === undefined ||
-      value === null ||
-      value === ''
-    ) {
+  const getTeamName = (value: any) => {
+    if (value === undefined || value === null || value === '') {
       return '—';
     }
 
-    const team =
-      Array.isArray(teams)
-        ? teams.find(
-            (item: any) => {
-              const ids = [
-                item?.id,
-                item?.team_id,
-                item?.team_code,
-                item?.code,
-              ];
+    const team = Array.isArray(teams)
+      ? teams.find((item: any) => {
+          const ids = [item?.id, item?.team_id, item?.team_code, item?.code];
 
-              return ids.some(
-                (id) =>
-                  String(id) ===
-                  String(value)
-              );
-            }
-          )
-        : undefined;
+          return ids.some((id) => String(id) === String(value));
+        })
+      : undefined;
 
     if (!team) {
       return String(value);
@@ -179,116 +124,78 @@ export default function MatchesTable({
   // SIDE / PLAYER 1
   // ============================================================
 
-  const getSideA = (
-    match: any
-  ) => {
-    const matchType =
-      String(
-        match?.match_type ||
-        match?.matchType ||
-        'SINGLES'
-      ).toUpperCase();
+  const getSideA = (match: any) => {
+    const matchType = String(
+      match?.match_type || match?.matchType || 'SINGLES'
+    ).toUpperCase();
 
     // Tennis API — current backend
     const player1 =
       match?.player1_name ||
       match?.player1Name ||
       match?.red_player_name ||
-      getPlayerName(
-        match?.player1 ||
-        match?.red_player
-      );
+      getPlayerName(match?.player1 || match?.red_player);
 
-    if (
-      matchType !== 'DOUBLES'
-    ) {
-      return (
-        player1 || '—'
-      );
+    if (matchType !== 'DOUBLES') {
+      return player1 || '—';
     }
 
     const player3 =
-      match?.player3_name ||
-      match?.player3Name ||
-      getPlayerName(
-        match?.player3
-      );
+      match?.player2_name ||
+      match?.player2Name ||
+      getPlayerName(match?.player2);
 
-    return `${player1 || '—'} / ${
-      player3 || '—'
-    }`;
+    return `${player1 || '—'} / ${player3 || '—'}`;
   };
 
   // ============================================================
   // SIDE / PLAYER 2
   // ============================================================
 
-  const getSideB = (
-    match: any
-  ) => {
-    const matchType =
-      String(
-        match?.match_type ||
-        match?.matchType ||
-        'SINGLES'
-      ).toUpperCase();
+  const getSideB = (match: any) => {
+    const matchType = String(
+      match?.match_type || match?.matchType || 'SINGLES'
+    ).toUpperCase();
 
     const player2 =
       match?.player2_name ||
       match?.player2Name ||
       match?.blue_player_name ||
-      getPlayerName(
-        match?.player2 ||
-        match?.blue_player
-      );
+      getPlayerName(match?.player2 || match?.blue_player);
 
-    if (
-      matchType !== 'DOUBLES'
-    ) {
-      return (
-        player2 || '—'
-      );
+    if (matchType !== 'DOUBLES') {
+      return player2 || '—';
     }
+
+    const player3 =
+      match?.player3_name ||
+      match?.player3Name ||
+      getPlayerName(match?.player3);
 
     const player4 =
       match?.player4_name ||
       match?.player4Name ||
-      getPlayerName(
-        match?.player4
-      );
+      getPlayerName(match?.player4);
 
-    return `${player2 || '—'} / ${
-      player4 || '—'
-    }`;
+    return `${player3 || '—'} / ${player4 || '—'}`;
   };
 
   // ============================================================
   // OFFICIAL / SCORER
   // ============================================================
 
-  const getOfficialName = (
-    officialId: any 
-  ) => {
-    if (
-      officialId === undefined ||
-      officialId === null ||
-      officialId === '' 
-    ) {
+  const getOfficialName = (officialId: any) => {
+    if (officialId === undefined || officialId === null || officialId === '') {
       return '—';
     }
 
-    const official =
-      Array.isArray(officials)
-        ? officials.find(
-            (item: any) =>
-              String(item?.id) ===
-                String(officialId) ||
-              String(
-                item?.official_code
-              ) ===
-                String(officialId)
-          )
-        : undefined;
+    const official = Array.isArray(officials)
+      ? officials.find(
+          (item: any) =>
+            String(item?.id) === String(officialId) ||
+            String(item?.official_code) === String(officialId)
+        )
+      : undefined;
 
     if (!official) {
       return '—';
@@ -297,9 +204,7 @@ export default function MatchesTable({
     return (
       official?.official_name ||
       official?.name ||
-      `${official?.first_name || ''} ${
-        official?.last_name || ''
-      }`.trim() ||
+      `${official?.first_name || ''} ${official?.last_name || ''}`.trim() ||
       official?.official_code ||
       '—'
     );
@@ -309,23 +214,15 @@ export default function MatchesTable({
   // COMPLETION CHECK
   // ============================================================
 
-  const isMatchCompleted = (
-    match: any
-  ) => {
+  const isMatchCompleted = (match: any) => {
     return (
-      match?.status ===
-        'COMPLETED' ||
-      match?.is_completed ===
-        true ||
+      match?.status === 'COMPLETED' ||
+      match?.is_completed === true ||
       match?.is_completed === 1 ||
       match?.is_completed === '1' ||
-      match?.is_complete ===
-        true ||
+      match?.is_complete === true ||
       match?.is_complete === 1 ||
-      Boolean(
-        match?.winner ||
-        match?.match_winner
-      )
+      Boolean(match?.winner || match?.match_winner)
     );
   };
 
@@ -333,25 +230,16 @@ export default function MatchesTable({
   // MATCH FORMAT
   // ============================================================
 
-  const getMatchFormat = (
-    match: any
-  ) => {
-    const format =
-      String(
-        match?.match_format ||
-        match?.matchFormat ||
-        ''
-      ).toUpperCase();
+  const getMatchFormat = (match: any) => {
+    const format = String(
+      match?.match_format || match?.matchFormat || ''
+    ).toUpperCase();
 
-    if (
-      format === 'BEST_OF_5'
-    ) {
+    if (format === 'BEST_OF_5') {
       return 'Best of 5';
     }
 
-    if (
-      format === 'BEST_OF_3'
-    ) {
+    if (format === 'BEST_OF_3') {
       return 'Best of 3';
     }
 
@@ -361,26 +249,16 @@ export default function MatchesTable({
   // MATCH TYPE
   // ============================================================
 
-  const getMatchType = (
-    match: any
-  ) => {
+  const getMatchType = (match: any) => {
     const type = String(
-      match?.match_type ||
-      match?.matchType ||
-      ''
+      match?.match_type || match?.matchType || ''
     ).toUpperCase();
 
-    if (
-      type === 'DOUBLES' ||
-      type === 'DOUBLE'
-    ) {
+    if (type === 'DOUBLES' || type === 'DOUBLE') {
       return 'Double';
     }
 
-    if (
-      type === 'SINGLES' ||
-      type === 'SINGLE'
-    ) {
+    if (type === 'SINGLES' || type === 'SINGLE') {
       return 'Single';
     }
 
@@ -390,124 +268,75 @@ export default function MatchesTable({
   // FILTER + SEARCH
   // ============================================================
 
-  const filteredMatches =
-    useMemo(() => {
-      return matches.filter(
-        (match: any) => {
-          const completed =
-            isMatchCompleted(
-              match
-            );
+  const filteredMatches = useMemo(() => {
+    return matches.filter((match: any) => {
+      const completed = isMatchCompleted(match);
 
-          if (
-            filter ===
-              'completed' &&
-            !completed
-          ) {
-            return false;
-          }
+      if (filter === 'completed' && !completed) {
+        return false;
+      }
 
-          if (
-            filter ===
-              'incomplete' &&
-            completed
-          ) {
-            return false;
-          }
+      if (filter === 'incomplete' && completed) {
+        return false;
+      }
 
-          if (!search.trim()) {
-            return true;
-          }
+      if (!search.trim()) {
+        return true;
+      }
 
-          const query =
-            search
-              .trim()
-              .toLowerCase();
+      const query = search.trim().toLowerCase();
 
-          const values = [
-            match?.match_date,
-            match?.match_time,
-            match?.match_no,
-            match?.tournament_code,
-            match?.player1_name,
-            match?.player2_name,
-            match?.player3_name,
-            match?.player4_name,
-            match?.age_category,
-            match?.gender,
-            match?.match_type,
-            match?.match_format,
-          ];
+      const values = [
+        match?.match_date,
+        match?.match_time,
+        match?.match_no,
+        match?.tournament_code,
+        match?.player1_name,
+        match?.player2_name,
+        match?.player3_name,
+        match?.player4_name,
+        match?.age_category,
+        match?.gender,
+        match?.match_type,
+        match?.match_format,
+      ];
 
-          return values.some(
-            (value) =>
-              String(
-                value ?? ''
-              )
-                .toLowerCase()
-                .includes(query)
-          );
-        }
+      return values.some((value) =>
+        String(value ?? '')
+          .toLowerCase()
+          .includes(query)
       );
-    }, [
-      matches,
-      filter,
-      search,
-    ]);
+    });
+  }, [matches, filter, search]);
 
   // ============================================================
   // PAGINATION
   // ============================================================
 
-  const paginatedRows =
-    useMemo(() => {
-      const start =
-        page *
-        rowsPerPage;
+  const paginatedRows = useMemo(() => {
+    const start = page * rowsPerPage;
 
-      const end =
-        start +
-        rowsPerPage;
+    const end = start + rowsPerPage;
 
-      return filteredMatches.slice(
-        start,
-        end
-      );
-    }, [
-      filteredMatches,
-      page,
-      rowsPerPage,
-    ]);
+    return filteredMatches.slice(start, end);
+  }, [filteredMatches, page, rowsPerPage]);
 
   // ============================================================
   // HEADER STYLE
   // ============================================================
 
   const headerStyle = {
-    fontSize:
-      tokens.typography.sizes
-        .cooldownTimer,
+    fontSize: tokens.typography.sizes.cooldownTimer,
 
-    fontWeight:
-      tokens.typography.weights
-        .bold as any,
+    fontWeight: tokens.typography.weights.bold as any,
 
-    textTransform:
-      'uppercase' as const,
+    textTransform: 'uppercase' as const,
 
     letterSpacing: 1.2,
 
-    color:
-      theme.colors
-        .textSecondary ||
-      tokens.colors
-        .textSecondary,
+    color: theme.colors.textSecondary || tokens.colors.textSecondary,
 
-    fontFamily:
-      theme.typography
-        .fontFamily ||
-      tokens.typography
-        .fontFamily,
+    fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily,
   };
 
   // ============================================================
@@ -518,8 +347,7 @@ export default function MatchesTable({
     <View
       style={{
         flex: 1,
-        paddingHorizontal:
-          tokens.spacing.xl,
+        paddingHorizontal: tokens.spacing.xl,
       }}
     >
       {/* FILTER BAR */}
@@ -531,16 +359,12 @@ export default function MatchesTable({
       >
         <FilterSearchBar
           filter={filter}
-          onFilterChange={(
-            value: MatchFilter
-          ) => {
+          onFilterChange={(value: MatchFilter) => {
             setFilter(value);
             setPage(0);
           }}
           search={search}
-          onSearchChange={(
-            value: string
-          ) => {
+          onSearchChange={(value: string) => {
             setSearch(value);
             setPage(0);
           }}
@@ -552,13 +376,11 @@ export default function MatchesTable({
             },
             {
               label: 'Incomplete',
-              value:
-                'incomplete',
+              value: 'incomplete',
             },
             {
               label: 'Completed',
-              value:
-                'completed',
+              value: 'completed',
             },
           ]}
         />
@@ -576,26 +398,15 @@ export default function MatchesTable({
           style={{
             flex: 1,
 
-            backgroundColor:
-              theme.colors
-                .surface ||
-              tokens.colors
-                .surface,
+            backgroundColor: theme.colors.surface || tokens.colors.surface,
 
-            borderRadius:
-              tokens.radius.lg,
+            borderRadius: tokens.radius.lg,
 
             overflow: 'hidden',
 
-            borderWidth:
-              tokens.layout
-                .dividerHeight,
+            borderWidth: tokens.layout.dividerHeight,
 
-            borderColor:
-              theme.colors
-                .border ||
-              tokens.colors
-                .border,
+            borderColor: theme.colors.border || tokens.colors.border,
 
             ...tokens.shadow?.light,
           }}
@@ -604,102 +415,47 @@ export default function MatchesTable({
 
           <View
             style={{
-              flexDirection:
-                'row',
+              flexDirection: 'row',
 
-              alignItems:
-                'center',
+              alignItems: 'center',
 
-              paddingVertical:
-                tokens.spacing.md,
+              paddingVertical: tokens.spacing.md,
 
-              paddingHorizontal:
-                tokens.spacing.lg,
+              paddingHorizontal: tokens.spacing.lg,
 
               backgroundColor:
-                theme.colors
-                  .secondary ||
-                tokens.colors
-                  .secondary,
+                theme.colors.secondary || tokens.colors.secondary,
 
-              borderBottomWidth:
-                tokens.layout
-                  .dividerHeight,
+              borderBottomWidth: tokens.layout.dividerHeight,
 
-              borderBottomColor:
-                theme.colors
-                  .border ||
-                tokens.colors
-                  .border,
+              borderBottomColor: theme.colors.border || tokens.colors.border,
             }}
           >
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.1 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.1 }]}>
               Date
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.5 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.5 }]}>
               Team 1
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.5 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.5 }]}>
               Team 2
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.1 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.1 }]}>
               Category
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.0 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.0 }]}>
               Match Type
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.0 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.0 }]}>
               Gender
             </Text>
 
-            <Text
-              numberOfLines={1}
-              style={[
-                headerStyle,
-                { flex: 1.4 },
-              ]}
-            >
+            <Text numberOfLines={1} style={[headerStyle, { flex: 1.4 }]}>
               Scorer
             </Text>
 
@@ -708,8 +464,7 @@ export default function MatchesTable({
               style={[
                 headerStyle,
                 {
-                  width:
-                    ACTION_WIDTH,
+                  width: ACTION_WIDTH,
                 },
               ]}
             >
@@ -721,463 +476,281 @@ export default function MatchesTable({
 
           <ScrollView
             nestedScrollEnabled
-            showsVerticalScrollIndicator={
-              false
-            }
+            showsVerticalScrollIndicator={false}
             style={{
               flex: 1,
             }}
             contentContainerStyle={{
-              paddingBottom:
-                tokens.spacing.xl,
+              paddingBottom: tokens.spacing.xl,
             }}
           >
-            {paginatedRows.length >
-            0 ? (
-              paginatedRows.map(
-                (
-                  match: any,
-                  index: number
-                ) => {
-                  const completed =
-                    isMatchCompleted(
-                      match
-                    );
+            {paginatedRows.length > 0 ? (
+              paginatedRows.map((match: any, index: number) => {
+                const completed = isMatchCompleted(match);
 
-                  const isHovered =
-                    hoveredRow ===
-                    match.id;
+                const isHovered = hoveredRow === match.id;
 
-                  const cellText = {
-                    fontSize:
-                      tokens
-                        .typography
-                        .sizes
-                        .tableText,
+                const cellText = {
+                  fontSize: tokens.typography.sizes.tableText,
 
-                    color:
-                      theme.colors
-                        .textPrimary ||
-                      tokens.colors
-                        .textPrimary,
+                  color: theme.colors.textPrimary || tokens.colors.textPrimary,
 
-                    fontFamily:
-                      theme.typography
-                        .fontFamily ||
-                      tokens.typography
-                        .fontFamily,
-                  };
+                  fontFamily:
+                    theme.typography.fontFamily || tokens.typography.fontFamily,
+                };
 
-                  return (
-                    <HoverView
-                      key={
-                        match.id ??
-                        index
-                      }
-                      onMouseEnter={() =>
-                        setHoveredRow(
-                          match.id
-                        )
-                      }
-                      onMouseLeave={() =>
-                        setHoveredRow(
-                          null
-                        )
-                      }
+                return (
+                  <HoverView
+                    key={match.id ?? index}
+                    onMouseEnter={() => setHoveredRow(match.id)}
+                    onMouseLeave={() => setHoveredRow(null)}
+                    style={{
+                      flexDirection: 'row',
+
+                      alignItems: 'center',
+
+                      paddingVertical: tokens.spacing.sm,
+
+                      paddingHorizontal: tokens.spacing.lg,
+
+                      borderBottomWidth:
+                        index !== paginatedRows.length - 1
+                          ? tokens.layout.dividerHeight
+                          : 0,
+
+                      borderBottomColor: theme.colors.border,
+
+                      backgroundColor: isHovered
+                        ? theme.colors.background
+                        : theme.colors.surface,
+                    }}
+                  >
+                    {/* DATE */}
+
+                    <Text
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.1,
+                          fontWeight: tokens.typography.weights.medium as any,
+                        },
+                      ]}
+                    >
+                      {formatDateToDisplay(match?.match_date)}
+                    </Text>
+
+                    {/* PLAYER / TEAM A */}
+
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.5,
+                          fontWeight: tokens.typography.weights.bold as any,
+                        },
+                      ]}
+                    >
+                      {getSideA(match)}
+                    </Text>
+
+                    {/* PLAYER / TEAM B */}
+
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.5,
+                          fontWeight: tokens.typography.weights.bold as any,
+                        },
+                      ]}
+                    >
+                      {getSideB(match)}
+                    </Text>
+
+                    {/* CATEGORY */}
+
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.1,
+                          fontWeight: tokens.typography.weights.medium as any,
+                        },
+                      ]}
+                    >
+                      {match?.age_category || match?.match_category || '—'}
+                    </Text>
+
+                    {/* MATCH TYPE */}
+
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.0,
+                          fontWeight: tokens.typography.weights.medium as any,
+                        },
+                      ]}
+                    >
+                      {getMatchType(match)}
+                    </Text>
+
+                    {/* GENDER */}
+
+                    <View
                       style={{
-                        flexDirection:
-                          'row',
-
-                        alignItems:
-                          'center',
-
-                        paddingVertical:
-                          tokens
-                            .spacing
-                            .sm,
-
-                        paddingHorizontal:
-                          tokens
-                            .spacing
-                            .lg,
-
-                        borderBottomWidth:
-                          index !==
-                          paginatedRows.length -
-                            1
-                            ? tokens
-                                .layout
-                                .dividerHeight
-                            : 0,
-
-                        borderBottomColor:
-                          theme.colors
-                            .border,
-
-                        backgroundColor:
-                          isHovered
-                            ? theme.colors
-                                .background
-                            : theme.colors
-                                .surface,
+                        flex: 1,
                       }}
                     >
-                      {/* DATE */}
-
-                      <Text
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.1,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .medium as any,
-                          },
-                        ]}
-                      >
-                        {formatDateToDisplay(
-                          match?.match_date
-                        )}
-                      </Text>
-
-                      {/* PLAYER / TEAM A */}
-
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.5,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .bold as any,
-                          },
-                        ]}
-                      >
-                        {getSideA(
-                          match
-                        )}
-                      </Text>
-
-                      {/* PLAYER / TEAM B */}
-
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.5,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .bold as any,
-                          },
-                        ]}
-                      >
-                        {getSideB(
-                          match
-                        )}
-                      </Text>
-
-                      {/* CATEGORY */}
-
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.1,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .medium as any,
-                          },
-                        ]}
-                      >
-                        {match?.age_category ||
-                          match?.match_category ||
-                          '—'}
-                      </Text>
-
-                                            {/* MATCH TYPE */}
-
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.0,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .medium as any,
-                          },
-                        ]}
-                      >
-                        {getMatchType(match)}
-                      </Text> 
-
-                      {/* GENDER */}
-
                       <View
                         style={{
-                          flex: 1,
+                          alignSelf: 'flex-start',
+
+                          paddingHorizontal: tokens.spacing.xs,
+
+                          paddingVertical: tokens.spacing.xs,
+
+                          borderRadius: tokens.radius.round,
+
+                          backgroundColor:
+                            theme.colors.secondary || tokens.colors.secondary,
                         }}
                       >
-                        <View
+                        <Text
+                          numberOfLines={1}
                           style={{
-                            alignSelf:
-                              'flex-start',
+                            fontSize: tokens.typography.sizes.badge - 1,
 
-                            paddingHorizontal:
-                              tokens
-                                .spacing
-                                .xs,
+                            fontWeight: tokens.typography.weights.medium as any,
 
-                            paddingVertical:
-                              tokens
-                                .spacing
-                                .xs,
+                            color:
+                              theme.colors.primary || tokens.colors.primary,
 
-                            borderRadius:
-                              tokens
-                                .radius
-                                .round,
-
-                            backgroundColor:
-                              theme.colors
-                                .secondary ||
-                              tokens.colors
-                                .secondary,
+                            fontFamily:
+                              theme.typography.fontFamily ||
+                              tokens.typography.fontFamily,
                           }}
                         >
-                          <Text
-                            numberOfLines={
-                              1
-                            }
-                            style={{
-                              fontSize:
-                                tokens
-                                  .typography
-                                  .sizes
-                                  .badge - 1,
-
-                              fontWeight:
-                                tokens
-                                  .typography
-                                  .weights
-                                  .medium as any,
-
-                              color:
-                                theme.colors
-                                  .primary ||
-                                tokens.colors
-                                  .primary,
-
-                              fontFamily:
-                                theme.typography
-                                  .fontFamily ||
-                                tokens.typography
-                                  .fontFamily,
-                            }}
-                          >
-                            {match?.gender ||
-                              '—'}
-                          </Text>
-                        </View>
+                          {match?.gender || '—'}
+                        </Text>
                       </View>
+                    </View>
 
-                      {/* SCORER */}
+                    {/* SCORER */}
 
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          cellText,
-                          {
-                            flex: 1.4,
-                            fontWeight:
-                              tokens
-                                .typography
-                                .weights
-                                .medium as any,
-                          },
-                        ]}
-                      >
-                        {getOfficialName(
-                          match?.digital_scorer_id ??
-                            match?.digital_scorer_code
-                        )}
-                      </Text>
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        cellText,
+                        {
+                          flex: 1.4,
+                          fontWeight: tokens.typography.weights.medium as any,
+                        },
+                      ]}
+                    >
+                      {getOfficialName(
+                        match?.digital_scorer_id ?? match?.digital_scorer_code
+                      )}
+                    </Text>
 
-                      {/* ACTIONS */}
+                    {/* ACTIONS */}
 
-                      <View
+                    <View
+                      style={{
+                        width: ACTION_WIDTH,
+
+                        flexDirection: 'row',
+
+                        alignItems: 'center',
+
+                        gap: tokens.spacing.sm,
+                      }}
+                    >
+                      {/* START / VIEW */}
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (
+                            typeof document !== 'undefined' &&
+                            document.fullscreenEnabled &&
+                            !document.fullscreenElement
+                          ) {
+                            document.documentElement
+                              .requestFullscreen()
+                              .catch(() => undefined);
+                          }
+
+                          onStartMatch(match, completed);
+                        }}
                         style={{
-                          width:
-                            ACTION_WIDTH,
+                          backgroundColor: completed
+                            ? theme.colors.success || '#22c55e'
+                            : theme.colors.primary || tokens.colors.primary,
 
-                          flexDirection:
-                            'row',
+                          paddingHorizontal: tokens.spacing.xs,
 
-                          alignItems:
-                            'center',
+                          paddingVertical: 4,
 
-                          gap:
-                            tokens
-                              .spacing
-                              .sm,
+                          borderRadius: tokens.radius.sm,
                         }}
                       >
-                        {/* START / VIEW */}
-
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (
-                              typeof document !== 'undefined' &&
-                              document.fullscreenEnabled &&
-                              !document.fullscreenElement
-                            ) {
-                              document.documentElement
-                                .requestFullscreen()
-                                .catch(() => undefined);
-                            }
-                          
-                            onStartMatch(
-                              match,
-                              completed
-                            );
-                          }}
+                        <Text
                           style={{
-                            backgroundColor:
-                              completed
-                                ? theme.colors
-                                    .success ||
-                                  '#22c55e'
-                                : theme.colors
-                                    .primary ||
-                                  tokens.colors
-                                    .primary,
+                            color: '#fff',
 
-                            paddingHorizontal:
-                              tokens
-                                .spacing
-                                .xs,
+                            fontSize: tokens.typography.sizes.badge - 1,
 
-                            paddingVertical:
-                              4,
-
-                            borderRadius:
-                              tokens
-                                .radius
-                                .sm,
+                            fontWeight: '700',
                           }}
                         >
-                          <Text
-                            style={{
-                              color:
-                                '#fff',
+                          {completed ? 'View' : 'Start'}
+                        </Text>
+                      </TouchableOpacity>
 
-                              fontSize:
-                                tokens
-                                  .typography
-                                  .sizes
-                                  .badge - 1,
+                      {/* EDIT */}
 
-                              fontWeight:
-                                '700',
-                            }}
-                          >
-                            {completed
-                              ? 'View'
-                              : 'Start'}
-                          </Text>
-                        </TouchableOpacity>
+                      <TouchableOpacity onPress={() => onEdit(match)}>
+                        <Pencil
+                          size={14}
+                          color={theme.colors.primary || tokens.colors.primary}
+                          strokeWidth={2.3}
+                        />
+                      </TouchableOpacity>
 
-                        {/* EDIT */}
+                      {/* DELETE */}
 
-                        <TouchableOpacity
-                          onPress={() =>
-                            onEdit(
-                              match
-                            )
-                          }
-                        >
-                          <Pencil
-                            size={14}
-                            color={
-                              theme.colors
-                                .primary ||
-                              tokens.colors
-                                .primary
-                            }
-                            strokeWidth={
-                              2.3
-                            }
-                          />
-                        </TouchableOpacity>
-
-                        {/* DELETE */}
-
-                        <TouchableOpacity
-                          onPress={() =>
-                            onDelete(
-                              match.id
-                            )
-                          }
-                        >
-                          <Trash2
-                            size={14}
-                            color={
-                              theme.colors
-                                .error ||
-                              tokens.colors
-                                .error
-                            }
-                            strokeWidth={
-                              2.3
-                            }
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </HoverView>
-                  );
-                }
-              )
+                      <TouchableOpacity onPress={() => onDelete(match.id)}>
+                        <Trash2
+                          size={14}
+                          color={theme.colors.error || tokens.colors.error}
+                          strokeWidth={2.3}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </HoverView>
+                );
+              })
             ) : (
               <View
                 style={{
-                  paddingVertical:
-                    tokens.spacing.xl *
-                    2,
+                  paddingVertical: tokens.spacing.xl * 2,
 
-                  alignItems:
-                    'center',
+                  alignItems: 'center',
 
-                  justifyContent:
-                    'center',
+                  justifyContent: 'center',
                 }}
               >
                 <Text
                   style={{
-                    fontSize:
-                      tokens
-                        .typography
-                        .sizes.small,
+                    fontSize: tokens.typography.sizes.small,
 
-                    color:
-                      theme.colors
-                        .textSecondary,
+                    color: theme.colors.textSecondary,
 
-                    fontFamily:
-                      theme.typography
-                        .fontFamily,
+                    fontFamily: theme.typography.fontFamily,
                   }}
                 >
                   No matches found
@@ -1191,22 +764,12 @@ export default function MatchesTable({
       {/* PAGINATION */}
 
       <Pagination
-        total={
-          filteredMatches.length
-        }
+        total={filteredMatches.length}
         page={page}
-        rowsPerPage={
-          rowsPerPage
-        }
-        onPageChange={
-          setPage
-        }
-        onRowsPerPageChange={(
-          value: number
-        ) => {
-          setRowsPerPage(
-            value
-          );
+        rowsPerPage={rowsPerPage}
+        onPageChange={setPage}
+        onRowsPerPageChange={(value: number) => {
+          setRowsPerPage(value);
           setPage(0);
         }}
       />
