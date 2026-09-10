@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { type TextStyle, View } from 'react-native';
+import { Text } from 'react-native-paper';
 
 import { styles } from './PlayerScorer.styles';
 import { useTheme } from '@/theme/themeContext';
@@ -10,6 +11,16 @@ import {
   PlayerId,
   SetScore,
 } from '../types/tennis.types';
+
+// Keep RN platform typography defaults; existing per-element styles take precedence.
+const nativeTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  lineHeight: undefined,
+  letterSpacing: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type Props = {
   player1Name: string;
@@ -28,7 +39,6 @@ type Props = {
   server: PlayerId;
   matchType: MatchType;
   matchFormat: MatchFormat;
-
 };
 
 export default function PlayerScorer({
@@ -48,12 +58,10 @@ export default function PlayerScorer({
   server,
   matchType,
   matchFormat,
-
 }: Props) {
   const theme = useTheme();
 
-  const totalSets =
-    matchFormat === 'BEST_OF_3' ? 3 : 5;
+  const totalSets = matchFormat === 'BEST_OF_3' ? 3 : 5;
 
   /*
    * SERVER DISPLAY
@@ -77,8 +85,6 @@ export default function PlayerScorer({
 
   /*
    * ACTUAL SERVER NAME
-   *
-   * This is especially important for doubles.
    */
   const servingPlayerName =
     server === 'PLAYER1'
@@ -124,10 +130,7 @@ export default function PlayerScorer({
 
       <View style={styles.playerPanel}>
         {rows.map((row) => (
-          <View
-            key={row.id}
-            style={styles.playerSummary}
-          >
+          <View key={row.id} style={styles.playerSummary}>
             <View
               style={[
                 styles.avatar,
@@ -139,7 +142,7 @@ export default function PlayerScorer({
                 },
               ]}
             >
-              <Text style={styles.avatarText}>
+              <Text style={[nativeTextDefaults, styles.avatarText]}>
                 {row.name.charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -151,8 +154,7 @@ export default function PlayerScorer({
                     style={[
                       styles.serverDot,
                       {
-                        backgroundColor:
-                          theme.colors.success,
+                        backgroundColor: theme.colors.success,
                       },
                     ]}
                   />
@@ -161,10 +163,10 @@ export default function PlayerScorer({
                 <Text
                   numberOfLines={1}
                   style={[
+                    nativeTextDefaults,
                     styles.playerName,
                     {
-                      color:
-                        theme.colors.textPrimary,
+                      color: theme.colors.textPrimary,
                     },
                   ]}
                 >
@@ -175,10 +177,10 @@ export default function PlayerScorer({
               <Text
                 numberOfLines={1}
                 style={[
+                  nativeTextDefaults,
                   styles.playerMeta,
                   {
-                    color:
-                      theme.colors.textSecondary,
+                    color: theme.colors.textSecondary,
                   },
                 ]}
               >
@@ -211,23 +213,22 @@ export default function PlayerScorer({
         >
           <Text
             style={[
+              nativeTextDefaults,
               styles.matchStripText,
               {
                 color: theme.colors.textPrimary,
               },
             ]}
           >
-            {matchType === 'DOUBLES'
-              ? 'Doubles'
-              : 'Singles'}
+            {matchType === 'DOUBLES' ? 'Doubles' : 'Singles'}
           </Text>
 
           <Text
             style={[
+              nativeTextDefaults,
               styles.matchStripDot,
               {
-                color:
-                  theme.colors.textSecondary,
+                color: theme.colors.textSecondary,
               },
             ]}
           >
@@ -236,21 +237,20 @@ export default function PlayerScorer({
 
           <Text
             style={[
+              nativeTextDefaults,
               styles.matchStripText,
               {
-                color:
-                  theme.colors.textPrimary,
+                color: theme.colors.textPrimary,
               },
             ]}
           >
-            {matchFormat === 'BEST_OF_3'
-              ? 'Best of 3 Sets'
-              : 'Best of 5 Sets'}
+            {matchFormat === 'BEST_OF_3' ? 'Best of 3 Sets' : 'Best of 5 Sets'}
           </Text>
         </View>
 
         <Text
           style={[
+            nativeTextDefaults,
             styles.columnLabel,
             { color: theme.colors.success, marginVertical: 6 },
           ]}
@@ -265,10 +265,10 @@ export default function PlayerScorer({
             <Text
               key={index}
               style={[
+                nativeTextDefaults,
                 styles.columnLabel,
                 {
-                  color:
-                    theme.colors.textSecondary,
+                  color: theme.colors.textSecondary,
                 },
               ]}
             >
@@ -278,10 +278,10 @@ export default function PlayerScorer({
 
           <Text
             style={[
+              nativeTextDefaults,
               styles.columnLabel,
               {
-                color:
-                  theme.colors.textSecondary,
+                color: theme.colors.textSecondary,
               },
             ]}
           >
@@ -290,10 +290,10 @@ export default function PlayerScorer({
 
           <Text
             style={[
+              nativeTextDefaults,
               styles.columnLabel,
               {
-                color:
-                  theme.colors.textSecondary,
+                color: theme.colors.textSecondary,
               },
             ]}
           >
@@ -307,16 +307,14 @@ export default function PlayerScorer({
             style={[
               styles.scoreRow,
               {
-                borderColor:
-                  theme.colors.border,
+                borderColor: theme.colors.border,
               },
             ]}
           >
             {Array.from({
               length: totalSets,
             }).map((_, index) => {
-              const set =
-                completedSets[index];
+              const set = completedSets[index];
 
               const value = set
                 ? row.id === 'PLAYER1'
@@ -328,10 +326,10 @@ export default function PlayerScorer({
                 <Text
                   key={index}
                   style={[
+                    nativeTextDefaults,
                     styles.scoreCell,
                     {
-                      color:
-                        theme.colors.textPrimary,
+                      color: theme.colors.textPrimary,
                     },
                   ]}
                 >
@@ -342,10 +340,10 @@ export default function PlayerScorer({
 
             <Text
               style={[
+                nativeTextDefaults,
                 styles.scoreCell,
                 {
-                  color:
-                    theme.colors.textPrimary,
+                  color: theme.colors.textPrimary,
                 },
               ]}
             >
@@ -354,6 +352,7 @@ export default function PlayerScorer({
 
             <Text
               style={[
+                nativeTextDefaults,
                 styles.pointCell,
                 {
                   color: theme.colors.primary,
