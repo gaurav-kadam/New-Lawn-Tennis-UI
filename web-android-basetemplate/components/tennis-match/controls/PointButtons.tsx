@@ -1,6 +1,17 @@
   import React from 'react';
-  import { Pressable, StyleSheet, Text, View } from 'react-native';
+  import { StyleSheet, type TextStyle, View } from 'react-native';
+  import { Text, TouchableRipple } from 'react-native-paper';
   import { useTheme } from '@/theme/themeContext';
+
+  // Preserve the original RN font metrics rather than Paper typography defaults.
+  const nativeTextDefaults: TextStyle = {
+    fontFamily: undefined,
+    fontWeight: undefined,
+    lineHeight: undefined,
+    letterSpacing: undefined,
+    textAlign: undefined,
+    writingDirection: undefined,
+  };
 
   type Props = {
     player1Name: string;
@@ -24,27 +35,35 @@
     return (
       <View style={styles.container}>
 
-        <Pressable
+        <TouchableRipple
           style={[styles.button, { backgroundColor: theme.colors.success, borderColor: theme.colors.success, opacity: disabled ? 0.45 : 1 }]}
           onPress={onPlayer1Point}
           disabled={disabled}
+          rippleColor="transparent"
+          underlayColor="transparent"
         >
-          <Text style={styles.buttonKicker}>POINT TO</Text>
-          <Text numberOfLines={1} style={styles.buttonText}>
-            {player1Name.toUpperCase()}
-          </Text>
-        </Pressable>
+          <>
+            <Text style={[nativeTextDefaults, styles.buttonKicker]}>POINT TO</Text>
+            <Text numberOfLines={1} style={[nativeTextDefaults, styles.buttonText]}>
+              {player1Name.toUpperCase()}
+            </Text>
+          </>
+        </TouchableRipple>
 
-        <Pressable
+        <TouchableRipple
           style={[styles.button, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, opacity: disabled ? 0.45 : 1 }]}
           onPress={onPlayer2Point}
           disabled={disabled}
+          rippleColor="transparent"
+          underlayColor="transparent"
         >
-          <Text style={styles.buttonKicker}>POINT TO</Text>
-          <Text numberOfLines={1} style={styles.buttonText}>
-            {player2Name.toUpperCase()}
-          </Text>
-        </Pressable>
+          <>
+            <Text style={[nativeTextDefaults, styles.buttonKicker]}>POINT TO</Text>
+            <Text numberOfLines={1} style={[nativeTextDefaults, styles.buttonText]}>
+              {player2Name.toUpperCase()}
+            </Text>
+          </>
+        </TouchableRipple>
 
       </View>
     );
