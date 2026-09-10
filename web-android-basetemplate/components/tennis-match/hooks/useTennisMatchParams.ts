@@ -4,6 +4,7 @@ import {
   MatchFormat,
   MatchType,
   PlayerId,
+  ServingStateSnapshot,
 } from '../types/tennis.types';
 
 type TennisMatchRouteParams = {
@@ -17,6 +18,7 @@ type TennisMatchRouteParams = {
   matchNo?: string | string[];
   courtNo?: string | string[];
   serviceOrder?: string | string[];
+  servingState?: string | string[];
 };
 
 export type TennisMatchParams = {
@@ -30,6 +32,7 @@ export type TennisMatchParams = {
   matchNo: string;
   courtNo: string;
   doublesServeOrder: PlayerId[];
+  servingState: ServingStateSnapshot | null;
   team1DisplayName: string;
   team2DisplayName: string;
 };
@@ -94,6 +97,39 @@ function parseDoublesServeOrder(
   }
 }
 
+function parseServingState(
+  rawValue: string,
+  matchType: MatchType
+): ServingStateSnapshot | null {
+  if (!rawValue) return null;
+  try {
+    const parsed: any = JSON.parse(rawValue);
+    const players = ['PLAYER1', 'PLAYER2', 'PLAYER3', 'PLAYER4'];
+    if (!parsed || (parsed.match_type && parsed.match_type !== matchType) ||
+      !players.includes(parsed.first_server) ||
+      !players.includes(parsed.current_server) ||
+      !players.includes(parsed.current_set_first_server) ||
+      !Array.isArray(parsed.current_set_service_order)) return null;
+    return {
+      version: typeof parsed.version === 'number' ? parsed.version : undefined,
+      match_type: matchType,
+      first_server: parsed.first_server,
+      current_server: parsed.current_server,
+      current_set_first_server: parsed.current_set_first_server,
+      current_set_service_order: parsed.current_set_service_order.filter(
+        (player: unknown): player is PlayerId => players.includes(String(player))
+      ),
+      doubles_serve_index: Number.isInteger(parsed.doubles_serve_index)
+        ? parsed.doubles_serve_index
+        : 0,
+      tiebreak_first_server: parsed.tiebreak_first_server ?? null,
+      is_tiebreak: Boolean(parsed.is_tiebreak),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function useTennisMatchParams(): TennisMatchParams {
   const params =
     useLocalSearchParams<TennisMatchRouteParams>();
@@ -137,6 +173,11 @@ export function useTennisMatchParams(): TennisMatchParams {
       matchType
     );
 
+  const servingState = parseServingState(
+    getParamValue(params.servingState),
+    matchType
+  );
+
   /*
    * IMPORTANT:
    * Preserve the current application's
@@ -170,6 +211,7 @@ const team2DisplayName =
     matchNo,
     courtNo,
     doublesServeOrder,
+    servingState,
     team1DisplayName,
     team2DisplayName,
   };
