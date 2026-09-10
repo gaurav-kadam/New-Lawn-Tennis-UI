@@ -21,15 +21,23 @@ class OfficialService {
 
   // Helper to map React camelCase to FastAPI snake_case
   private mapToBackend(data: any) {
+    const officialName =
+      data.official_name ||
+      data.officialName ||
+      [data.firstName, data.lastName]
+        .filter((part: unknown) => typeof part === 'string' && part.trim())
+        .map((part: string) => part.trim())
+        .join(' ');
+
     return {
-      first_name: data.firstName,
-      last_name: data.lastName,
+      official_name: officialName,
+      role_title: data.roleTitle || data.role_title || 'Official',
       email: data.email,
-      phone_no: data.phoneNo,
+      mobile: data.mobile || data.phoneNo,
       gender: data.gender,
       state: data.state,
       city: data.city,
-      dob: data.dob
+      date_of_birth: data.dateOfBirth || data.date_of_birth || data.dob,
     };
   }
 }
