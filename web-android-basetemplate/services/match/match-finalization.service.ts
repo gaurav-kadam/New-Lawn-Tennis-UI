@@ -12,6 +12,7 @@ export type FinalMatchEvent = {
     | 'UNFORCED_ERROR'
     | 'VOLLEY';
   player: 'PLAYER1' | 'PLAYER2' | 'PLAYER3' | 'PLAYER4';
+  server?: 'PLAYER1' | 'PLAYER2' | 'PLAYER3' | 'PLAYER4';
   elapsed_seconds: number;
   recorded_at: string;
 };
@@ -34,7 +35,9 @@ export type FinalizeMatchPayload = {
       was_tiebreak: boolean;
       tiebreak_player1_points?: number;
       tiebreak_player2_points?: number;
+      serving_state?: Record<string, unknown>;
     }>;
+    serving_state?: Record<string, unknown>;
   };
   events: FinalMatchEvent[];
 };

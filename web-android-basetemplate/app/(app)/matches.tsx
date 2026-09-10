@@ -13,6 +13,7 @@ import { useMatches } from '../../hooks/usematches';
 import { useTeams } from '../../hooks/useteams';
 
 import matchService from '../../services/match/match.service';
+import { isCompletedMatch } from '@/services/match/match-result.service';
 import tournamentService from '../../services/tournament/tournamment.service';
 import teamService from '../../services/team/team.service';
 import { useTheme } from '../../theme/themeContext';
@@ -154,6 +155,10 @@ export default function MatchesScreen() {
 };
 
 const handleStartMatch = async (match: any) => {
+  if (isCompletedMatch(match)) {
+    router.push({ pathname: '/TennisMatchScreen', params: { matchId: String(match.id) } });
+    return;
+  }
   try {
     // ============================================================
     // MATCH TYPE
@@ -460,6 +465,9 @@ const handleStartMatch = async (match: any) => {
             match.doublesServeOrder ??
             []
           ),
+
+        servingState:
+          JSON.stringify(match.serving_state ?? null),
       },
     });
   } catch (error) {

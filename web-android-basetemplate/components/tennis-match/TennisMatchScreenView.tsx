@@ -1,4 +1,7 @@
 import { useRouter } from 'expo-router';
+import { useNavigation, usePreventRemove } from '@react-navigation/native';
+import { isAxiosError } from 'axios';
+import NotificationModal from '@/components/ui/NotificationModal';
 import {
   useCallback,
   useEffect,
@@ -8,9 +11,13 @@ import {
 
 import matchDraftService from '@/services/match/match-draft.service';
 import matchFinalizationService from '@/services/match/match-finalization.service';
+import { loadMatchResult } from '@/services/match/match-result.service';
+import { serializeCompletedSetServingState } from '@/services/match/completed-set-serving-state';
 
 import {
-  Alert,
+  ActivityIndicator,
+  Pressable,
+  Text,
   Platform,
   View,
   useWindowDimensions,
@@ -18,7 +25,7 @@ import {
 
 import MatchBoard from '@/components/tennis-match/MatchBoard';
 import { useTennisMatch } from '@/components/tennis-match/hooks/useTennisMatch';
-import { useTennisMatchParams } from '@/components/tennis-match/hooks/useTennisMatchParams';
+import { TennisMatchParams, useTennisMatchParams } from '@/components/tennis-match/hooks/useTennisMatchParams';
 import { getDisplayPoints } from '@/components/tennis-match/logic/tennisLogic';
 import { PlayerId } from '@/components/tennis-match/types/tennis.types';
 import { useFullscreenStore } from '@/stores/fullscreen.store';
@@ -27,9 +34,17 @@ import TennisHeader from '@/components/tennis-match/header/TennisHeader';
 import { useMatchTimer } from '@/components/tennis-match/hooks/useMatchTimer';
 
 export default function TennisMatchScreenView() {
+  const params = useTennisMatchParams();
+  return <TennisMatchSession key={params.matchId} params={params} />;
+}
 
+function TennisMatchSession({ params }: { params: TennisMatchParams }) {
+
+  const [completedParams, setCompletedParams] = useState<TennisMatchParams | null>(null);
+  const readOnly = completedParams !== null;
   const theme = useTheme();
   const router = useRouter();
+  const navigation = useNavigation();
 
   const {
     matchId,
@@ -42,9 +57,10 @@ export default function TennisMatchScreenView() {
     matchNo,
     courtNo,
     doublesServeOrder,
+    servingState,
     team1DisplayName,
     team2DisplayName,
-  } = useTennisMatchParams();
+  } = completedParams ?? params;
 
   const {
     height: windowHeight,
@@ -70,6 +86,8 @@ export default function TennisMatchScreenView() {
     undo,
     restoreMatch,
     resetMatch,
+    selectNextSetServer,
+    applyServingState,
     canUndo,
 
   } = useTennisMatch(
@@ -80,7 +98,8 @@ export default function TennisMatchScreenView() {
     matchType,
     player3Name,
     player4Name,
-    doublesServeOrder
+    doublesServeOrder,
+    servingState
   );
 
   // ACTION PLAYER
@@ -90,140 +109,101 @@ export default function TennisMatchScreenView() {
     setSelectedPlayer,
   ] = useState<PlayerId>('PLAYER1');
 
-  const hasLoadedDraftRef = useRef(false);
-
-  const [
-    isDraftReady,
-    setIsDraftReady,
-  ] = useState(false);
-
-  const [
-  isFinalizing,
-  setIsFinalizing,
-] = useState(false);
-
-const isFinalizationInProgressRef =
-  useRef(false);
+  const [draftStatus, setDraftStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [draftError, setDraftError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const isFinalizationInProgressRef = useRef(false);
+  const acceptedRef = useRef(false);
+  const uncertainRef = useRef(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; title: string; message: string } | null>(null);
+  usePreventRemove(isFinalizing, ({ data }) => {
+    if (!isFinalizationInProgressRef.current) {
+      navigation.dispatch(data.action);
+      return;
+    }
+    setNotification({ type: 'error', title: 'Saving Match', message: 'Please wait until the current match operation finishes.' });
+  });
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-  if (hasLoadedDraftRef.current) {
-    return;
-  }
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
-  hasLoadedDraftRef.current = true;
-
-  const loadMatchDraft = async () => {
-    try {
-      if (!matchId) {
-        return;
+  useEffect(() => {
+    let active = true;
+    setDraftStatus('loading');
+    setDraftError('');
+    void (async () => {
+      try {
+        if (!matchId) throw new Error('Match ID is missing. Return to Matches to open a match.');
+        // Verify server status before touching drafts, including direct links/reloads.
+        const result = await loadMatchResult(matchId);
+        if (!active) return;
+        if (result.completed) {
+          acceptedRef.current = true;
+          setCompletedParams(result.params);
+          restoreMatch(result.state, result.events);
+          restoreTimer(result.elapsedSeconds, 'stopped', Date.now());
+          setDraftStatus('ready');
+          return;
+        }
+        const draft = await matchDraftService.loadDraft(matchId);
+        if (!active) return;
+        if (draft) {
+          restoreMatch(draft.state, draft.events);
+          restoreTimer(draft.elapsedSeconds, draft.timerStatus, draft.updatedAt);
+        } else if (result.servingState) {
+          applyServingState(result.servingState);
+        }
+        setDraftStatus('ready');
+      } catch (error) {
+        if (!active) return;
+        setDraftError(isAxiosError(error) ? 'Unable to verify the saved match. Please check your connection and retry.' : error instanceof Error ? error.message : 'Unable to restore the match. Please retry.');
+        setDraftStatus('failed');
       }
+    })();
+    return () => { active = false; };
+  }, [matchId, loadAttempt, restoreMatch, restoreTimer, applyServingState]);
 
-      const draft =
-        await matchDraftService.loadDraft(matchId);
+  useEffect(() => {
+    if (!matchId || draftStatus !== 'ready' || readOnly || acceptedRef.current || isFinalizationInProgressRef.current) return;
+    // Enqueue every committed snapshot immediately, including reset/restart.
+    // Navigation cannot cancel a delayed debounce and lose the last point.
+    void matchDraftService.saveDraft({
+      matchId, state, events, elapsedSeconds, timerStatus,
+    }).catch(() => {
+      if (mountedRef.current) setDraftError('Local save failed. Keep this match open and retry saving.');
+    });
+  }, [matchId, draftStatus, readOnly, state, events, elapsedSeconds, timerStatus]);
 
-      if (!draft) {
-        return;
-      }
+  const canMutate = useCallback(() => !readOnly && draftStatus === 'ready' && !isFinalizationInProgressRef.current && !acceptedRef.current && !uncertainRef.current, [draftStatus, readOnly]);
 
-      restoreMatch(
-        draft.state,
-        draft.events
-      );
-
-      restoreTimer(
-        draft.elapsedSeconds,
-        draft.timerStatus,
-        draft.updatedAt
-      );
-    } catch (error) {
-      console.error(
-        'Failed to restore local match draft:',
-        error
-      );
-    } finally {
-      setIsDraftReady(true);
-    }
-  };
-
-  void loadMatchDraft();
-}, [
-  matchId,
-  restoreMatch,
-  restoreTimer,
-]);
-
-useEffect(() => {
-  if (!matchId || !isDraftReady) {
-    return;
-  }
-
-  const saveTimeout = setTimeout(() => {
-    void matchDraftService
-      .saveDraft({
-        matchId,
-        state,
-        events,
-        elapsedSeconds,
-        timerStatus,
-      })
-      .catch(error => {
-        console.error(
-          'Failed to save local match draft:',
-          error
-        );
-      });
-  }, 300);
-
-  return () => {
-    clearTimeout(saveTimeout);
-  };
-}, [
-  matchId,
-  isDraftReady,
-  state,
-  events,
-  elapsedSeconds,
-  timerStatus,
-]);
 const finalizeMatch = useCallback(async () => {
-  if (!matchId) {
-    Alert.alert(
-      'Cannot Save Match',
-      'Match ID is missing.'
-    );
-    return;
-  }
-
-  if (!state.matchWinner) {
-    Alert.alert(
-      'Cannot Save Match',
-      'Declare a match winner first.'
-    );
-    return;
-  }
-
-  if (events.length === 0) {
-    Alert.alert(
-      'Cannot Save Match',
-      'No match events were recorded.'
-    );
-    return;
-  }
-
-  if (isFinalizationInProgressRef.current) {
+  if (!canMutate()) return;
+  if (!matchId || !state.matchWinner || events.length === 0) {
+    setNotification({ type: 'error', title: 'Cannot Save Match', message: 'A completed match and its recorded events are required.' });
     return;
   }
 
   isFinalizationInProgressRef.current = true;
 
   setIsFinalizing(true);
+  let submitted = false;
 
   try {
+    await matchDraftService.saveDraft({ matchId, state, events, elapsedSeconds, timerStatus });
     // Events are shown newest first in the UI.
     // Backend requires oldest event first.
     const chronologicalEvents =
       [...events].reverse();
+    const matchFirstServer =
+      state.completedSets[0]?.servingState?.first_server ??
+      servingState?.first_server ??
+      'PLAYER1';
 
+    submitted = true;
     await matchFinalizationService.finalize(
       matchId,
       {
@@ -266,7 +246,27 @@ const finalizeMatch = useCallback(async () => {
 
               tiebreak_player2_points:
                 set.tiebreakPlayer2Points,
+
+              serving_state:
+                set.servingState
+                  ? serializeCompletedSetServingState(
+                    set.servingState,
+                    state.matchType
+                  )
+                  : undefined,
             })),
+
+          serving_state: {
+            version: 1,
+            match_type: state.matchType,
+            first_server: matchFirstServer,
+            current_server: state.server,
+            current_set_first_server: state.currentSetFirstServer,
+            current_set_service_order: state.doublesServeOrder,
+            doubles_serve_index: state.doublesServeIndex,
+            tiebreak_first_server: state.tiebreakFirstServer,
+            is_tiebreak: state.isTiebreak,
+          },
         },
 
         events: chronologicalEvents.map(
@@ -276,6 +276,8 @@ const finalizeMatch = useCallback(async () => {
             event_type: event.type,
 
             player: event.player,
+
+            server: event.server,
 
             elapsed_seconds:
               event.elapsedSeconds,
@@ -288,52 +290,37 @@ const finalizeMatch = useCallback(async () => {
       }
     );
 
-    // Remove local copies only after the backend
-    // confirms that the full match was saved.
-    await matchDraftService.deleteDraft(matchId);
-
-    stopTimer();
-
-    Alert.alert(
-      'Match Saved',
-      'The completed match was saved successfully.',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            router.replace('/matches');
-          },
-        },
-      ]
-    );
-  } catch (error: any) {
-    console.error(
-      'Failed to finalize match:',
-      error
-    );
-
-    const message =
-      error?.response?.data?.message ??
-      error?.response?.data?.detail ??
-      'Match was not saved. Your local draft is safe; please try again.';
-
-    Alert.alert(
-      'Unable to Save Match',
-      typeof message === 'string'
-        ? message
-        : 'Match was not saved. Your local draft is safe; please try again.'
-    );
+    acceptedRef.current = true;
+    let cleanupFailed = false;
+    try { await matchDraftService.deleteDraft(matchId); }
+    catch { cleanupFailed = true; }
+    if (mountedRef.current) {
+      stopTimer();
+      setNotification({
+        type: 'success', title: 'Match Saved',
+        message: cleanupFailed
+          ? 'The match was saved successfully. Local draft cleanup failed; the saved server result will be used when you reopen it.'
+          : 'The completed match was saved successfully.',
+      });
+    }
+  } catch (error) {
+    const status = isAxiosError(error) ? error.response?.status : undefined;
+    const uncertain = submitted && (status === undefined || status >= 500 || status === 409);
+    uncertainRef.current = uncertain;
+    if (mountedRef.current) setNotification({
+      type: 'error',
+      title: uncertain ? 'Check Match Result' : 'Unable to Save Match',
+      message: uncertain
+        ? 'The server result could not be confirmed, or the match is already completed. Your draft has been kept. Return to Matches and reopen this match to check its saved result.'
+        : submitted
+          ? 'The server did not accept the match. Your draft has been kept.'
+          : 'The latest draft could not be saved locally. No finalization request was sent. Please retry.',
+    });
   } finally {
     isFinalizationInProgressRef.current = false;
-    setIsFinalizing(false);
+    if (mountedRef.current) setIsFinalizing(false);
   }
-}, [
-  matchId,
-  state,
-  events,
-  stopTimer,
-  router,
-]);
+}, [canMutate, matchId, state, events, elapsedSeconds, timerStatus, stopTimer, servingState?.first_server]);
     // FULLSCREEN STORE
  
   const {
@@ -434,31 +421,40 @@ const finalizeMatch = useCallback(async () => {
     // RESTART MATCH
   const restartCurrentMatch =
     useCallback(() => {
+      if (!canMutate()) return;
       resetMatch();
       resetTimer();
       setSelectedPlayer('PLAYER1');
+      isFinalizationInProgressRef.current = false;
+      setIsFinalizing(false);
     }, [
+      canMutate,
       resetMatch,
       resetTimer,
     ]);
 
     // RESET MATCH 
 
-  const resetCurrentMatch =
-    useCallback(() => {
+  const resetCurrentMatch = useCallback(async () => {
+    if (!canMutate()) return;
+    isFinalizationInProgressRef.current = true;
+    setIsFinalizing(true);
+    try {
+      await matchDraftService.deleteDraft(matchId);
+      acceptedRef.current = true; // Block old snapshots during navigation.
+      if (!mountedRef.current) return;
       resetMatch();
       resetTimer();
       setSelectedPlayer('PLAYER1');
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/matches');
-      }
-    }, [
-      resetMatch,
-      resetTimer,
-      router,
-    ]);
+      if (router.canGoBack()) router.back();
+      else router.replace('/matches');
+    } catch {
+      if (mountedRef.current) setDraftError('Unable to reset the stored match. Your current session has been kept.');
+    } finally {
+      isFinalizationInProgressRef.current = false;
+      if (mountedRef.current) setIsFinalizing(false);
+    }
+  }, [canMutate, matchId, resetMatch, resetTimer, router]);
 
   useEffect(() => {
     syncBrowserFullscreen();
@@ -541,8 +537,16 @@ const finalizeMatch = useCallback(async () => {
     // SCORING ENABLED
   
   const scoringEnabled =
-    timerStatus === 'running' &&
-    !Boolean(state.matchWinner);
+    canMutate() && timerStatus === 'running' &&
+    !Boolean(state.matchWinner) &&
+    !state.pendingDoublesServerSelection;
+
+  const playerNameForId = (player: PlayerId) => {
+    if (player === 'PLAYER1') return player1Name;
+    if (player === 'PLAYER2') return matchType === 'DOUBLES' ? player2Name : player2Name;
+    if (player === 'PLAYER3') return player3Name;
+    return player4Name;
+  };
 
   // MATCH STATUS
 
@@ -563,8 +567,31 @@ const finalizeMatch = useCallback(async () => {
       }}
     >
 
+      <NotificationModal
+        visible={notification !== null}
+        type={notification?.type ?? 'error'}
+        title={notification?.title ?? ''}
+        message={notification?.message ?? ''}
+        onClose={() => {
+          const saved = acceptedRef.current;
+          setNotification(null);
+          if (saved) router.replace('/matches');
+        }}
+      />
+      {draftStatus !== 'ready' && (
+        <View style={{ padding: 12 }}>
+          {draftStatus === 'loading' ? <ActivityIndicator /> : <>
+            <Text>{draftError}</Text>
+            <Pressable onPress={() => setLoadAttempt(value => value + 1)}><Text>Retry loading match</Text></Pressable>
+          </>}
+        </View>
+      )}
+      {readOnly && <Text>Completed match - read only</Text>}
+      {draftStatus === 'ready' && draftError !== '' && <Text accessibilityRole="alert">{draftError}</Text>}
       <TennisHeader
+        controlsDisabled={!canMutate()}
         onBack={() => {
+          if (isFinalizationInProgressRef.current) return;
           if (router.canGoBack()) {
             router.back();
           } else {
@@ -583,14 +610,15 @@ const finalizeMatch = useCallback(async () => {
           timerStatus
         }
         onStart={() => {
+          if (!canMutate()) return;
           startTimer();
           void enterBrowserFullscreen();
         }}
         onPause={
-          pauseTimer
+          () => { if (canMutate()) pauseTimer(); }
         }
         onStop={
-          stopTimer
+          () => { if (canMutate()) stopTimer(); }
         }
         matchNo={
           matchNo
@@ -625,6 +653,42 @@ const finalizeMatch = useCallback(async () => {
             theme.colors.surface,
         }}
       >
+        {state.pendingDoublesServerSelection && (
+          <View
+            style={{
+              margin: 10,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: theme.colors.primary,
+              borderRadius: 10,
+              backgroundColor: theme.colors.background,
+            }}
+          >
+            <Text style={{ color: theme.colors.textPrimary, fontWeight: '800', marginBottom: 8 }}>
+              Select the first server for the new set
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {state.pendingDoublesServerSelection.players.map(player => (
+                <Pressable
+                  key={player}
+                  onPress={() => selectNextSetServer(player)}
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: theme.colors.textPrimary, textAlign: 'center', fontWeight: '700' }}>
+                    {playerNameForId(player)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
         <MatchBoard
           state={state}
           matchType={matchType}
@@ -662,7 +726,7 @@ const finalizeMatch = useCallback(async () => {
           }
 
           onAddPoint={(player) =>
-            addPoint(
+            scoringEnabled && addPoint(
               player,
               elapsedSeconds
             )
@@ -672,7 +736,7 @@ const finalizeMatch = useCallback(async () => {
             action,
             player
           ) =>
-            recordMatchAction(
+            scoringEnabled && recordMatchAction(
               action,
               player,
               elapsedSeconds
@@ -680,7 +744,7 @@ const finalizeMatch = useCallback(async () => {
           }
 
           onUndo={
-            undo
+            () => { if (scoringEnabled) undo(); }
           }
           canUndo={
             canUndo
@@ -690,7 +754,7 @@ const finalizeMatch = useCallback(async () => {
             }
 
             onFinalizeMatch={
-              finalizeMatch
+              readOnly || acceptedRef.current || uncertainRef.current ? undefined : finalizeMatch
             }
 
             isFinalizing={

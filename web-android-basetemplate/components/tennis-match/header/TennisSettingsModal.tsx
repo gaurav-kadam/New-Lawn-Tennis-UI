@@ -14,6 +14,7 @@ import { useTheme } from '@/theme/themeContext';
 type SettingsAction = 'RESTART' | 'RESET' | null;
 
 type Props = {
+  actionsDisabled?: boolean;
   visible: boolean;
   isFullscreen: boolean;
   onClose: () => void;
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export default function TennisSettingsModal({
+  actionsDisabled = false,
   visible,
   isFullscreen,
   onClose,
@@ -41,6 +43,7 @@ export default function TennisSettingsModal({
   };
 
   const handleConfirm = () => {
+    if (actionsDisabled) return;
     if (confirmAction === 'RESTART') {
       onRestart();
     } else if (confirmAction === 'RESET') {
@@ -167,6 +170,7 @@ export default function TennisSettingsModal({
 
                 <Pressable
                   onPress={handleConfirm}
+                  disabled={actionsDisabled}
                   style={[
                     styles.confirmButton,
                     {
@@ -264,6 +268,7 @@ export default function TennisSettingsModal({
 
                 <SettingsRow
                   icon="refresh-outline"
+                  disabled={actionsDisabled}
                   title="Restart Match"
                   description="Start this match again from 0–0"
                   iconColor={
@@ -287,6 +292,7 @@ export default function TennisSettingsModal({
 
                 <SettingsRow
                   icon="warning-outline"
+                  disabled={actionsDisabled}
                   title="Reset Match"
                   description="Clear this session and return to Matches"
                   iconColor={
@@ -370,6 +376,7 @@ export default function TennisSettingsModal({
 }
 
 type SettingsRowProps = {
+  disabled?: boolean;
   icon: React.ComponentProps<
     typeof Ionicons
   >['name'];
@@ -386,6 +393,7 @@ type SettingsRowProps = {
 };
 
 function SettingsRow({
+  disabled = false,
   icon,
   title,
   description,
@@ -398,6 +406,7 @@ function SettingsRow({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.row,
         {

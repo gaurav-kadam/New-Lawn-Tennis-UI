@@ -18,6 +18,7 @@ import {
 } from '../hooks/useMatchTimer';
 
 type Props = {
+  controlsDisabled?: boolean;
   onBack: () => void;
 
   matchCompleted: boolean;
@@ -45,6 +46,7 @@ type Props = {
   onToggleFullscreen: () => void;
 };
 export default function TennisHeader({
+  controlsDisabled = false,
   onBack,
   matchCompleted,
   courtName = 'Court 1',
@@ -62,15 +64,13 @@ export default function TennisHeader({
   const theme = useTheme();
 
   const canStart =
-    timerStatus === 'idle' ||
-    timerStatus === 'paused';
+    !controlsDisabled && (timerStatus === 'idle' || timerStatus === 'paused');
 
   const canPause =
-    timerStatus === 'running';
+    !controlsDisabled && timerStatus === 'running';
 
   const canStop =
-    timerStatus === 'running' ||
-    timerStatus === 'paused';
+    !controlsDisabled && (timerStatus === 'running' || timerStatus === 'paused');
 
  const statusLabel = matchCompleted
   ? 'COMPLETED'
@@ -409,6 +409,7 @@ const [settingsVisible, setSettingsVisible] =
         </Pressable>
           
         <TennisSettingsModal
+          actionsDisabled={controlsDisabled}
           visible={settingsVisible}
           isFullscreen={isFullscreen}
           
