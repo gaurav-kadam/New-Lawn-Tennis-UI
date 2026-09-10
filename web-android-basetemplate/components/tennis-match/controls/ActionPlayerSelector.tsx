@@ -1,6 +1,6 @@
 import React from 'react';
+import { Button } from 'react-native-paper';
 import {
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -90,14 +90,20 @@ export default function ActionPlayerSelector({
             selectedPlayer === player.id;
 
           return (
-            <Pressable
+            <Button
               key={player.id}
               onPress={() =>
                 onPlayerChange(player.id)
               }
               disabled={disabled}
+              mode="outlined"
+              uppercase={false}
+              rippleColor="transparent"
+              hitSlop={{ top: 1, bottom: 1, left: 9, right: 9 }}
+              contentStyle={styles.paperContent}
               style={[
                 styles.playerButton,
+                styles.paperButton,
                 {
                   backgroundColor: isSelected
                     ? theme.colors.primary
@@ -109,21 +115,18 @@ export default function ActionPlayerSelector({
                   opacity: disabled ? 0.45 : 1,
                 },
               ]}
+              labelStyle={[
+                styles.paperLabel,
+                styles.playerName,
+                {
+                  color: isSelected
+                    ? theme.colors.textLight
+                    : theme.colors.textPrimary,
+                },
+              ]}
             >
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.playerName,
-                  {
-                    color: isSelected
-                      ? theme.colors.textLight
-                      : theme.colors.textPrimary,
-                  },
-                ]}
-              >
-                {player.name}
-              </Text>
-            </Pressable>
+              {player.name}
+            </Button>
           );
         })}
       </View>
@@ -157,6 +160,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     paddingHorizontal: 8,
+  },
+
+  paperButton: {
+    minWidth: 0,
+    alignItems: 'stretch',
+  },
+  paperContent: {
+    height: 34, 
+    paddingHorizontal: 0,
+  },
+  paperLabel: {
+    marginHorizontal: 0,
+    marginVertical: 0,
+    fontFamily: undefined,
+    lineHeight: undefined,
+    letterSpacing: undefined,
+    textAlign: undefined,
+    writingDirection: undefined,
+    flexShrink: 1,
   },
 
   playerName: {
