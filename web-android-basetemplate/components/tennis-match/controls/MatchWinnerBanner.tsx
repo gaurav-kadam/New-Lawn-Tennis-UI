@@ -1,13 +1,22 @@
 import React from 'react';
+import { Text, TouchableRipple } from 'react-native-paper';
 
 import {
-  Pressable,
   StyleSheet,
-  Text,
+  type TextStyle,
   View,
 } from 'react-native';
 
 import { useTheme } from '@/theme/themeContext';
+
+const nativeTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  lineHeight: undefined,
+  letterSpacing: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type Props = {
   winnerName?: string | null | undefined;
@@ -37,6 +46,7 @@ export default function MatchWinnerBanner({
     >
       <Text
         style={[
+          nativeTextDefaults,
           styles.title,
           {
             color: theme.colors.textLight,
@@ -48,6 +58,7 @@ export default function MatchWinnerBanner({
 
       <Text
         style={[
+          nativeTextDefaults,
           styles.winner,
           {
             color: theme.colors.textLight,
@@ -60,6 +71,7 @@ export default function MatchWinnerBanner({
 
       <Text
         style={[
+          nativeTextDefaults,
           styles.subtitle,
           {
             color: theme.colors.textLight,
@@ -70,9 +82,11 @@ export default function MatchWinnerBanner({
       </Text>
 
       {onFinalize && (
-        <Pressable
+        <TouchableRipple
           disabled={isFinalizing}
           onPress={onFinalize}
+          rippleColor="transparent"
+          underlayColor="transparent"
           style={[
             styles.finishButton,
             {
@@ -84,6 +98,7 @@ export default function MatchWinnerBanner({
         >
           <Text
             style={[
+              nativeTextDefaults,
               styles.finishButtonText,
               {
                 color: theme.colors.primary,
@@ -94,7 +109,7 @@ export default function MatchWinnerBanner({
               ? 'Saving Match...'
               : 'Finish Match'}
           </Text>
-        </Pressable>
+        </TouchableRipple>
       )}
     </View>
   );

@@ -3,7 +3,6 @@
   import { Text, TouchableRipple } from 'react-native-paper';
   import { useTheme } from '@/theme/themeContext';
 
-  // Preserve the original RN font metrics rather than Paper typography defaults.
   const nativeTextDefaults: TextStyle = {
     fontFamily: undefined,
     fontWeight: undefined,
