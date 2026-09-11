@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import {
   StyleSheet,
-  Text,
+  type TextStyle,
   View,
 } from 'react-native';
 
@@ -12,6 +12,15 @@ import {
   MatchType,
   PlayerId,
 } from '../types/tennis.types';
+
+const nativeTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  lineHeight: undefined,
+  letterSpacing: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type Props = {
   matchType: MatchType;
@@ -75,6 +84,7 @@ export default function ActionPlayerSelector({
     <View style={styles.container}>
       <Text
         style={[
+          nativeTextDefaults,
           styles.label,
           {
             color: theme.colors.textSecondary,

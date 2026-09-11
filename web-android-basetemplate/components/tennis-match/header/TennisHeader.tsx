@@ -1,9 +1,10 @@
 import React from 'react';
-import { Platform, StyleSheet, Text, type TextStyle, View } from 'react-native';
+import { Platform, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import {
   IconButton,
+  Text,
   Text as PaperText,
   TouchableRipple,
 } from 'react-native-paper';
@@ -132,6 +133,7 @@ export default function TennisHeader({
         <View>
           <Text
             style={[
+              timerTextDefaults,
               styles.title,
               {
                 color: theme.colors.textPrimary,
@@ -143,6 +145,7 @@ export default function TennisHeader({
 
           <Text
             style={[
+              timerTextDefaults,
               styles.subtitle,
               {
                 color: theme.colors.textSecondary,
@@ -159,6 +162,7 @@ export default function TennisHeader({
       <View pointerEvents="box-none" style={styles.center}>
         <Text
           style={[
+            timerTextDefaults,
             styles.timerText,
             {
               color: theme.colors.textPrimary,
@@ -170,6 +174,7 @@ export default function TennisHeader({
 
         <Text
           style={[
+            timerTextDefaults,
             styles.timerLabel,
             {
               color: theme.colors.textSecondary,
@@ -333,6 +338,7 @@ export default function TennisHeader({
 
           <Text
             style={[
+              timerTextDefaults,
               styles.liveText,
               {
                 color: isLive
@@ -349,6 +355,7 @@ export default function TennisHeader({
 
         <Text
           style={[
+            timerTextDefaults,
             styles.courtText,
             {
               color: theme.colors.textPrimary,
