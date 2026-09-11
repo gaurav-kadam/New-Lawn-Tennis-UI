@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { TouchableRipple } from 'react-native-paper';
 
 import { styles } from './TennisCourt.style';
 type CourtPoint = {
@@ -15,7 +16,9 @@ type Props = {
 
 export default function TennisCourt({ points = [], onCourtPress }: Props) {
   return (
-    <Pressable
+    <TouchableRipple
+      rippleColor="transparent"
+      underlayColor="transparent"
       style={styles.container}
       onPress={(event) => {
         if (!onCourtPress) return;
@@ -63,7 +66,7 @@ export default function TennisCourt({ points = [], onCourtPress }: Props) {
 
         </View>
       </View>
-    </Pressable>
+    </TouchableRipple>
   );
 }
 
