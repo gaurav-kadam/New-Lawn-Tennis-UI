@@ -1,6 +1,6 @@
 import React from 'react';
 import { type TextStyle, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Surface, Text } from 'react-native-paper';
 
 import { styles } from './PlayerScorer.styles';
 import { useTheme } from '@/theme/themeContext';
@@ -12,7 +12,6 @@ import {
   SetScore,
 } from '../types/tennis.types';
 
-// Keep RN platform typography defaults; existing per-element styles take precedence.
 const nativeTextDefaults: TextStyle = {
   fontFamily: undefined,
   fontWeight: undefined,
@@ -115,7 +114,9 @@ export default function PlayerScorer({
   ];
 
   return (
-    <View
+    <Surface
+      elevation={0}
+      mode="flat"
       style={[
         styles.card,
         {
@@ -364,6 +365,6 @@ export default function PlayerScorer({
           </View>
         ))}
       </View>
-    </View>
+    </Surface>
   );
 }
