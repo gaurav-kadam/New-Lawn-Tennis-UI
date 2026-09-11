@@ -1,22 +1,27 @@
 import React from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, Text, type TextStyle, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import { IconButton } from 'react-native-paper';
+import {
+  IconButton,
+  Text as PaperText,
+  TouchableRipple,
+} from 'react-native-paper';
 
 import { useTheme } from '@/theme/themeContext';
 import TennisSettingsModal from './TennisSettingsModal';
 
-import {
-  formatMatchTime,
-  MatchTimerStatus,
-} from '../hooks/useMatchTimer';
+import { formatMatchTime, MatchTimerStatus } from '../hooks/useMatchTimer';
+
+// Keep timer labels on the existing native typography.
+const timerTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  lineHeight: undefined,
+  letterSpacing: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type Props = {
   controlsDisabled?: boolean;
@@ -67,41 +72,40 @@ export default function TennisHeader({
   const canStart =
     !controlsDisabled && (timerStatus === 'idle' || timerStatus === 'paused');
 
-  const canPause =
-    !controlsDisabled && timerStatus === 'running';
+  const canPause = !controlsDisabled && timerStatus === 'running';
 
   const canStop =
-    !controlsDisabled && (timerStatus === 'running' || timerStatus === 'paused');
+    !controlsDisabled &&
+    (timerStatus === 'running' || timerStatus === 'paused');
 
- const statusLabel = matchCompleted
-  ? 'COMPLETED'
-  : timerStatus === 'running'
-    ? 'LIVE'
-    : timerStatus === 'paused'
-      ? 'PAUSED'
-      : timerStatus === 'stopped'
-        ? 'STOPPED'
-        : 'READY';
+  const statusLabel = matchCompleted
+    ? 'COMPLETED'
+    : timerStatus === 'running'
+      ? 'LIVE'
+      : timerStatus === 'paused'
+        ? 'PAUSED'
+        : timerStatus === 'stopped'
+          ? 'STOPPED'
+          : 'READY';
 
-const isLive =
-  timerStatus === 'running' &&
-  !matchCompleted;
+  const isLive = timerStatus === 'running' && !matchCompleted;
 
-const [settingsVisible, setSettingsVisible] =
-  React.useState(false);
+  const [settingsVisible, setSettingsVisible] = React.useState(false);
 
   const [settingsPressed, setSettingsPressed] = React.useState(false);
+
+  const [startPressed, setStartPressed] = React.useState(false);
+  const [pausePressed, setPausePressed] = React.useState(false);
+  const [stopPressed, setStopPressed] = React.useState(false);
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor:
-            theme.colors.surface,
+          backgroundColor: theme.colors.surface,
 
-          borderColor:
-            theme.colors.border,
+          borderColor: theme.colors.border,
         },
       ]}
     >
@@ -130,8 +134,7 @@ const [settingsVisible, setSettingsVisible] =
             style={[
               styles.title,
               {
-                color:
-                  theme.colors.textPrimary,
+                color: theme.colors.textPrimary,
               },
             ]}
           >
@@ -142,252 +145,220 @@ const [settingsVisible, setSettingsVisible] =
             style={[
               styles.subtitle,
               {
-                color:
-                  theme.colors.textSecondary,
+                color: theme.colors.textSecondary,
               },
             ]}
           >
-            {matchNo
-              ? `Match ${matchNo}`
-              : 'Live Scoreboard'}
+            {matchNo ? `Match ${matchNo}` : 'Live Scoreboard'}
           </Text>
         </View>
       </View>
 
       {/* CENTER TIMER */}
 
-      <View
-        pointerEvents="box-none"
-        style={styles.center}
-      >
+      <View pointerEvents="box-none" style={styles.center}>
         <Text
           style={[
             styles.timerText,
             {
-              color:
-                theme.colors.textPrimary,
+              color: theme.colors.textPrimary,
             },
           ]}
         >
-          {formatMatchTime(
-            elapsedSeconds
-          )}
+          {formatMatchTime(elapsedSeconds)}
         </Text>
 
         <Text
           style={[
             styles.timerLabel,
             {
-              color:
-                theme.colors.textSecondary,
+              color: theme.colors.textSecondary,
             },
           ]}
         >
           MATCH TIME
         </Text>
 
-        <View
-          style={styles.timerControls}
-        >
+        <View style={styles.timerControls}>
           {/* START / RESUME */}
 
-          <Pressable
+          <TouchableRipple
+            rippleColor="transparent"
+            underlayColor="transparent"
+            onPressIn={() => setStartPressed(true)}
+            onPressOut={() => setStartPressed(false)}
             onPress={onStart}
             disabled={!canStart}
-            style={({ pressed }) => [
+            style={[
               styles.timerButton,
               {
-                backgroundColor:
-                  theme.colors.success,
+                backgroundColor: theme.colors.success,
 
-                borderColor:
-                  theme.colors.success,
+                borderColor: theme.colors.success,
 
-                opacity: !canStart
-                  ? 0.35
-                  : pressed
-                    ? 0.75
-                    : 1,
+                opacity: !canStart ? 0.35 : startPressed ? 0.75 : 1,
               },
             ]}
           >
-            <Ionicons
-              name="play"
-              size={13}
-              color={
-                theme.colors.textLight
-              }
-            />
+            <>
+              <Ionicons name="play" size={13} color={theme.colors.textLight} />
 
-            <Text
-              style={[
-                styles.timerButtonText,
-                {
-                  color:
-                    theme.colors.textLight,
-                },
-              ]}
-            >
-              {timerStatus ===
-              'paused'
-                ? 'RESUME'
-                : 'START'}
-            </Text>
-          </Pressable>
+              <PaperText
+                style={[
+                  timerTextDefaults,
+                  styles.timerButtonText,
+                  {
+                    color: theme.colors.textLight,
+                  },
+                ]}
+              >
+                {timerStatus === 'paused' ? 'RESUME' : 'START'}
+              </PaperText>
+            </>
+          </TouchableRipple>
 
           {/* PAUSE */}
 
-          <Pressable
+          <TouchableRipple
+            rippleColor="transparent"
+            underlayColor="transparent"
+            onPressIn={() => setPausePressed(true)}
+            onPressOut={() => setPausePressed(false)}
             onPress={onPause}
             disabled={!canPause}
-            style={({ pressed }) => [
+            style={[
               styles.timerButton,
               {
-                backgroundColor:
-                  theme.colors.surface,
+                backgroundColor: theme.colors.surface,
 
-                borderColor:
-                  theme.colors.border,
+                borderColor: theme.colors.border,
 
-                opacity: !canPause
-                  ? 0.35
-                  : pressed
-                    ? 0.75
-                    : 1,
+                opacity: !canPause ? 0.35 : pausePressed ? 0.75 : 1,
               },
             ]}
           >
-            <Ionicons
-              name="pause"
-              size={13}
-              color={
-                theme.colors.textPrimary
-              }
-            />
+            <>
+              <Ionicons
+                name="pause"
+                size={13}
+                color={theme.colors.textPrimary}
+              />
 
-            <Text
-              style={[
-                styles.timerButtonText,
-                {
-                  color:
-                    theme.colors.textPrimary,
-                },
-              ]}
-            >
-              PAUSE
-            </Text>
-          </Pressable>
+              <PaperText
+                style={[
+                  timerTextDefaults,
+                  styles.timerButtonText,
+                  {
+                    color: theme.colors.textPrimary,
+                  },
+                ]}
+              >
+                PAUSE
+              </PaperText>
+            </>
+          </TouchableRipple>
 
           {/* STOP */}
 
-          <Pressable
+          <TouchableRipple
+            rippleColor="transparent"
+            underlayColor="transparent"
+            onPressIn={() => setStopPressed(true)}
+            onPressOut={() => setStopPressed(false)}
             onPress={onStop}
             disabled={!canStop}
-            style={({ pressed }) => [
+            style={[
               styles.timerButton,
               {
-                backgroundColor:
-                  theme.colors.error,
+                backgroundColor: theme.colors.error,
 
-                borderColor:
-                  theme.colors.error,
+                borderColor: theme.colors.error,
 
-                opacity: !canStop
-                  ? 0.35
-                  : pressed
-                    ? 0.75
-                    : 1,
+                opacity: !canStop ? 0.35 : stopPressed ? 0.75 : 1,
               },
             ]}
           >
-            <Ionicons
-              name="stop"
-              size={13}
-              color={
-                theme.colors.textLight
-              }
-            />
+            <>
+              <Ionicons name="stop" size={13} color={theme.colors.textLight} />
 
-            <Text
-              style={[
-                styles.timerButtonText,
-                {
-                  color:
-                    theme.colors.textLight,
-                },
-              ]}
-            >
-              STOP
-            </Text>
-          </Pressable>
+              <PaperText
+                style={[
+                  timerTextDefaults,
+                  styles.timerButtonText,
+                  {
+                    color: theme.colors.textLight,
+                  },
+                ]}
+              >
+                STOP
+              </PaperText>
+            </>
+          </TouchableRipple>
         </View>
       </View>
-    
-    {/* RIGHT */}
+
+      {/* RIGHT */}
 
       <View style={styles.right}>
         <View
+          style={[
+            styles.liveBadge,
+            {
+              backgroundColor: isLive
+                ? `${theme.colors.success}18`
+                : matchCompleted
+                  ? `${theme.colors.primary}18`
+                  : `${theme.colors.border}18`,
+
+              borderColor: isLive
+                ? theme.colors.success
+                : matchCompleted
+                  ? theme.colors.primary
+                  : theme.colors.border,
+            },
+          ]}
+        >
+          <View
             style={[
-              styles.liveBadge,
+              styles.liveDot,
               {
                 backgroundColor: isLive
-                  ? `${theme.colors.success}18`
-                  : matchCompleted
-                    ? `${theme.colors.primary}18`
-                    : `${theme.colors.border}18`,
-              
-                borderColor: isLive
                   ? theme.colors.success
                   : matchCompleted
                     ? theme.colors.primary
-                    : theme.colors.border,
+                    : theme.colors.textSecondary,
+              },
+            ]}
+          />
+
+          <Text
+            style={[
+              styles.liveText,
+              {
+                color: isLive
+                  ? theme.colors.success
+                  : matchCompleted
+                    ? theme.colors.primary
+                    : theme.colors.textSecondary,
               },
             ]}
           >
-            <View
-              style={[
-                styles.liveDot,
-                {
-                  backgroundColor: isLive
-                    ? theme.colors.success
-                    : matchCompleted
-                      ? theme.colors.primary
-                      : theme.colors.textSecondary,
-                },
-              ]}
-            />
-          
-            <Text
-              style={[
-                styles.liveText,
-                {
-                  color: isLive
-                    ? theme.colors.success
-                    : matchCompleted
-                      ? theme.colors.primary
-                      : theme.colors.textSecondary,
-                },
-              ]}
-            >
-              {statusLabel}
-            </Text>
-          </View>
+            {statusLabel}
+          </Text>
+        </View>
 
         <Text
           style={[
             styles.courtText,
             {
-              color:
-                theme.colors.textPrimary,
+              color: theme.colors.textPrimary,
             },
           ]}
         >
           {courtName}
         </Text>
         <IconButton
-          onPress={() =>
-            setSettingsVisible(true)
-          }
+          onPress={() => setSettingsVisible(true)}
           onPressIn={() => setSettingsPressed(true)}
           onPressOut={() => setSettingsPressed(false)}
           size={18}
@@ -409,26 +380,20 @@ const [settingsVisible, setSettingsVisible] =
             },
           ]}
         />
-          
+
         <TennisSettingsModal
           actionsDisabled={controlsDisabled}
           visible={settingsVisible}
           isFullscreen={isFullscreen}
-          
-          onClose={() =>
-            setSettingsVisible(false)
-          }
-        
+          onClose={() => setSettingsVisible(false)}
           onRestart={() => {
             setSettingsVisible(false);
             onRestartMatch();
           }}
-        
           onReset={() => {
             setSettingsVisible(false);
             onResetMatch();
           }}
-        
           onToggleFullscreen={() => {
             onToggleFullscreen();
             setSettingsVisible(false);
@@ -448,8 +413,7 @@ const styles = StyleSheet.create({
 
     flexDirection: 'row',
 
-    justifyContent:
-      'space-between',
+    justifyContent: 'space-between',
 
     alignItems: 'center',
 
@@ -486,8 +450,7 @@ const styles = StyleSheet.create({
 
     alignItems: 'center',
 
-    justifyContent:
-      'center',
+    justifyContent: 'center',
 
     zIndex: 2,
   },
@@ -499,8 +462,7 @@ const styles = StyleSheet.create({
 
     alignItems: 'center',
 
-    justifyContent:
-      'flex-end',
+    justifyContent: 'flex-end',
 
     gap: 8,
 
@@ -515,8 +477,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 11,
     fontWeight: '700',
-    textTransform:
-      'uppercase',
+    textTransform: 'uppercase',
   },
 
   iconButton: {
@@ -583,9 +544,7 @@ const styles = StyleSheet.create({
 
     fontWeight: '900',
 
-    fontVariant: [
-      'tabular-nums',
-    ],
+    fontVariant: ['tabular-nums'],
 
     letterSpacing: 1.5,
   },
@@ -599,8 +558,7 @@ const styles = StyleSheet.create({
 
     letterSpacing: 0.8,
 
-    textTransform:
-      'uppercase',
+    textTransform: 'uppercase',
   },
 
   timerControls: {
