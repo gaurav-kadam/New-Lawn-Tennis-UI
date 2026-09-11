@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { Text, TouchableRipple } from 'react-native-paper';
 import {
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
-  Text,
+  type TextStyle,
   View,
 } from 'react-native';
 
 import { useTheme } from '@/theme/themeContext';
+
+// Existing text styles override these neutralized Paper typography defaults.
+const nativeTextDefaults: TextStyle = {
+  fontFamily: undefined,
+  fontWeight: undefined,
+  lineHeight: undefined,
+  letterSpacing: undefined,
+  textAlign: undefined,
+  writingDirection: undefined,
+};
 
 type SettingsAction = 'RESTART' | 'RESET' | null;
 
@@ -34,8 +44,7 @@ export default function TennisSettingsModal({
 }: Props) {
   const theme = useTheme();
 
-  const [confirmAction, setConfirmAction] =
-    useState<SettingsAction>(null);
+  const [confirmAction, setConfirmAction] = useState<SettingsAction>(null);
 
   const closeModal = () => {
     setConfirmAction(null);
@@ -54,9 +63,7 @@ export default function TennisSettingsModal({
   };
 
   const confirmationTitle =
-    confirmAction === 'RESTART'
-      ? 'Restart Match?'
-      : 'Reset Match?';
+    confirmAction === 'RESTART' ? 'Restart Match?' : 'Reset Match?';
 
   const confirmationMessage =
     confirmAction === 'RESTART'
@@ -71,10 +78,14 @@ export default function TennisSettingsModal({
       onRequestClose={closeModal}
     >
       <View style={styles.overlay}>
-        <Pressable
+        <TouchableRipple
+          rippleColor="transparent"
+          underlayColor="transparent"
           style={StyleSheet.absoluteFill}
           onPress={closeModal}
-        />
+        >
+          <View />
+        </TouchableRipple>
 
         <View
           style={[
@@ -117,10 +128,10 @@ export default function TennisSettingsModal({
                 <View style={styles.confirmTitleWrap}>
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.title,
                       {
-                        color:
-                          theme.colors.textPrimary,
+                        color: theme.colors.textPrimary,
                       },
                     ]}
                   >
@@ -129,10 +140,10 @@ export default function TennisSettingsModal({
 
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.confirmMessage,
                       {
-                        color:
-                          theme.colors.textSecondary,
+                        color: theme.colors.textSecondary,
                       },
                     ]}
                   >
@@ -142,33 +153,34 @@ export default function TennisSettingsModal({
               </View>
 
               <View style={styles.confirmActions}>
-                <Pressable
-                  onPress={() =>
-                    setConfirmAction(null)
-                  }
+                <TouchableRipple
+                  rippleColor="transparent"
+                  underlayColor="transparent"
+                  onPress={() => setConfirmAction(null)}
                   style={[
                     styles.confirmButton,
                     styles.cancelButton,
                     {
-                      borderColor:
-                        theme.colors.border,
+                      borderColor: theme.colors.border,
                     },
                   ]}
                 >
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.confirmButtonText,
                       {
-                        color:
-                          theme.colors.textPrimary,
+                        color: theme.colors.textPrimary,
                       },
                     ]}
                   >
                     CANCEL
                   </Text>
-                </Pressable>
+                </TouchableRipple>
 
-                <Pressable
+                <TouchableRipple
+                  rippleColor="transparent"
+                  underlayColor="transparent"
                   onPress={handleConfirm}
                   disabled={actionsDisabled}
                   style={[
@@ -188,16 +200,16 @@ export default function TennisSettingsModal({
                 >
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.confirmButtonText,
                       {
-                        color:
-                          theme.colors.textLight,
+                        color: theme.colors.textLight,
                       },
                     ]}
                   >
                     {confirmAction}
                   </Text>
-                </Pressable>
+                </TouchableRipple>
               </View>
             </>
           ) : (
@@ -208,10 +220,10 @@ export default function TennisSettingsModal({
                 <View>
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.title,
                       {
-                        color:
-                          theme.colors.textPrimary,
+                        color: theme.colors.textPrimary,
                       },
                     ]}
                   >
@@ -220,10 +232,10 @@ export default function TennisSettingsModal({
 
                   <Text
                     style={[
+                      nativeTextDefaults,
                       styles.subtitle,
                       {
-                        color:
-                          theme.colors.textSecondary,
+                        color: theme.colors.textSecondary,
                       },
                     ]}
                   >
@@ -231,24 +243,23 @@ export default function TennisSettingsModal({
                   </Text>
                 </View>
 
-                <Pressable
+                <TouchableRipple
+                  rippleColor="transparent"
+                  underlayColor="transparent"
                   onPress={closeModal}
                   style={[
                     styles.closeButton,
                     {
-                      borderColor:
-                        theme.colors.border,
+                      borderColor: theme.colors.border,
                     },
                   ]}
                 >
                   <Ionicons
                     name="close"
                     size={18}
-                    color={
-                      theme.colors.textPrimary
-                    }
+                    color={theme.colors.textPrimary}
                   />
-                </Pressable>
+                </TouchableRipple>
               </View>
 
               {/* MATCH */}
@@ -257,37 +268,22 @@ export default function TennisSettingsModal({
                 style={[
                   styles.section,
                   {
-                    borderTopColor:
-                      theme.colors.border,
+                    borderTopColor: theme.colors.border,
                   },
                 ]}
               >
-                <Text style={styles.sectionTitle}>
-                  MATCH
-                </Text>
+                <Text style={[nativeTextDefaults, styles.sectionTitle]}>MATCH</Text>
 
                 <SettingsRow
                   icon="refresh-outline"
                   disabled={actionsDisabled}
                   title="Restart Match"
                   description="Start this match again from 0–0"
-                  iconColor={
-                    theme.colors.primary
-                  }
-                  textColor={
-                    theme.colors.textPrimary
-                  }
-                  secondaryColor={
-                    theme.colors.textSecondary
-                  }
-                  borderColor={
-                    theme.colors.border
-                  }
-                  onPress={() =>
-                    setConfirmAction(
-                      'RESTART'
-                    )
-                  }
+                  iconColor={theme.colors.primary}
+                  textColor={theme.colors.textPrimary}
+                  secondaryColor={theme.colors.textSecondary}
+                  borderColor={theme.colors.border}
+                  onPress={() => setConfirmAction('RESTART')}
                 />
 
                 <SettingsRow
@@ -295,23 +291,11 @@ export default function TennisSettingsModal({
                   disabled={actionsDisabled}
                   title="Reset Match"
                   description="Clear this session and return to Matches"
-                  iconColor={
-                    theme.colors.error
-                  }
-                  textColor={
-                    theme.colors.textPrimary
-                  }
-                  secondaryColor={
-                    theme.colors.textSecondary
-                  }
-                  borderColor={
-                    theme.colors.border
-                  }
-                  onPress={() =>
-                    setConfirmAction(
-                      'RESET'
-                    )
-                  }
+                  iconColor={theme.colors.error}
+                  textColor={theme.colors.textPrimary}
+                  secondaryColor={theme.colors.textSecondary}
+                  borderColor={theme.colors.border}
+                  onPress={() => setConfirmAction('RESET')}
                 />
               </View>
 
@@ -322,48 +306,25 @@ export default function TennisSettingsModal({
                   style={[
                     styles.section,
                     {
-                      borderTopColor:
-                        theme.colors.border,
+                      borderTopColor: theme.colors.border,
                     },
                   ]}
                 >
-                  <Text
-                    style={styles.sectionTitle}
-                  >
-                    DISPLAY
-                  </Text>
+                  <Text style={[nativeTextDefaults, styles.sectionTitle]}>DISPLAY</Text>
 
                   <SettingsRow
-                    icon={
-                      isFullscreen
-                        ? 'contract-outline'
-                        : 'expand-outline'
-                    }
-                    title={
-                      isFullscreen
-                        ? 'Exit Full Screen'
-                        : 'Full Screen'
-                    }
+                    icon={isFullscreen ? 'contract-outline' : 'expand-outline'}
+                    title={isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
                     description={
                       isFullscreen
                         ? 'Leave browser fullscreen mode'
                         : 'Use the complete screen for scoring'
                     }
-                    iconColor={
-                      theme.colors.primary
-                    }
-                    textColor={
-                      theme.colors.textPrimary
-                    }
-                    secondaryColor={
-                      theme.colors.textSecondary
-                    }
-                    borderColor={
-                      theme.colors.border
-                    }
-                    onPress={
-                      onToggleFullscreen
-                    }
+                    iconColor={theme.colors.primary}
+                    textColor={theme.colors.textPrimary}
+                    secondaryColor={theme.colors.textSecondary}
+                    borderColor={theme.colors.border}
+                    onPress={onToggleFullscreen}
                   />
                 </View>
               )}
@@ -377,9 +338,7 @@ export default function TennisSettingsModal({
 
 type SettingsRowProps = {
   disabled?: boolean;
-  icon: React.ComponentProps<
-    typeof Ionicons
-  >['name'];
+  icon: React.ComponentProps<typeof Ionicons>['name'];
 
   title: string;
   description: string;
@@ -403,38 +362,40 @@ function SettingsRow({
   borderColor,
   onPress,
 }: SettingsRowProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
-    <Pressable
+    <TouchableRipple
+      rippleColor="transparent"
+      underlayColor="transparent"
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
         styles.row,
         {
-          borderBottomColor:
-            borderColor,
+          borderBottomColor: borderColor,
           opacity: pressed ? 0.72 : 1,
         },
       ]}
     >
+      <>
       <View
         style={[
           styles.rowIcon,
           {
-            backgroundColor:
-              `${iconColor}18`,
+            backgroundColor: `${iconColor}18`,
           },
         ]}
       >
-        <Ionicons
-          name={icon}
-          size={18}
-          color={iconColor}
-        />
+        <Ionicons name={icon} size={18} color={iconColor} />
       </View>
 
       <View style={styles.rowContent}>
         <Text
           style={[
+            nativeTextDefaults,
             styles.rowTitle,
             {
               color: textColor,
@@ -446,6 +407,7 @@ function SettingsRow({
 
         <Text
           style={[
+            nativeTextDefaults,
             styles.rowDescription,
             {
               color: secondaryColor,
@@ -456,20 +418,16 @@ function SettingsRow({
         </Text>
       </View>
 
-      <Ionicons
-        name="chevron-forward"
-        size={16}
-        color={secondaryColor}
-      />
-    </Pressable>
+      <Ionicons name="chevron-forward" size={16} color={secondaryColor} />
+      </>
+    </TouchableRipple>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor:
-      'rgba(2, 6, 23, 0.42)',
+    backgroundColor: 'rgba(2, 6, 23, 0.42)',
 
     alignItems: 'flex-end',
     justifyContent: 'flex-start',
