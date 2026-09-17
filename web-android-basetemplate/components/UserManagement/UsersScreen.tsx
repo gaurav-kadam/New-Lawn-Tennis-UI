@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
 
 import DeleteModal from '../../components/elements/DeleteModal';
@@ -16,28 +16,23 @@ import { useUsers } from '@/hooks/useUsers';
 export default function UsersScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { user, isLoggedIn, loading: authLoading } = useAuth();
+  const canAccess = !authLoading && isLoggedIn && user?.role?.role_name?.toLowerCase() === 'supervisor';
   const { width: screenWidth } = useWindowDimensions();
   const isMobile = screenWidth < 768;
 
   // Pulling complete user list to hand off to local visual presentation filters
-  const { users: masterUsersList, reload: reloadUsers } = useUsers({});
+  const { users: masterUsersList, reload: reloadUsers } = useUsers({ enabled: canAccess });
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [deleteModal, setDeleteModal] = useState(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (!storedUser) return;
-      const user = JSON.parse(storedUser);
-      const role = user?.role?.role_name || user?.role_name || user?.role;
-      if (role !== 'Supervisor') {
-        router.replace('/dashboard');
-      }
-    };
-    checkAccess();
-  }, []);
+    if (!authLoading && !canAccess) {
+      router.replace('/dashboard');
+    }
+  }, [authLoading, canAccess, router]);
 
   const openCreateModal = () => {
     setSelectedUser(null);
@@ -63,6 +58,8 @@ export default function UsersScreen() {
     setDeleteModal(false);
     setSelectedUser(null);
   };
+
+  if (!canAccess) return null;
 
   return (
     <View style={{ flex: 1, height: '100vh' as any, overflow: 'hidden' as any, backgroundColor: theme.colors.background }}>

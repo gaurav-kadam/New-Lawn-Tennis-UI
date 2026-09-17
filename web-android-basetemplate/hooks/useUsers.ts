@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import UserService from '../services/users/user.Service';
 
 export const useUsers = (options?: {
+  enabled?: boolean;
   isActive?: boolean;
   search?: string;
   page?: number;
@@ -12,9 +13,11 @@ export const useUsers = (options?: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { isActive, search, page = 0, rowsPerPage = 10 } = options || {};
+  const { enabled = true, isActive, search, page = 0, rowsPerPage = 10 } = options || {};
 
   const loadUsers = useCallback(async () => {
+    if (!enabled) return;
+
     try {
       setLoading(true);
       setError('');
@@ -40,7 +43,7 @@ export const useUsers = (options?: {
     } finally {
       setLoading(false);
     }
-  }, [isActive, search, page, rowsPerPage]);
+  }, [enabled, isActive, search, page, rowsPerPage]);
 
   useEffect(() => {
     loadUsers();
