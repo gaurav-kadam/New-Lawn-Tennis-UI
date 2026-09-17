@@ -43,9 +43,7 @@ export default function PlayersScreen() {
     role === 'admin' ||
     role === 'supervisor';
 
-  /* ----------------------------------------------------------
-     STATE
-  ---------------------------------------------------------- */
+    //  STATE
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -68,9 +66,7 @@ export default function PlayersScreen() {
     loading: false,
   });
 
-  /* ----------------------------------------------------------
-     DATA
-  ---------------------------------------------------------- */
+    //  DATA
 
   const {
     players = [],
@@ -83,9 +79,7 @@ export default function PlayersScreen() {
     pageSize,
   });
 
-  /* ----------------------------------------------------------
-     SCORER ACCESS
-  ---------------------------------------------------------- */
+    //  SCORER ACCESS
 
   useEffect(() => {
     if (role === 'scorer') {
@@ -93,9 +87,7 @@ export default function PlayersScreen() {
     }
   }, [role, router]);
 
-  /* ----------------------------------------------------------
-     FILTER + SEARCH
-  ---------------------------------------------------------- */
+    //  FILTER + SEARCH
 
   const filteredPlayers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -141,9 +133,7 @@ export default function PlayersScreen() {
     });
   }, [players, search, filter]);
 
-  /* ----------------------------------------------------------
-     MODAL
-  ---------------------------------------------------------- */
+    //  MODAL
 
   const openCreate = () => {
     if (!canCrud) return;
@@ -164,9 +154,7 @@ export default function PlayersScreen() {
     setEditingPlayer(null);
   };
 
-  /* ----------------------------------------------------------
-     CREATE / UPDATE
-  ---------------------------------------------------------- */
+    //  CREATE / UPDATE
 
   const savePlayer = async (data: any) => {
     try {
@@ -202,9 +190,7 @@ export default function PlayersScreen() {
     }
   };
 
-  /* ----------------------------------------------------------
-     DELETE
-  ---------------------------------------------------------- */
+    //  DELETE
 
   const requestDelete = (id: any) => {
     if (!canCrud || id == null) return;
@@ -270,26 +256,16 @@ export default function PlayersScreen() {
     }
   };
 
-  /* ----------------------------------------------------------
-     FILTER
-  ---------------------------------------------------------- */
-
+  
   const changeFilter = (value: Filter) => {
     setFilter(value);
     setPage(1);
   };
 
-  /* ----------------------------------------------------------
-     SCORER REDIRECT
-  ---------------------------------------------------------- */
-
+ 
   if (role === 'scorer') {
     return null;
   }
-
-  /* ----------------------------------------------------------
-     RENDER
-  ---------------------------------------------------------- */
 
   return (
     <View
@@ -573,9 +549,9 @@ export default function PlayersScreen() {
         {!loading && !error && total > 0 && (
           <Pagination
             total={total}
-            page={page}
+            page={page - 1}
             rowsPerPage={pageSize}
-            onPageChange={setPage}
+            onPageChange={(pageIndex) => setPage(pageIndex + 1)}
             onRowsPerPageChange={(value: number) => {
               setPageSize(value);
               setPage(1);
