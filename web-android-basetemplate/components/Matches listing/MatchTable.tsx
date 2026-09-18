@@ -21,22 +21,17 @@ export default function MatchesTable({
   onEdit,
   onDelete,
   onStartMatch,
+  page,
+  setPage,
+  rowsPerPage,
+  setRowsPerPage,
+  total,
 }: any) {
   const theme = useTheme();
-
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-
   const [filter, setFilter] = useState<MatchFilter>('all');
-
   const [search, setSearch] = useState('');
 
-  const [page, setPage] = useState(0);
-
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  // ============================================================
-  // DATE
-  // ============================================================
 
   const formatDateToDisplay = (rawDate: any) => {
     if (!rawDate) {
@@ -55,10 +50,6 @@ export default function MatchesTable({
 
     return value;
   };
-
-  // ============================================================
-  // PLAYER NAME
-  // ============================================================
 
   const getPlayerName = (playerCode: any) => {
     if (playerCode === undefined || playerCode === null || playerCode === '') {
@@ -90,10 +81,6 @@ export default function MatchesTable({
     );
   };
 
-  // ============================================================
-  // TEAM NAME FALLBACK
-  // ============================================================
-
   const getTeamName = (value: any) => {
     if (value === undefined || value === null || value === '') {
       return '—';
@@ -120,10 +107,6 @@ export default function MatchesTable({
     );
   };
 
-  // ============================================================
-  // SIDE / PLAYER 1
-  // ============================================================
-
   const getSideA = (match: any) => {
     const matchType = String(
       match?.match_type || match?.matchType || 'SINGLES'
@@ -147,10 +130,6 @@ export default function MatchesTable({
 
     return `${player1 || '—'} / ${player3 || '—'}`;
   };
-
-  // ============================================================
-  // SIDE / PLAYER 2
-  // ============================================================
 
   const getSideB = (match: any) => {
     const matchType = String(
@@ -180,10 +159,6 @@ export default function MatchesTable({
     return `${player3 || '—'} / ${player4 || '—'}`;
   };
 
-  // ============================================================
-  // OFFICIAL / SCORER
-  // ============================================================
-
   const getOfficialName = (officialId: any) => {
     if (officialId === undefined || officialId === null || officialId === '') {
       return '—';
@@ -210,10 +185,6 @@ export default function MatchesTable({
     );
   };
 
-  // ============================================================
-  // COMPLETION CHECK
-  // ============================================================
-
   const isMatchCompleted = (match: any) => {
     return (
       match?.status === 'COMPLETED' ||
@@ -225,10 +196,6 @@ export default function MatchesTable({
       Boolean(match?.winner || match?.match_winner)
     );
   };
-
-  // ============================================================
-  // MATCH FORMAT
-  // ============================================================
 
   const getMatchFormat = (match: any) => {
     const format = String(
@@ -245,9 +212,6 @@ export default function MatchesTable({
 
     return '—';
   };
-  // ============================================================
-  // MATCH TYPE
-  // ============================================================
 
   const getMatchType = (match: any) => {
     const type = String(
@@ -264,9 +228,6 @@ export default function MatchesTable({
 
     return '—';
   };
-  // ============================================================
-  // FILTER + SEARCH
-  // ============================================================
 
   const filteredMatches = useMemo(() => {
     return matches.filter((match: any) => {
@@ -309,39 +270,17 @@ export default function MatchesTable({
     });
   }, [matches, filter, search]);
 
-  // ============================================================
-  // PAGINATION
-  // ============================================================
-
-  const paginatedRows = useMemo(() => {
-    const start = page * rowsPerPage;
-
-    const end = start + rowsPerPage;
-
-    return filteredMatches.slice(start, end);
-  }, [filteredMatches, page, rowsPerPage]);
-
-  // ============================================================
-  // HEADER STYLE
-  // ============================================================
+  const paginatedRows = filteredMatches;
 
   const headerStyle = {
     fontSize: tokens.typography.sizes.cooldownTimer,
-
     fontWeight: tokens.typography.weights.bold as any,
-
     textTransform: 'uppercase' as const,
-
     letterSpacing: 1.2,
-
     color: theme.colors.textSecondary || tokens.colors.textSecondary,
 
     fontFamily: theme.typography.fontFamily || tokens.typography.fontFamily,
   };
-
-  // ============================================================
-  // RENDER
-  // ============================================================
 
   return (
     <View
@@ -764,7 +703,7 @@ export default function MatchesTable({
       {/* PAGINATION */}
 
       <Pagination
-        total={filteredMatches.length}
+        total={total}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={setPage}

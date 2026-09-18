@@ -26,8 +26,8 @@ export const useMatches = (
       setError('');
 
       const params: Record<string, any> = {
-        skip: page * rowsPerPage,
-        limit: rowsPerPage,
+        page: page + 1,
+        page_size: rowsPerPage,
       };
 
       if (isComplete !== undefined) {

@@ -43,8 +43,9 @@ export default function MatchesScreen() {
     tournament_code?: string;
   }>();
 
-  // Fetch complete datasets to enable high-performance client-side operations
-  const { matches = [], loading, error, reload } = useMatches();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const { matches = [], total, loading, error, reload } = useMatches(undefined, undefined, page, rowsPerPage);
   const { teams = [], reload: fetchTeams } = useTeams({ lazy: true });
   const { officials = [], reload: fetchOfficials } = useOfficials({
     rowsPerPage: 500,
@@ -364,6 +365,11 @@ export default function MatchesScreen() {
       {isMobile ? (
         <MatchCardList
           matches={matches}
+          page={page}
+          setPage={setPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          total={total}
           teams={teams}
           officials={officials}
           onEdit={openEditModal}
@@ -373,6 +379,11 @@ export default function MatchesScreen() {
       ) : (
         <MatchTable
           matches={matches}
+          page={page}
+          setPage={setPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          total={total}
           teams={teams}
           officials={officials}
           onEdit={openEditModal}

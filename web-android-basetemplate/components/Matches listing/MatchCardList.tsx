@@ -18,14 +18,18 @@ export default function MatchCardList({
   onEdit,
   onDelete,
   onStartMatch,
+  page,
+  setPage,
+  rowsPerPage,
+  setRowsPerPage,
+  total,
 }: any) {
   const theme = useTheme();
 
   // Local state controls for managing list configurations natively
   const [filter, setFilter] = useState<MatchFilter>('all');
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+
 
   const getTeamName = (teamIdOrField: any) => {
     if (!teamIdOrField) return '—';
@@ -60,11 +64,7 @@ export default function MatchCardList({
     });
   }, [matches, filter, search]);
 
-  const paginatedCards = useMemo(() => {
-    const start = page * rowsPerPage;
-    const end = start + rowsPerPage;
-    return filteredMatches.slice(start, end);
-  }, [filteredMatches, page, rowsPerPage]);
+  const paginatedCards = filteredMatches;
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, padding: theme.spacing.md || 15, gap: 14 }}>
@@ -186,7 +186,7 @@ export default function MatchCardList({
       )}
 
       <Pagination
-        total={filteredMatches.length}
+        total={total}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={setPage}
