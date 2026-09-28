@@ -7,15 +7,15 @@ class UserService {
   }
 
   async createUser(payload: any) {
-    return ApiService.post('/users', payload);
+    return ApiService.post('/user', payload);
   }
 
   async updateUser(id: number, payload: any) {
-    return ApiService.put(`/users/${id}`, payload);
+    return ApiService.put(`/user/${id}`, payload);
   }
 
   async deleteUser(id: number) {
-    return ApiService.delete(`/users/${id}`);
+    return ApiService.delete(`/user/${id}`);
   }
 }
 

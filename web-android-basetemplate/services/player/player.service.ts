@@ -23,14 +23,14 @@ class PlayerService {
   }
 
   async getPlayerById(id: number) {
-    return ApiService.get(`/players/${id}`);
+    return ApiService.get(`/player/${id}`);
   }
 
   async createPlayer(
     payload: PlayerCreatePayload
   ) {
     return ApiService.post(
-      '/players',
+      '/player',
       payload
     );
   }
@@ -40,35 +40,24 @@ class PlayerService {
     payload: PlayerUpdatePayload
   ) {
     return ApiService.put(
-      `/players/${id}`,
+      `/player/${id}`,
       payload
     );
   }
 
   async deletePlayer(id: number) {
     return ApiService.delete(
-      `/players/${id}`
+      `/player/${id}`
     );
   }
 
   async restorePlayer(id: number) {
     return ApiService.post(
-      `/players/${id}/restore`,
+      `/player/${id}/restore`,
       {}
     );
   }
 
-  /*
-   * Kept for the existing match flow.
-   * Do not remove this yet.
-   */
-  async getPlayersByTeamCode(
-    teamCode: string
-  ) {
-    return ApiService.get(
-      `/teams/code/${teamCode}/players`
-    );
-  }
 }
 
 export default new PlayerService();

@@ -66,7 +66,7 @@ class MatchService {
     params?: Record<string, any>
   ) {
     return ApiService.get(
-      `/matches/tournament/${tournamentCode}`,
+      `/match/tournament/${tournamentCode}`,
       params
     );
   }
@@ -75,7 +75,7 @@ class MatchService {
     id: number | string
   ) {
     return ApiService.get(
-      `/matches/${id}`
+      `/match/${id}`
     );
   }
 
@@ -93,7 +93,7 @@ class MatchService {
     );
 
     return ApiService.post(
-      '/matches',
+      '/match',
       payload
     );
   }
@@ -103,7 +103,7 @@ class MatchService {
     data: MatchPayload
   ) {
     return ApiService.put(
-      `/matches/${id}`,
+      `/match/${id}`,
       this.mapToBackend(data)
     );
   }
@@ -112,16 +112,7 @@ class MatchService {
     id: number | string
   ) {
     return ApiService.delete(
-      `/matches/${id}`
-    );
-  }
-
-  async completeMatch(
-    id: number | string
-  ) {
-    return ApiService.post(
-      `/matches/${id}/complete`,
-      {}
+      `/match/${id}`
     );
   }
 

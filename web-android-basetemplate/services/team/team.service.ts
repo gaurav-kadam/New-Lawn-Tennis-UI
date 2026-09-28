@@ -18,24 +18,17 @@ class TeamService {
   }
 
   async getTeamById(id: number) {
-    return ApiService.get(`/teams/${id}`);
+    return ApiService.get(`/team/${id}`);
   }
 
   async getPlayersByTeamCode(
     teamCode: string
   ) {
     return ApiService.get(
-      `/teams/code/${teamCode}/players`
+      `/team/code/${teamCode}/players`
     );
   }
 
-  /**
-   * Create a team.
-   *
-   * IMPORTANT:
-   * Team creation does NOT handle players.
-   * Players are managed separately.
-   */
   async createTeam(data: TeamPayload) {
     const payload = {
       team_name: data.teamName,
@@ -50,7 +43,7 @@ class TeamService {
     };
 
     return ApiService.post(
-      '/teams',
+      '/team',
       payload
     );
   }
@@ -72,14 +65,14 @@ class TeamService {
     };
 
     return ApiService.put(
-      `/teams/${id}`,
+      `/team/${id}`,
       payload
     );
   }
 
   async deleteTeam(id: number) {
     return ApiService.delete(
-      `/teams/${id}`
+      `/team/${id}`
     );
   }
 }

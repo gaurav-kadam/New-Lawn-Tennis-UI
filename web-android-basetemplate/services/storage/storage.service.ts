@@ -19,7 +19,6 @@ class StorageService {
     const value =
       await AsyncStorage.getItem(key);
 
-    // IMPORTANT FIX
     if (!value) {
       return null;
     }

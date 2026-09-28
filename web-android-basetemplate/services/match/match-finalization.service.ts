@@ -48,13 +48,13 @@ class MatchFinalizationService {
     payload: FinalizeMatchPayload
   ) {
     return ApiService.post(
-      `/matches/${matchId}/finalize`,
+      `/match/${matchId}/finalize`,
       payload
     );
   }
   getEvents(matchId: string) {
   return ApiService.get(
-    `/matches/${matchId}/events`
+    `/match/${matchId}/events`
   );
 }
 }

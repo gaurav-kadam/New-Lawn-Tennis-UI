@@ -7,19 +7,19 @@ class TournamentService {
   }
 
   async getTournamentById(id: number) {
-    return ApiService.get(`/tournaments/${id}`);
+    return ApiService.get(`/tournament/${id}`);
   }
 
   async createTournament(payload: any) {
-    return ApiService.post('/tournaments', payload);
+    return ApiService.post('/tournament', payload);
   }
 
   async updateTournament(id: number, payload: any) {
-    return ApiService.put(`/tournaments/${id}`, payload);
+    return ApiService.put(`/tournament/${id}`, payload);
   }
 
   async deleteTournament(id: number) {
-    return ApiService.delete(`/tournaments/${id}`);
+    return ApiService.delete(`/tournament/${id}`);
   }
 }
 

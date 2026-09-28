@@ -7,16 +7,16 @@ class OfficialService {
 
   async createOfficial(data: any) {
     const payload = this.mapToBackend(data);
-    return ApiService.post('/officials', payload);
+    return ApiService.post('/official', payload);
   }
 
   async updateOfficial(id: number, data: any) {
     const payload = this.mapToBackend(data);
-    return ApiService.put(`/officials/${id}`, payload);
+    return ApiService.put(`/official/${id}`, payload);
   }
 
   async deleteOfficial(id: number) {
-    return ApiService.delete(`/officials/${id}`);
+    return ApiService.delete(`/official/${id}`);
   }
 
   // Helper to map React camelCase to FastAPI snake_case
