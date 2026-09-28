@@ -135,6 +135,7 @@ export default function MatchCardList({
               <TouchableOpacity
                 onPress={() => {
                             if (
+                              !isCompletedMatch(match) &&
                               typeof document !== 'undefined' &&
                               document.fullscreenEnabled &&
                               !document.fullscreenElement

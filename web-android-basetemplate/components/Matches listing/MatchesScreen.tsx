@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Text,
@@ -18,7 +18,10 @@ import { useMatches } from '../../hooks/usematches';
 import { useTeams } from '../../hooks/useteams';
 
 import matchService from '../../services/match/match.service';
-import { isCompletedMatch } from '@/services/match/match-result.service';
+import { isCompletedMatch, loadMatchResult } from '@/services/match/match-result.service';
+import ScoreSheetPreview from '@/components/results/score-sheet/ScoreSheetPreview';
+import type { ScoreSheetData } from '@/components/results/score-sheet/scoreSheet.types';
+import TennisPaperProvider from '@/components/tennis-match/ui/TennisPaperProvider';
 import tournamentService from '../../services/tournament/tournamment.service';
 import teamService from '../../services/team/team.service';
 import { useTheme } from '../../theme/themeContext';
@@ -52,6 +55,10 @@ export default function MatchesScreen() {
   });
 
   const [openModal, setOpenModal] = useState(false);
+  const [scoreSheet, setScoreSheet] = useState<ScoreSheetData | null>(null);
+  const [scoreSheetLoading, setScoreSheetLoading] = useState(false);
+  const scoreSheetRequest = useRef(0);
+  useEffect(() => () => { scoreSheetRequest.current++; }, []);
   const [editingData, setEditingData] = useState<any>(null);
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [notif, setNotif] = useState<NotifState>({
@@ -139,10 +146,24 @@ export default function MatchesScreen() {
 
   const handleStartMatch = async (match: any) => {
     if (isCompletedMatch(match)) {
-      router.push({
-        pathname: '/TennisMatchScreen',
-        params: { matchId: String(match.id) },
-      });
+      const request = ++scoreSheetRequest.current;
+      setScoreSheet(null);
+      setScoreSheetLoading(true);
+      try {
+        const result = await loadMatchResult(String(match.id));
+        if (request !== scoreSheetRequest.current) return;
+        if (!result.completed) {
+          showNotif('error', 'Score Sheet Unavailable', 'This match is not completed.');
+          return;
+        }
+        setScoreSheet(result.scoreSheet);
+      } catch {
+        if (request === scoreSheetRequest.current) {
+          showNotif('error', 'Score Sheet Unavailable', 'Unable to load the saved match. Please try again.');
+        }
+      } finally {
+        if (request === scoreSheetRequest.current) setScoreSheetLoading(false);
+      }
       return;
     }
     try {
@@ -390,6 +411,13 @@ export default function MatchesScreen() {
           onDelete={handleDelete}
           onStartMatch={handleStartMatch}
         />
+      )}
+
+      {scoreSheetLoading && <ActivityIndicator accessibilityLabel="Loading score sheet" color={theme.colors.primary} />}
+      {scoreSheet && (
+        <TennisPaperProvider>
+          <ScoreSheetPreview visible data={scoreSheet} onClose={() => setScoreSheet(null)} />
+        </TennisPaperProvider>
       )}
 
       {openModal ? (

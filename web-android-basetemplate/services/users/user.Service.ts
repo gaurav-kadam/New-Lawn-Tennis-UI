@@ -7,7 +7,7 @@ class UserService {
   }
 
   async createUser(payload: any) {
-    return ApiService.post('/auth/register/', payload);
+    return ApiService.post('/users', payload);
   }
 
   async updateUser(id: number, payload: any) {

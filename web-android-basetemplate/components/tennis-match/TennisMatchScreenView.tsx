@@ -7,6 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import matchDraftService from '@/services/match/match-draft.service';
 import matchFinalizationService from '@/services/match/match-finalization.service';
 import { loadMatchResult } from '@/services/match/match-result.service';
+import ScoreSheetPreview from '@/components/results/score-sheet/ScoreSheetPreview';
+import type { ScoreSheetData } from '@/components/results/score-sheet/scoreSheet.types';
 import { serializeCompletedSetServingState } from '@/services/match/completed-set-serving-state';
 
 import {
@@ -17,7 +19,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-import { Text, TouchableRipple } from 'react-native-paper';
+import { Button, Text, TouchableRipple } from 'react-native-paper';
 
 import MatchBoard from '@/components/tennis-match/MatchBoard';
 import { useTennisMatch } from '@/components/tennis-match/hooks/useTennisMatch';
@@ -53,6 +55,8 @@ function TennisMatchSession({ params }: { params: TennisMatchParams }) {
   const [completedParams, setCompletedParams] =
     useState<TennisMatchParams | null>(null);
   const readOnly = completedParams !== null;
+  const [scoreSheet, setScoreSheet] = useState<ScoreSheetData | null>(null);
+  const [scoreSheetVisible, setScoreSheetVisible] = useState(false);
   const theme = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
@@ -163,6 +167,7 @@ function TennisMatchSession({ params }: { params: TennisMatchParams }) {
         if (result.completed) {
           acceptedRef.current = true;
           setCompletedParams(result.params);
+          setScoreSheet(result.scoreSheet);
           restoreMatch(result.state, result.events);
           restoreTimer(result.elapsedSeconds, 'stopped', Date.now());
           setDraftStatus('ready');
@@ -596,6 +601,12 @@ function TennisMatchSession({ params }: { params: TennisMatchParams }) {
         </View>
       )}
       {readOnly && <Text style={nativeTextDefaults}>Completed match - read only</Text>}
+      {readOnly && draftStatus === 'ready' && scoreSheet && (
+        <>
+          <Button onPress={() => setScoreSheetVisible(true)} textColor={theme.colors.primary}>View Score Sheet</Button>
+          <ScoreSheetPreview visible={scoreSheetVisible} data={scoreSheet} onClose={() => setScoreSheetVisible(false)} />
+        </>
+      )}
       {draftStatus === 'ready' && draftError !== '' && (
         <Text style={nativeTextDefaults} accessibilityRole="alert">{draftError}</Text>
       )}

@@ -614,6 +614,7 @@ export default function MatchesTable({
                       <TouchableOpacity
                         onPress={() => {
                           if (
+                            !completed &&
                             typeof document !== 'undefined' &&
                             document.fullscreenEnabled &&
                             !document.fullscreenElement
